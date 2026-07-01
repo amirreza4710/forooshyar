@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نادران‌گستر | پلتفرم مدیریت پخش</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/fontsource/css/vazirmatn@latest/index.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      fontFamily: { sans: ['Vazirmatn', 'sans-serif'] },
+      colors: {
+        brand: { 50:'#eef5ff',100:'#d9e8ff',200:'#bcd8ff',300:'#8ec1ff',400:'#5aa0ff',500:'#3b7fff',600:'#2663f5',700:'#1c4de1',800:'#1d40b6',900:'#1d3a8f' },
+        accent: { 500:'#10b981', 600:'#059669' },
+      },
+      animation: {
+        'fade-in': 'fadeIn .3s ease-out',
+        'slide-up': 'slideUp .4s cubic-bezier(.16,1,.3,1)',
+        'scale-in': 'scaleIn .2s cubic-bezier(.16,1,.3,1)',
+      },
+      keyframes: {
+        fadeIn: {'0%':{opacity:0},'100%':{opacity:1}},
+        slideUp: {'0%':{opacity:0,transform:'translateY(20px)'},'100%':{opacity:1,transform:'translateY(0)'}},
+        scaleIn: {'0%':{opacity:0,transform:'scale(.95)'},'100%':{opacity:1,transform:'scale(1)'}},
+      }
+    }
+  }
+}
+</script>
+<style>
+  *{font-family:'Vazirmatn',sans-serif}
+  html,body{height:100%}
+  body{background:#f8fafc;color:#0f172a;overflow:hidden; transition: background-color 0.3s, color 0.3s;}
+  body.dark{background:#0b1020;color:#e6edf9}
+
+  /* Scrollbar */
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:10px;}
+  .dark ::-webkit-scrollbar-thumb{background:#334155;}
+
+  /* UI Elements */
+  .card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;box-shadow: 0 1px 3px rgba(0,0,0,0.02);}
+  .dark .card{background:#121a2e;border:1px solid #1e293b; box-shadow: 0 4px 6px rgba(0,0,0,0.1);}
+  
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:600;border-radius:10px;transition:all .2s;cursor:pointer;padding:8px 16px;font-size:14px;}
+  .btn-sm{padding:6px 12px;font-size:12px;border-radius:8px;}
+  .btn-icon{padding:6px;width:32px;height:32px;border-radius:8px;}
+  .btn:disabled {opacity: 0.5; cursor: not-allowed;}
+  .btn-primary{background:linear-gradient(135deg, #2663f5, #1c4de1);color:#fff;}
+  .btn-primary:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(38,99,245,.3);}
+  .btn-accent{background:linear-gradient(135deg, #10b981, #059669);color:#fff;}
+  .btn-accent:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(16,185,129,.3);}
+  .btn-outline{border:1px solid #cbd5e1;color:#475569;}
+  .dark .btn-outline{border-color:#334155;color:#cbd5e1;}
+  .btn-outline:not(:disabled):hover{background:#f1f5f9;}
+  .dark .btn-outline:not(:disabled):hover{background:#1e293b;}
+  .btn-ghost{color:#64748b;background:transparent;}
+  .btn-ghost:hover{background:#f1f5f9;color:#0f172a;}
+  .dark .btn-ghost{color:#94a3b8;}
+  .dark .btn-ghost:hover{background:#1e293b;color:#f1f5f9;}
+
+  .input{width:100%;background:#fff;border:1px solid #cbd5e1;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;transition:border .2s;}
+  .input:focus{border-color:#3b7fff;box-shadow:0 0 0 3px rgba(59,127,255,.15);}
+  .dark .input{background:#0d1428;border-color:#334155;color:#e6edf9;}
+  .dark .input:focus{border-color:#3b7fff;box-shadow:0 0 0 3px rgba(59,127,255,.25);}
+
+  .chip{padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px;}
+  .chip-success{background:#d1fae5;color:#065f46;}
+  .dark .chip-success{background:rgba(16,185,129,.15);color:#34d399;}
+  .chip-warn{background:#fef3c7;color:#92400e;}
+  .dark .chip-warn{background:rgba(245,158,11,.15);color:#fbbf24;}
+  .chip-info{background:#dbeafe;color:#1e40af;}
+  .dark .chip-info{background:rgba(59,130,246,.15);color:#60a5fa;}
+  
+  /* Status Select Dropdown */
+  .status-select {
+    appearance: none; background-color: transparent; border: 1px solid transparent;
+    padding: 2px 24px 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; cursor: pointer;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat; background-position: left 6px center; background-size: 12px; transition: all 0.2s;
+  }
+  .status-select:hover { border-color: currentColor; }
+  .status-select:focus { outline: none; box-shadow: 0 0 0 2px rgba(59,130,246,0.3); }
+
+  /* Tables */
+  table{width:100%;border-collapse:collapse; text-align: right;}
+  th{font-size:12px;color:#64748b;padding:12px 16px;border-bottom:1px solid #e2e8f0;background:#f8fafc; white-space: nowrap;}
+  .dark th{background:#0d1428;color:#94a3b8;border-color:#1e293b;}
+  td{padding:14px 16px;font-size:13px;border-bottom:1px solid #f1f5f9; vertical-align: middle;}
+  .dark td{border-color:#1e293b;}
+  tr:hover td{background:#f8fafc;}
+  .dark tr:hover td{background:#162038;}
+
+  /* Layouts & States */
+  .screen{display:none; height:100%; width:100%;}
+  .screen.active{display:flex; animation:fadeIn .3s ease;}
+  .tab-content{display:none; animation:fadeIn .2s ease;}
+  .tab-content.active{display:block;}
+
+  /* Modals */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;}
+  .modal-overlay.active{display:flex; animation:fadeIn .2s ease;}
+  .modal{background:#fff;width:100%;max-width:500px;border-radius:20px;box-shadow:0 25px 50px -12px rgba(0,0,0,.25);max-height:90vh;overflow-y:auto;}
+  .dark .modal{background:#121a2e;border:1px solid #1e293b;}
+  
+  /* Toasts */
+  .toast-container{position:fixed;bottom:20px;left:20px;z-index:200;display:flex;flex-direction:column;gap:10px;}
+  .toast{background:#fff;padding:12px 18px;border-radius:12px;box-shadow:0 10px 30px -10px rgba(0,0,0,.2);display:flex;align-items:center;gap:12px;font-weight:600;font-size:14px;border:1px solid #e2e8f0; border-right:4px solid #3b7fff;}
+  .dark .toast{background:#1e293b;border-color:#334155;color:#fff;}
+  .toast.success{border-right-color:#10b981;}
+  .toast.error{border-right-color:#ef4444;}
+</style>
+</head>
+<body class="dark">
+
+<!-- ================= LOGIN SCREEN ================= -->
+<div id="login-screen" class="screen active items-center justify-center relative overflow-hidden bg-slate-50 dark:bg-[#0b1020]">
+  <div class="absolute top-[-10%] right-[-5%] w-[40vw] h-[40vw] bg-brand-500/20 rounded-full blur-[100px]"></div>
+  <div class="absolute bottom-[-10%] left-[-5%] w-[30vw] h-[30vw] bg-accent-500/20 rounded-full blur-[100px]"></div>
+
+  <div class="card w-full max-w-md p-8 relative z-10 animate-scale-in">
+    <div class="text-center mb-8">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-600 to-accent-500 mx-auto flex items-center justify-center font-black text-white text-3xl shadow-lg shadow-brand-500/30 mb-4">ن</div>
+      <h1 class="text-2xl font-black text-slate-900 dark:text-white">نادران‌گستر</h1>
+      <p class="text-slate-500 text-sm mt-1">پلتفرم یکپارچه مدیریت پخش و فروش</p>
+    </div>
+
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">نام (اسم کوچک)</label>
+          <input type="text" id="username" class="input" placeholder="مثال: امیررضا" required>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">رمز عبور</label>
+          <input type="password" id="password" class="input" placeholder="1234" value="1234" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-full py-3 mt-4 text-base">ورود به سیستم</button>
+      </div>
+      <div class="mt-6 text-center text-xs text-slate-400 border-t border-slate-200 dark:border-slate-800 pt-4">
+        کاربران مجاز:<br>
+        <span class="font-bold text-brand-500">امیررضا</span> | 
+        <span class="font-bold text-brand-500">امیرمحمد</span> | 
+        <span class="font-bold text-brand-500">حسام</span><br>
+        (رمز ورود برای همه: <span class="font-mono bg-slate-100 dark:bg-slate-800 px-1 rounded">1234</span>)
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= MAIN APP SCREEN ================= -->
+<div id="app-screen" class="screen flex w-full">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white dark:bg-[#0d1428] border-l border-slate-200 dark:border-slate-800 flex flex-col flex-shrink-0 z-50 fixed right-0 top-0 h-full transition-transform duration-300 translate-x-full lg:relative lg:translate-x-0" id="sidebar">
+    <div class="p-5 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-accent-500 flex items-center justify-center font-black text-white text-lg">ن</div>
+        <div>
+          <div class="font-bold text-[15px] text-slate-900 dark:text-white leading-tight">نادران‌گستر</div>
+          <div class="text-[11px] text-brand-600 dark:text-brand-400 font-bold mt-0.5">سیستم یکپارچه پخش</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto p-3 space-y-1">
+      <div class="text-[11px] font-black text-slate-400 dark:text-slate-500 px-3 py-2 mt-2 uppercase tracking-wider">عملیات جاری</div>
+      
+      <button onclick="navTo('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors nav-link active-nav">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        داشبورد
+      </button>
+      
+      <button onclick="navTo('new-order')" id="nav-new-order" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors nav-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        ثبت سفارش
+      </button>
+
+      <button onclick="navTo('orders')" id="nav-orders" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors nav-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        لیست سفارشات
+        <span id="nav-orders-badge" class="mr-auto bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-300 py-0.5 px-2 rounded-full text-[10px]">۰</span>
+      </button>
+
+      <div class="text-[11px] font-black text-slate-400 dark:text-slate-500 px-3 py-2 mt-4 uppercase tracking-wider">اطلاعات پایه</div>
+
+      <button onclick="navTo('products')" id="nav-products" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors nav-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        کاتالوگ محصولات
+      </button>
+
+      <button onclick="navTo('customers')" id="nav-customers" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors nav-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        مشتریان (مسیرها)
+      </button>
+
+      <button onclick="navTo('users')" id="nav-users" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors nav-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        تیم فروش
+      </button>
+      
+      <div class="text-[11px] font-black text-slate-400 dark:text-slate-500 px-3 py-2 mt-4 uppercase tracking-wider">تنظیمات کاربری</div>
+
+      <button onclick="navTo('profile')" id="nav-profile" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors nav-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        پروفایل من
+      </button>
+    </nav>
+
+    <div class="p-4 border-t border-slate-100 dark:border-slate-800/50">
+      <button onclick="toggleTheme()" class="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm font-bold">
+        <span id="themeLabel">حالت روز</span>
+        <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </aside>
+  
+  <!-- Mobile Overlay -->
+  <div id="mobile-overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" onclick="closeSidebar()"></div>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col h-full min-w-0 bg-[#f8fafc] dark:bg-[#0b1020]">
+    
+    <!-- Header -->
+    <header class="bg-white/80 dark:bg-[#0d1428]/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex items-center justify-between z-10 sticky top-0">
+      <div class="flex items-center gap-4">
+        <button class="lg:hidden p-1 text-slate-600 dark:text-slate-300" onclick="toggleSidebar()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div class="hidden sm:block">
+          <div class="text-sm font-bold text-slate-900 dark:text-white" id="headerDate">--</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <div class="text-left hidden sm:block cursor-pointer hover:opacity-80 transition-opacity" onclick="navTo('profile')">
+          <div class="text-sm font-bold text-slate-900 dark:text-white" id="headerUserName">کاربر</div>
+          <div class="text-[11px] text-slate-500" id="headerUserRole">ویزیتور</div>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center text-brand-600 dark:text-brand-400 font-black cursor-pointer" onclick="navTo('profile')" id="headerUserAvatar">
+          ک
+        </div>
+      </div>
+    </header>
+
+    <!-- Scrollable Area -->
+    <div class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 relative">
+      
+      <!-- ============ DASHBOARD ============ -->
+      <section id="tab-dashboard" class="tab-content active">
+        <div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 class="text-2xl font-black text-slate-900 dark:text-white mb-2" id="dashWelcome">سلام!</h1>
+            <p class="text-slate-500 dark:text-slate-400">خلاصه وضعیت سیستم پخش و فروش</p>
+          </div>
+          <button onclick="navTo('new-order')" class="btn btn-primary shadow-lg shadow-brand-500/20">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            ثبت سفارش جدید
+          </button>
+        </div>
+
+        <!-- KPIs -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div class="card p-5">
+            <div class="flex items-center gap-4 mb-2">
+              <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+              <div>
+                <div class="text-sm font-bold text-slate-500">فروش کل (تومان)</div>
+                <div class="text-xl font-black text-slate-900 dark:text-white" id="kpiTotalSales">0</div>
+              </div>
+            </div>
+          </div>
+          <div class="card p-5">
+            <div class="flex items-center gap-4 mb-2">
+              <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              </div>
+              <div>
+                <div class="text-sm font-bold text-slate-500">تعداد سفارشات</div>
+                <div class="text-xl font-black text-slate-900 dark:text-white" id="kpiOrderCount">0</div>
+              </div>
+            </div>
+          </div>
+          <div class="card p-5">
+            <div class="flex items-center gap-4 mb-2">
+              <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              </div>
+              <div>
+                <div class="text-sm font-bold text-slate-500">مشتریان (مسیرها)</div>
+                <div class="text-xl font-black text-slate-900 dark:text-white" id="kpiCustomerCount">0</div>
+              </div>
+            </div>
+          </div>
+          <div class="card p-5">
+            <div class="flex items-center gap-4 mb-2">
+              <div class="w-12 h-12 rounded-xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center text-orange-600 dark:text-orange-400">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+              </div>
+              <div>
+                <div class="text-sm font-bold text-slate-500">محصولات در کاتالوگ</div>
+                <div class="text-xl font-black text-slate-900 dark:text-white" id="kpiProductCount">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="card p-6 lg:col-span-2">
+            <h3 class="font-bold text-lg mb-4">نمودار فروش اخیر</h3>
+            <div class="relative h-[300px] w-full">
+              <canvas id="salesChart"></canvas>
+            </div>
+          </div>
+          <div class="card p-0 flex flex-col h-full overflow-hidden">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800">
+              <h3 class="font-bold text-lg">آخرین سفارشات</h3>
+            </div>
+            <div class="flex-1 overflow-y-auto" id="dashRecentOrders">
+              <!-- Rendered via JS -->
+            </div>
+            <div class="p-3 border-t border-slate-100 dark:border-slate-800 text-center">
+              <button class="text-sm text-brand-600 dark:text-brand-400 font-bold hover:underline" onclick="navTo('orders')">مدیریت سفارشات</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ NEW ORDER ============ -->
+      <section id="tab-new-order" class="tab-content h-full">
+        <div class="flex flex-col h-[calc(100vh-140px)]">
+          <div class="mb-4 flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-black text-slate-900 dark:text-white">ثبت سفارش جدید</h2>
+              <p class="text-sm text-slate-500 mt-1">ساخت فاکتور فروش (با دسترسی به دیتابیس کالا)</p>
+            </div>
+          </div>
+
+          <div class="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
+            <!-- Product Selection -->
+            <div class="flex-1 flex flex-col card overflow-hidden">
+              <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30 flex gap-2">
+                <input type="text" id="productSearchInput" onkeyup="renderShopProducts()" placeholder="جستجوی محصول..." class="input flex-1">
+                <select id="productCategoryFilter" onchange="renderShopProducts()" class="input w-auto font-bold text-brand-700 dark:text-brand-400">
+                  <!-- JS will populate categories here -->
+                </select>
+              </div>
+              <div class="flex-1 overflow-y-auto p-4 bg-slate-50 dark:bg-slate-900/20">
+                <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4" id="shopProductsGrid"></div>
+              </div>
+            </div>
+
+            <!-- Cart -->
+            <div class="w-full lg:w-[360px] flex flex-col card overflow-hidden flex-shrink-0">
+              <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30">
+                <label class="block text-xs font-bold text-slate-500 mb-2">انتخاب مشتری</label>
+                <div class="flex gap-2">
+                  <select id="orderCustomerSelect" class="input font-bold text-slate-900 dark:text-white flex-1"></select>
+                  <button class="btn btn-outline px-3" onclick="openModal('customerModal')" title="مشتری جدید">+</button>
+                </div>
+              </div>
+
+              <div class="flex-1 overflow-y-auto p-3" id="cartContainer"></div>
+
+              <div class="p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                <div class="flex justify-between mb-2 text-sm font-bold text-slate-500">
+                  <span>جمع کل:</span>
+                  <span id="cartTotalItemsText">۰ قلم</span>
+                </div>
+                <div class="flex justify-between mb-4">
+                  <span class="font-bold text-lg">مبلغ قابل پرداخت:</span>
+                  <span class="font-black text-xl text-brand-600 dark:text-brand-400"><span id="cartTotalPriceText">۰</span> <span class="text-xs text-slate-500 font-normal">تومان</span></span>
+                </div>
+                <button class="btn btn-accent w-full py-3 text-base" id="submitOrderBtn" onclick="submitOrder()">ثبت نهایی سفارش</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ ORDERS ============ -->
+      <section id="tab-orders" class="tab-content">
+        <div class="mb-6 flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-black">مدیریت سفارشات</h2>
+            <p class="text-sm text-slate-500">پیگیری و تغییر وضعیت فاکتورهای ثبت شده</p>
+          </div>
+        </div>
+        <div class="card overflow-x-auto">
+          <table>
+            <thead>
+              <tr>
+                <th>کد سفارش</th>
+                <th>نام فروشگاه (مشتری)</th>
+                <th>نماینده فروش</th>
+                <th>تاریخ ثبت</th>
+                <th>مبلغ کل (تومان)</th>
+                <th>عملیات / وضعیت فاکتور</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============ PRODUCTS ============ -->
+      <section id="tab-products" class="tab-content">
+        <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-black">کاتالوگ محصولات</h2>
+            <p class="text-sm text-slate-500">موجودی انبار، ویرایش قیمت‌ها و کدهای کالا</p>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('productModal')">
+             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            افزودن محصول جدید
+          </button>
+        </div>
+        <div class="card overflow-x-auto">
+          <table>
+            <thead>
+              <tr>
+                <th>شناسه کالا</th>
+                <th>نام کالا</th>
+                <th>دسته‌بندی</th>
+                <th>قیمت فروش (تومان)</th>
+                <th>موجودی انبار</th>
+                <th>عملیات</th>
+              </tr>
+            </thead>
+            <tbody id="productsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============ CUSTOMERS ============ -->
+      <section id="tab-customers" class="tab-content">
+        <div class="mb-6 flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-black">مشتریان (مسیرها)</h2>
+            <p class="text-sm text-slate-500">مدیریت اطلاعات فروشگاه‌ها و سوپرمارکت‌ها</p>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('customerModal')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            ثبت مشتری جدید
+          </button>
+        </div>
+        <div class="card overflow-x-auto">
+          <table>
+            <thead>
+              <tr>
+                <th>کد سیستم</th>
+                <th>نام فروشگاه</th>
+                <th>شماره تماس</th>
+                <th>آدرس / منطقه</th>
+              </tr>
+            </thead>
+            <tbody id="customersTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============ USERS (SALES REPS) ============ -->
+      <section id="tab-users" class="tab-content">
+        <div class="mb-6 flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-black">تیم فروش (ویزیتورها)</h2>
+            <p class="text-sm text-slate-500">مدیریت پرسنل و دسترسی‌های ورود به سیستم</p>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('userModal')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            افزودن ویزیتور جدید
+          </button>
+        </div>
+        <div class="card overflow-x-auto">
+          <table>
+            <thead>
+              <tr>
+                <th>نام و نام خانوادگی</th>
+                <th>نام کاربری (برای ورود)</th>
+                <th>سمت / نقش</th>
+                <th>رمز عبور</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============ PROFILE ============ -->
+      <section id="tab-profile" class="tab-content max-w-2xl mx-auto">
+        <div class="mb-6">
+          <h2 class="text-2xl font-black">پروفایل من</h2>
+        </div>
+        <div class="card p-8 text-center relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-brand-600 to-accent-500 opacity-20"></div>
+          <div class="w-24 h-24 rounded-full bg-brand-500 mx-auto border-4 border-white dark:border-slate-800 flex items-center justify-center text-4xl text-white font-black relative z-10 shadow-xl mb-4" id="profileAvatar">ک</div>
+          <h3 class="text-2xl font-black mb-1" id="profileName">نام کاربر</h3>
+          <p class="text-slate-500 font-bold mb-6" id="profileRole">نقش کاربر</p>
+          
+          <div class="grid grid-cols-2 gap-4 mb-8">
+            <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+              <div class="text-sm text-slate-500 font-bold mb-1">فروش ثبت شده شما</div>
+              <div class="text-xl font-black text-brand-600 dark:text-brand-400" id="profileSales">۰ تومان</div>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+              <div class="text-sm text-slate-500 font-bold mb-1">تعداد فاکتورها</div>
+              <div class="text-xl font-black text-accent-600 dark:text-accent-500" id="profileOrders">۰ عدد</div>
+            </div>
+          </div>
+
+          <button class="btn btn-outline border-red-500 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 w-full" onclick="handleLogout()">خروج از حساب کاربری</button>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- ================= MODALS ================= -->
+
+<!-- Customer Modal -->
+<div id="customerModal" class="modal-overlay">
+  <div class="modal">
+    <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/30">
+      <h3 class="font-black text-lg">ثبت مشتری جدید</h3>
+      <button class="text-slate-400 hover:text-slate-600" onclick="closeModal('customerModal')">✕</button>
+    </div>
+    <form class="p-5 space-y-4" onsubmit="addCustomer(event)">
+      <div>
+        <label class="block text-xs font-bold mb-1 text-slate-500">نام فروشگاه (مثال: هایپر مارکت نمونه)</label>
+        <input type="text" id="newCustName" class="input" required>
+      </div>
+      <div>
+        <label class="block text-xs font-bold mb-1 text-slate-500">شماره موبایل</label>
+        <input type="tel" id="newCustPhone" class="input" required>
+      </div>
+      <div>
+        <label class="block text-xs font-bold mb-1 text-slate-500">آدرس / مسیر</label>
+        <input type="text" id="newCustAddress" class="input" placeholder="استان، شهر، خیابان...">
+      </div>
+      <button type="submit" class="btn btn-primary w-full py-3 mt-2">ذخیره مشتری در دیتابیس</button>
+    </form>
+  </div>
+</div>
+
+<!-- Product Modal -->
+<div id="productModal" class="modal-overlay">
+  <div class="modal">
+    <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/30">
+      <h3 class="font-black text-lg">تعریف محصول جدید</h3>
+      <button class="text-slate-400 hover:text-slate-600" onclick="closeModal('productModal')">✕</button>
+    </div>
+    <form class="p-5 space-y-4" onsubmit="addProduct(event)">
+      <div>
+        <label class="block text-xs font-bold mb-1 text-slate-500">نام کالا</label>
+        <input type="text" id="newProdName" class="input" required>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold mb-1 text-slate-500">دسته‌بندی</label>
+          <select id="newProdCategory" class="input" required>
+            <!-- Generated via JS -->
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold mb-1 text-slate-500">آیکون/ایموجی</label>
+          <input type="text" id="newProdIcon" class="input" placeholder="مثال: 📦" value="📦">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold mb-1 text-slate-500">قیمت (تومان)</label>
+          <input type="number" id="newProdPrice" class="input" required>
+        </div>
+        <div>
+          <label class="block text-xs font-bold mb-1 text-slate-500">موجودی انبار</label>
+          <input type="number" id="newProdStock" class="input" required>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary w-full py-3 mt-2">افزودن به کاتالوگ</button>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Product Modal -->
+<div id="editProductModal" class="modal-overlay">
+  <div class="modal">
+    <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/30">
+      <h3 class="font-black text-lg">ویرایش محصول</h3>
+      <button class="text-slate-400 hover:text-slate-600" onclick="closeModal('editProductModal')">✕</button>
+    </div>
+    <form class="p-5 space-y-4" onsubmit="saveProductEdit(event)">
+      <input type="hidden" id="editProdId">
+      
+      <div class="mb-4">
+        <div class="font-bold text-brand-600 dark:text-brand-400" id="editProdNameDisplay">نام محصول</div>
+        <div class="text-xs text-slate-500" id="editProdCodeDisplay">کد محصول</div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold mb-1 text-slate-500">قیمت جدید (تومان)</label>
+          <input type="number" id="editProdPrice" class="input" required>
+        </div>
+        <div>
+          <label class="block text-xs font-bold mb-1 text-slate-500">موجودی جدید انبار</label>
+          <input type="number" id="editProdStock" class="input" required>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-accent w-full py-3 mt-4">ذخیره تغییرات</button>
+    </form>
+  </div>
+</div>
+
+<!-- Add User Modal -->
+<div id="userModal" class="modal-overlay">
+  <div class="modal">
+    <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/30">
+      <h3 class="font-black text-lg">ثبت ویزیتور جدید</h3>
+      <button class="text-slate-400 hover:text-slate-600" onclick="closeModal('userModal')">✕</button>
+    </div>
+    <form class="p-5 space-y-4" onsubmit="addUser(event)">
+      <div>
+        <label class="block text-xs font-bold mb-1 text-slate-500">نام و نام خانوادگی</label>
+        <input type="text" id="newUserName" class="input" placeholder="مثال: علی حسینی" required>
+      </div>
+      <div>
+        <label class="block text-xs font-bold mb-1 text-slate-500">نام کاربری (برای ورود به سیستم)</label>
+        <input type="text" id="newUserUsername" class="input" placeholder="مثال: علی" required>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold mb-1 text-slate-500">رمز عبور</label>
+          <input type="text" id="newUserPassword" class="input" value="1234" required>
+        </div>
+        <div>
+          <label class="block text-xs font-bold mb-1 text-slate-500">نقش / سمت</label>
+          <select id="newUserRole" class="input" required>
+            <option>نماینده فروش</option>
+            <option>مدیر فروش / نماینده</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary w-full py-3 mt-2">ثبت و ایجاد حساب</button>
+    </form>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container"></div>
+
+<script>
+  // ================= STATE & REAL DATA =================
+  let currentUser = null;
+  let cart = [];
+  let salesChartInstance = null;
+
+  // Login Database
+  let usersDB = [
+    { username: 'امیررضا', password: '1234', name: 'امیررضا احمدی‌نژاد', role: 'مدیر فروش / نماینده' },
+    { username: 'امیرمحمد', password: '1234', name: 'امیرمحمد یعقوبی', role: 'نماینده فروش' },
+    { username: 'حسام', password: '1234', name: 'حسام حاتمی', role: 'نماینده فروش' }
+  ];
+
+  // Products Database
+  let productsDB = [
+    { id: 'PRD-001', code: 'NG-001', name: 'ژله تفنگی', category: 'ژله', pack: 'بسته 30 عددی', price: 30000, stock: 150, image: '🍮' },
+    { id: 'PRD-002', code: 'NG-002', name: 'سس ترش 20 گرم', category: 'سس و اسپری ترش', pack: 'بسته 30 عددی', price: 36000, stock: 240, image: '🥫' },
+    { id: 'PRD-003', code: 'NG-003', name: 'آبنبات کپسولی', category: 'آبنبات', pack: 'بسته 30 عددی', price: 25000, stock: 400, image: '🍬' },
+    { id: 'PRD-004', code: 'NG-004', name: 'آبنبات شیشه شیر', category: 'آبنبات', pack: 'بسته 24 عددی', price: 25000, stock: 0, image: '🍼' },
+    { id: 'PRD-005', code: 'NG-005', name: 'آبمیوه پودری زامبی', category: 'آبمیوه پودری', pack: 'بسته 30 عددی', price: 40000, stock: 85, image: '🥤' },
+    { id: 'PRD-035', code: 'NG-035', name: 'آبنبات (تنوعی پرتقال/لیمو/...)', category: 'آبنبات', pack: 'بسته 24 عددی', price: 50000, stock: 120, image: '🍭' },
+    { id: 'PRD-036', code: 'NG-036', name: 'آدامس متری برند رول گام', category: 'آدامس', pack: 'بسته 30 عددی', price: 33000, stock: 300, image: '🍬' },
+    { id: 'PRD-037', code: 'NG-037', name: 'علی کافه شرکتی درجه یک (۴۰ عددی)', category: 'قهوه و کافی', pack: 'بسته 40 عددی', price: 20000, stock: 65, image: '☕' },
+    { id: 'PRD-038', code: 'NG-038', name: 'علی کافه شرکتی درجه یک (۴۴ عددی)', category: 'قهوه و کافی', pack: 'بسته 44 عددی', price: 21600, stock: 40, image: '☕' },
+    { id: 'PRD-039', code: 'NG-039', name: 'خوشبو کننده دهان قرص لاته', category: 'خوشبوکننده دهان', pack: 'بسته 30 عددی', price: 40000, stock: 180, image: '💊' },
+    { id: 'PRD-040', code: 'NG-040', name: 'پاستیل نوشابه‌ای', category: 'پاستیل', pack: 'بسته 24 عددی', price: 35000, stock: 95, image: '🐛' },
+    { id: 'PRD-041', code: 'NG-041', name: 'مارشمالو کبابی', category: 'مارشمالو', pack: 'بسته 20 عددی', price: 45000, stock: 30, image: '🍡' },
+    { id: 'PRD-042', code: 'NG-042', name: 'تخم مرغ شانسی بزرگ', category: 'شانسی (تنوعی)', pack: 'بسته 12 عددی', price: 55000, stock: 15, image: '🎁' }
+  ];
+
+  let customersDB = [
+    { id: 'CUST-1', code: 'C-101', name: 'سوپرمارکت شباهنگ', phone: '09121111111', address: 'تهران، خیابان ولیعصر' },
+    { id: 'CUST-2', code: 'C-102', name: 'هایپر مارکت پدیده', phone: '09122222222', address: 'کرج، عظیمیه' },
+    { id: 'CUST-3', code: 'C-103', name: 'فروشگاه رحیمی و پسران', phone: '09123333333', address: 'تهران، بازار' }
+  ];
+
+  let ordersDB = [
+    { id: 'ORD-9840', customerId: 'CUST-1', customerName: 'سوپرمارکت شباهنگ', repName: 'امیررضا احمدی‌نژاد', date: new Date(Date.now() - 86400000).toLocaleDateString('fa-IR'), items: [{name: 'علی کافه شرکتی', qty: 10, price: 20000}], total: 200000, status: 'تکمیل شده', userId: 'امیررضا' },
+    { id: 'ORD-9841', customerId: 'CUST-2', customerName: 'هایپر مارکت پدیده', repName: 'حسام حاتمی', date: new Date().toLocaleDateString('fa-IR'), items: [{name: 'ژله تفنگی', qty: 5, price: 30000}], total: 150000, status: 'در انتظار', userId: 'حسام' }
+  ];
+
+  // ================= INIT =================
+  document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
+    document.getElementById('headerDate').innerText = new Intl.DateTimeFormat('fa-IR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(new Date());
+  });
+
+  // ================= AUTH =================
+  function handleLogin(e) {
+    e.preventDefault();
+    const user = document.getElementById('username').value.trim();
+    const pass = document.getElementById('password').value;
+    
+    const found = usersDB.find(u => u.username === user && u.password === pass);
+    if(found) {
+      currentUser = found;
+      document.getElementById('login-screen').classList.remove('active');
+      document.getElementById('app-screen').classList.add('active');
+      
+      document.getElementById('headerUserName').innerText = found.name;
+      document.getElementById('headerUserRole').innerText = found.role;
+      document.getElementById('headerUserAvatar').innerText = found.name.charAt(0);
+      
+      showToast(`خوش آمدید، ${found.name}`, 'success');
+      navTo('dashboard');
+    } else {
+      showToast('نام کاربری یا رمز عبور اشتباه است.', 'error');
+    }
+  }
+
+  function handleLogout() {
+    currentUser = null;
+    document.getElementById('app-screen').classList.remove('active');
+    document.getElementById('login-screen').classList.add('active');
+    
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+    
+    if(window.innerWidth < 1024) closeSidebar();
+    showToast('شما با موفقیت از سیستم خارج شدید.');
+  }
+
+  // ================= NAVIGATION =================
+  function navTo(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.getElementById(`tab-${tabId}`).classList.add('active');
+    
+    document.querySelectorAll('.nav-link').forEach(el => {
+      el.classList.remove('bg-brand-50', 'dark:bg-brand-900/30', 'text-brand-600', 'dark:text-brand-400');
+    });
+    const activeNav = document.getElementById(`nav-${tabId}`);
+    if(activeNav) activeNav.classList.add('bg-brand-50', 'dark:bg-brand-900/30', 'text-brand-600', 'dark:text-brand-400');
+
+    if(window.innerWidth < 1024) closeSidebar();
+
+    if(tabId === 'dashboard') renderDashboard();
+    if(tabId === 'new-order') renderNewOrderView();
+    if(tabId === 'orders') renderOrders();
+    if(tabId === 'products') renderProducts();
+    if(tabId === 'customers') renderCustomers();
+    if(tabId === 'users') renderUsers();
+    if(tabId === 'profile') renderProfile();
+  }
+
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('mobile-overlay');
+    if (sidebar.classList.contains('translate-x-full')) {
+      sidebar.classList.remove('translate-x-full');
+      overlay.classList.remove('hidden');
+    } else {
+      sidebar.classList.add('translate-x-full');
+      overlay.classList.add('hidden');
+    }
+  }
+
+  function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('mobile-overlay');
+    if (!sidebar.classList.contains('translate-x-full')) {
+      sidebar.classList.add('translate-x-full');
+      overlay.classList.add('hidden');
+    }
+  }
+
+  // ================= DASHBOARD RENDERING =================
+  function renderDashboard() {
+    if(!currentUser) return;
+    document.getElementById('dashWelcome').innerText = `سلام، ${currentUser.name.split(' ')[0]} 👋`;
+    
+    let totalSales = ordersDB.reduce((sum, ord) => sum + ord.total, 0);
+    document.getElementById('kpiTotalSales').innerText = totalSales.toLocaleString('fa-IR');
+    document.getElementById('kpiOrderCount').innerText = ordersDB.length.toLocaleString('fa-IR');
+    document.getElementById('kpiCustomerCount').innerText = customersDB.length.toLocaleString('fa-IR');
+    document.getElementById('kpiProductCount').innerText = productsDB.length.toLocaleString('fa-IR');
+
+    const recent = [...ordersDB].reverse().slice(0,4);
+    const dashOrdContainer = document.getElementById('dashRecentOrders');
+    if(recent.length === 0) {
+      dashOrdContainer.innerHTML = '<div class="p-5 text-center text-slate-400 text-sm">سفارشی ثبت نشده است</div>';
+    } else {
+      dashOrdContainer.innerHTML = recent.map(o => `
+        <div class="p-4 border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex justify-between items-center">
+          <div>
+            <div class="font-bold text-sm">${o.customerName}</div>
+            <div class="text-xs text-slate-500">${o.id} - ${o.repName}</div>
+          </div>
+          <div class="text-left">
+            <div class="font-black text-sm">${o.total.toLocaleString('fa-IR')}</div>
+            <div class="text-[10px] mt-1 ${o.status==='تکمیل شده'?'text-emerald-500': o.status==='لغو شده' ? 'text-red-500' : 'text-orange-500'}">${o.status}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    renderChart();
+  }
+
+  function renderChart() {
+    const ctx = document.getElementById('salesChart');
+    if(salesChartInstance) salesChartInstance.destroy();
+    const isDark = document.body.classList.contains('dark');
+    const color = isDark ? '#94a3b8' : '#64748b';
+    
+    salesChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'امروز'],
+        datasets: [{
+          label: 'فروش (تومان)',
+          data: [0, 0, 0, 0, 0, 200000, 150000],
+          backgroundColor: '#3b7fff', borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+        scales: {
+          y: { ticks: { color: color, font:{family:'Vazirmatn'} }, grid: { color: isDark?'#1e293b':'#f1f5f9' } },
+          x: { ticks: { color: color, font:{family:'Vazirmatn'} }, grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // ================= NEW ORDER & CART =================
+  function renderNewOrderView() {
+    const select = document.getElementById('orderCustomerSelect');
+    select.innerHTML = '<option value="" disabled selected>انتخاب کنید...</option>' + 
+      customersDB.map(c => `<option value="${c.id}">${c.name} (${c.code})</option>`).join('');
+    
+    const categories = [...new Set(productsDB.map(p => p.category))];
+    const catSelect = document.getElementById('productCategoryFilter');
+    catSelect.innerHTML = '<option value="">همه دسته‌ها</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
+    
+    const modalCatSelect = document.getElementById('newProdCategory');
+    if(modalCatSelect.options.length === 0) {
+       modalCatSelect.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('') + '<option value="سایر">سایر موارد...</option>';
+    }
+
+    renderShopProducts();
+    updateCartUI();
+  }
+
+  function renderShopProducts() {
+    const query = (document.getElementById('productSearchInput').value || '').toLowerCase();
+    const categoryFilter = document.getElementById('productCategoryFilter').value;
+    const grid = document.getElementById('shopProductsGrid');
+    
+    let filtered = productsDB.filter(p => p.name.toLowerCase().includes(query) || p.code.toLowerCase().includes(query));
+    if(categoryFilter) {
+      filtered = filtered.filter(p => p.category === categoryFilter);
+    }
+    
+    if(filtered.length === 0) {
+      grid.innerHTML = `<div class="col-span-full text-center p-8 text-slate-400">محصولی یافت نشد.</div>`;
+      return;
+    }
+
+    grid.innerHTML = filtered.map(p => {
+      const isOut = p.stock <= 0;
+      return `
+      <div class="card p-3 border-2 border-transparent ${isOut?'opacity-50':'hover:border-brand-500 cursor-pointer'} transition-all flex flex-col" ${!isOut ? `onclick="addToCart('${p.id}')"` : ''}>
+        <div class="text-4xl text-center bg-slate-50 dark:bg-slate-800 rounded-xl py-4 mb-3">${p.image}</div>
+        <div class="text-xs text-brand-500 font-bold mb-1">${p.category}</div>
+        <div class="text-sm font-bold leading-tight flex-1 mb-2">${p.name}</div>
+        <div class="flex justify-between items-end mt-auto">
+          <div>
+            <div class="font-black text-slate-800 dark:text-slate-200">${p.price.toLocaleString('fa-IR')}</div>
+            <div class="text-[10px] ${isOut?'text-red-500':'text-slate-400'}">موجودی: ${p.stock.toLocaleString('fa-IR')}</div>
+          </div>
+          ${!isOut ? `<button class="w-8 h-8 rounded-lg bg-brand-100 dark:bg-brand-900/50 text-brand-600 dark:text-brand-400 flex justify-center items-center font-bold text-lg">+</button>` : ''}
+        </div>
+      </div>
+    `}).join('');
+  }
+
+  function addToCart(pid) {
+    const product = productsDB.find(p => p.id === pid);
+    if(product.stock <= 0) return showToast('کالا ناموجود است!', 'error');
+    
+    const exist = cart.find(c => c.id === pid);
+    if(exist) {
+      if(exist.qty >= product.stock) return showToast('موجودی انبار کافی نیست', 'error');
+      exist.qty++;
+    } else {
+      cart.push({...product, qty: 1});
+    }
+    updateCartUI();
+  }
+
+  function changeCartQty(pid, delta) {
+    const item = cart.find(c => c.id === pid);
+    const product = productsDB.find(p => p.id === pid);
+    
+    if(!item) return;
+    if(delta > 0 && item.qty >= product.stock) return showToast('موجودی انبار کافی نیست', 'error');
+    
+    item.qty += delta;
+    if(item.qty <= 0) cart = cart.filter(c => c.id !== pid);
+    updateCartUI();
+  }
+
+  function updateCartUI() {
+    const container = document.getElementById('cartContainer');
+    const btn = document.getElementById('submitOrderBtn');
+    
+    if(cart.length === 0) {
+      container.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-400 opacity-50"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="mb-2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><p class="text-sm">سبد خرید خالی است</p></div>`;
+      document.getElementById('cartTotalItemsText').innerText = '۰ قلم';
+      document.getElementById('cartTotalPriceText').innerText = '۰';
+      btn.disabled = true;
+      return;
+    }
+
+    btn.disabled = false;
+    let tPrice = 0, tQty = 0;
+    
+    container.innerHTML = cart.map(item => {
+      tPrice += item.price * item.qty;
+      tQty += item.qty;
+      return `
+        <div class="flex items-center gap-2 p-2 border border-slate-100 dark:border-slate-800 rounded-xl mb-2 bg-white dark:bg-slate-800/50">
+          <div class="text-2xl">${item.image}</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-bold truncate">${item.name}</div>
+            <div class="text-xs text-brand-600 dark:text-brand-400">${(item.price * item.qty).toLocaleString('fa-IR')} ت</div>
+          </div>
+          <div class="flex items-center bg-slate-100 dark:bg-slate-900 rounded-lg p-1">
+            <button onclick="changeCartQty('${item.id}', 1)" class="w-6 h-6 flex justify-center items-center bg-white dark:bg-slate-700 rounded shadow-sm hover:text-brand-500">+</button>
+            <span class="w-6 text-center text-xs font-bold">${item.qty}</span>
+            <button onclick="changeCartQty('${item.id}', -1)" class="w-6 h-6 flex justify-center items-center bg-white dark:bg-slate-700 rounded shadow-sm hover:text-red-500">-</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    document.getElementById('cartTotalItemsText').innerText = `${tQty.toLocaleString('fa-IR')} قلم`;
+    document.getElementById('cartTotalPriceText').innerText = tPrice.toLocaleString('fa-IR');
+  }
+
+  function submitOrder() {
+    const custId = document.getElementById('orderCustomerSelect').value;
+    if(!custId) return showToast('لطفاً مشتری را انتخاب کنید!', 'error');
+    if(cart.length === 0) return;
+
+    const customer = customersDB.find(c => c.id === custId);
+    let total = cart.reduce((s,i)=> s + (i.price*i.qty), 0);
+
+    const order = {
+      id: 'ORD-' + Math.floor(Math.random()*9000 + 1000),
+      customerId: customer.id,
+      customerName: customer.name,
+      repName: currentUser.name,
+      date: new Date().toLocaleDateString('fa-IR'),
+      items: [...cart],
+      total: total,
+      status: 'در انتظار',
+      userId: currentUser.username
+    };
+
+    ordersDB.unshift(order);
+    document.getElementById('nav-orders-badge').innerText = ordersDB.length.toLocaleString('fa-IR');
+
+    cart.forEach(cItem => {
+      let p = productsDB.find(p => p.id === cItem.id);
+      if(p) p.stock -= cItem.qty;
+    });
+
+    cart = [];
+    document.getElementById('orderCustomerSelect').value = '';
+    
+    showToast('سفارش با موفقیت در سیستم ثبت شد!', 'success');
+    navTo('orders');
+  }
+
+  // ================= LIST VIEWS RENDERING =================
+  function getStatusColor(status) {
+    if(status === 'تکمیل شده' || status === 'تایید شده') return 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10';
+    if(status === 'لغو شده') return 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10';
+    return 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-500/10';
+  }
+
+  function changeOrderStatus(orderId, newStatus) {
+    const order = ordersDB.find(o => o.id === orderId);
+    if(order) {
+      order.status = newStatus;
+      showToast(`وضعیت فاکتور ${orderId} به "${newStatus}" تغییر یافت.`, 'success');
+      renderOrders();
+    }
+  }
+
+  function renderOrders() {
+    document.getElementById('nav-orders-badge').innerText = ordersDB.length.toLocaleString('fa-IR');
+    const tbody = document.getElementById('ordersTableBody');
+    if(ordersDB.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-slate-400 p-8">هیچ سفارشی یافت نشد.</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = ordersDB.map(o => `
+      <tr>
+        <td class="font-mono text-xs font-bold text-slate-500">#${o.id}</td>
+        <td class="font-bold text-brand-600 dark:text-brand-400">${o.customerName}</td>
+        <td class="text-sm">${o.repName}</td>
+        <td class="text-slate-500 text-sm">${o.date}</td>
+        <td class="font-black">${o.total.toLocaleString('fa-IR')}</td>
+        <td>
+          <select onchange="changeOrderStatus('${o.id}', this.value)" class="status-select ${getStatusColor(o.status)}">
+            <option value="در انتظار" ${o.status === 'در انتظار' ? 'selected' : ''}>⏳ در انتظار</option>
+            <option value="تایید شده" ${o.status === 'تایید شده' ? 'selected' : ''}>✔️ تایید شده</option>
+            <option value="تکمیل شده" ${o.status === 'تکمیل شده' ? 'selected' : ''}>📦 تکمیل شده</option>
+            <option value="لغو شده" ${o.status === 'لغو شده' ? 'selected' : ''}>❌ لغو شده</option>
+          </select>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function renderProducts() {
+    const tbody = document.getElementById('productsTableBody');
+    tbody.innerHTML = productsDB.map(p => `
+      <tr>
+        <td class="font-mono text-xs text-slate-500">${p.code}</td>
+        <td class="font-bold flex items-center gap-2"><span class="text-xl">${p.image}</span> ${p.name}</td>
+        <td><span class="chip chip-info">${p.category}</span></td>
+        <td class="font-bold">${p.price.toLocaleString('fa-IR')}</td>
+        <td class="font-bold ${p.stock <= 0 ? 'text-red-500' : ''}">${p.stock.toLocaleString('fa-IR')} عدد</td>
+        <td>
+           <button class="btn-icon btn-outline border-slate-300 dark:border-slate-600 text-slate-500 hover:text-brand-500" onclick="openEditProductModal('${p.id}')" title="ویرایش">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+           </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function renderCustomers() {
+    const tbody = document.getElementById('customersTableBody');
+    tbody.innerHTML = customersDB.map(c => `
+      <tr>
+        <td class="font-mono text-xs text-slate-500">${c.code}</td>
+        <td class="font-bold text-brand-600 dark:text-brand-400">${c.name}</td>
+        <td class="font-mono text-sm">${c.phone}</td>
+        <td class="text-slate-500 text-xs truncate max-w-[200px]">${c.address || '-'}</td>
+      </tr>
+    `).join('');
+  }
+
+  function renderUsers() {
+    const tbody = document.getElementById('usersTableBody');
+    tbody.innerHTML = usersDB.map(u => `
+      <tr>
+        <td class="font-bold flex items-center gap-2">
+           <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-black text-slate-500">${u.name.charAt(0)}</div>
+           ${u.name}
+        </td>
+        <td class="font-mono font-bold text-brand-600 dark:text-brand-400">${u.username}</td>
+        <td><span class="chip ${u.role.includes('مدیر') ? 'chip-warn' : 'chip-success'}">${u.role}</span></td>
+        <td class="font-mono text-xs text-slate-400">**** (مخفی)</td>
+      </tr>
+    `).join('');
+  }
+
+  function renderProfile() {
+    if(!currentUser) return;
+    document.getElementById('profileAvatar').innerText = currentUser.name.charAt(0);
+    document.getElementById('profileName').innerText = currentUser.name;
+    document.getElementById('profileRole').innerText = currentUser.role;
+
+    const myOrders = ordersDB.filter(o => o.userId === currentUser.username);
+    const myTotal = myOrders.reduce((acc, o) => acc + o.total, 0);
+
+    document.getElementById('profileOrders').innerText = myOrders.length.toLocaleString('fa-IR') + ' عدد';
+    document.getElementById('profileSales').innerText = myTotal.toLocaleString('fa-IR') + ' تومان';
+  }
+
+  // ================= MODALS & ACTIONS =================
+  function openModal(id) { 
+    if (id === 'productModal') {
+      // بارگذاری خودکار دسته‌بندی‌ها هنگام باز شدن فرم محصول جدید
+      const categories = [...new Set(productsDB.map(p => p.category))];
+      const modalCatSelect = document.getElementById('newProdCategory');
+      modalCatSelect.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('') + '<option value="سایر">سایر موارد...</option>';
+    }
+    document.getElementById(id).classList.add('active'); 
+  }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  // Customer Adding
+  function addCustomer(e) {
+    e.preventDefault();
+    const name = document.getElementById('newCustName').value;
+    const phone = document.getElementById('newCustPhone').value;
+    const address = document.getElementById('newCustAddress').value;
+
+    const newCust = {
+      id: 'CUST-' + Date.now(),
+      code: 'C-' + Math.floor(Math.random()*900 + 100),
+      name, phone, address
+    };
+    
+    customersDB.push(newCust);
+    closeModal('customerModal');
+    e.target.reset();
+    showToast('مشتری در دیتابیس ثبت شد!', 'success');
+    
+    if(document.getElementById('tab-customers').classList.contains('active')) renderCustomers();
+    if(document.getElementById('tab-new-order').classList.contains('active')) renderNewOrderView();
+  }
+
+  // Product Adding
+  function addProduct(e) {
+    e.preventDefault();
+    const name = document.getElementById('newProdName').value;
+    const cat = document.getElementById('newProdCategory').value;
+    const icon = document.getElementById('newProdIcon').value || '📦';
+    const price = parseInt(document.getElementById('newProdPrice').value);
+    const stock = parseInt(document.getElementById('newProdStock').value);
+
+    productsDB.unshift({ 
+      id: 'PRD-' + Date.now(), 
+      code: 'NG-NEW', 
+      name, 
+      category: cat, 
+      pack: 'بسته استاندارد', 
+      price, 
+      stock, 
+      image: icon 
+    });
+    
+    closeModal('productModal');
+    e.target.reset();
+    showToast('محصول جدید به کاتالوگ اضافه شد.', 'success');
+    
+    if(document.getElementById('tab-products').classList.contains('active')) renderProducts();
+  }
+
+  // Product Editing
+  function openEditProductModal(id) {
+    const product = productsDB.find(p => p.id === id);
+    if(!product) return;
+    
+    document.getElementById('editProdId').value = product.id;
+    document.getElementById('editProdNameDisplay').innerText = product.image + ' ' + product.name;
+    document.getElementById('editProdCodeDisplay').innerText = product.code + ' | ' + product.category;
+    document.getElementById('editProdPrice').value = product.price;
+    document.getElementById('editProdStock').value = product.stock;
+    
+    openModal('editProductModal');
+  }
+
+  function saveProductEdit(e) {
+    e.preventDefault();
+    const id = document.getElementById('editProdId').value;
+    const newPrice = parseInt(document.getElementById('editProdPrice').value);
+    const newStock = parseInt(document.getElementById('editProdStock').value);
+
+    const productIndex = productsDB.findIndex(p => p.id === id);
+    if(productIndex !== -1) {
+      productsDB[productIndex].price = newPrice;
+      productsDB[productIndex].stock = newStock;
+      
+      closeModal('editProductModal');
+      showToast('تغییرات محصول با موفقیت ذخیره شد.', 'success');
+      
+      // Update UI if on products or new order tab
+      if(document.getElementById('tab-products').classList.contains('active')) renderProducts();
+      if(document.getElementById('tab-new-order').classList.contains('active')) renderNewOrderView();
+    }
+  }
+
+  // User/Rep Adding
+  function addUser(e) {
+    e.preventDefault();
+    const name = document.getElementById('newUserName').value;
+    const username = document.getElementById('newUserUsername').value.trim();
+    const password = document.getElementById('newUserPassword').value;
+    const role = document.getElementById('newUserRole').value;
+
+    // Check if username exists
+    if(usersDB.find(u => u.username === username)) {
+      return showToast('این نام کاربری قبلاً ثبت شده است!', 'error');
+    }
+
+    usersDB.push({ username, password, name, role });
+    
+    closeModal('userModal');
+    e.target.reset();
+    showToast(`ویزیتور جدید (${name}) با موفقیت ساخته شد!`, 'success');
+    
+    if(document.getElementById('tab-users').classList.contains('active')) renderUsers();
+  }
+
+  // ================= UTILS =================
+  function showToast(msg, type='info') {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span>${msg}</span>`;
+    c.appendChild(t);
+    setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(10px)'; t.style.transition='all .3s'; setTimeout(()=>t.remove(),300); }, 3000);
+  }
+
+  function initTheme() {
+    const isDark = localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if(isDark) document.body.classList.add('dark');
+    updateThemeUI(isDark);
+  }
+
+  function toggleTheme() {
+    const isDark = document.body.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    updateThemeUI(isDark);
+    if(salesChartInstance) renderChart();
+  }
+
+  function updateThemeUI(isDark) {
+    const elIcon = document.getElementById('themeIcon');
+    const elLabel = document.getElementById('themeLabel');
+    if(elIcon && elLabel) {
+      elIcon.innerHTML = isDark 
+        ? '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="4.22" x2="19.78" y2="5.64"/>' 
+        : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+      elLabel.innerText = isDark ? 'حالت روز' : 'حالت شب';
+    }
+  }
+</script>
+</body>
+</html>
