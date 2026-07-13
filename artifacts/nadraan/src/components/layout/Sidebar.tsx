@@ -30,7 +30,7 @@ function isDark() {
   return document.documentElement.classList.contains("dark");
 }
 
-export default function Sidebar() {
+export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const [location, navigate] = useLocation();
   const { user, logout } = useAuth();
 
