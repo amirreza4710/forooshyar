@@ -3,6 +3,7 @@ import { db, ordersTable, productsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
 import { CreateOrderBody, UpdateOrderBody, UpdateOrderParams, GetOrderParams } from "@workspace/api-zod";
+import { broadcast } from "../lib/notifications";
 import type { Request } from "express";
 import type { JwtPayload } from "../lib/auth";
 
@@ -53,6 +54,13 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
     items: items as unknown as object,
   }).returning();
 
+  broadcast({
+    type: "order_created",
+    message: `سفارش ${code} برای ${customerName} ثبت شد`,
+    actor: user.name,
+    meta: { orderId: order.id, code, customerName, total },
+  });
+
   res.status(201).json(serializeOrder(order));
 });
 
@@ -71,6 +79,17 @@ router.patch("/orders/:id", requireAuth, async (req, res): Promise<void> => {
   if (!body.success) { res.status(400).json({ error: body.error.message }); return; }
   const [order] = await db.update(ordersTable).set(body.data).where(eq(ordersTable.id, params.data.id)).returning();
   if (!order) { res.status(404).json({ error: "Order not found" }); return; }
+
+  const user = (req as Request & { user: JwtPayload }).user;
+  if (body.data.status) {
+    broadcast({
+      type: "order_updated",
+      message: `وضعیت سفارش ${order.code} به «${body.data.status}» تغییر یافت`,
+      actor: user.name,
+      meta: { orderId: order.id, code: order.code, status: body.data.status },
+    });
+  }
+
   res.json(serializeOrder(order));
 });
 
@@ -79,6 +98,15 @@ router.delete("/orders/:id", requireAuth, async (req, res): Promise<void> => {
   if (!params.success) { res.status(400).json({ error: "Invalid id" }); return; }
   const [order] = await db.delete(ordersTable).where(eq(ordersTable.id, params.data.id)).returning();
   if (!order) { res.status(404).json({ error: "Order not found" }); return; }
+
+  const user = (req as Request & { user: JwtPayload }).user;
+  broadcast({
+    type: "order_deleted",
+    message: `سفارش ${order.code} حذف شد`,
+    actor: user.name,
+    meta: { orderId: order.id, code: order.code },
+  });
+
   res.status(204).end();
 });
 

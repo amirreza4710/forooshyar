@@ -1,5 +1,6 @@
 import { useState, useEffect, type ReactNode } from "react";
 import Sidebar from "./Sidebar";
+import NotificationBell from "../NotificationBell";
 import { Menu } from "lucide-react";
 
 function useIsMobile() {
@@ -14,10 +15,8 @@ function useIsMobile() {
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const isMobile = useIsMobile();
-  // Desktop: open by default. Mobile: closed by default.
   const [open, setOpen] = useState(!isMobile);
 
-  // Sync when screen size crosses breakpoint
   useEffect(() => {
     setOpen(!isMobile);
   }, [isMobile]);
@@ -34,7 +33,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         />
       )}
 
-      {/* Sidebar — fixed overlay on mobile, static on desktop */}
+      {/* Sidebar */}
       <div
         className={[
           "shrink-0 h-screen z-30 transition-all duration-200 ease-in-out",
@@ -49,7 +48,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       {/* Main */}
       <main className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Top bar */}
-        <header className="flex items-center gap-3 px-3 sm:px-5 h-12 border-b border-border bg-background shrink-0">
+        <header className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 h-12 border-b border-border bg-background shrink-0">
           <button
             onClick={() => setOpen(o => !o)}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors shrink-0"
@@ -57,11 +56,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           >
             <Menu size={18} />
           </button>
-          <span className="text-xs sm:text-sm text-muted-foreground truncate">
+
+          <span className="text-xs sm:text-sm text-muted-foreground truncate flex-1">
             {new Date().toLocaleDateString("fa-IR", {
               weekday: "long", year: "numeric", month: "long", day: "numeric",
             })}
           </span>
+
+          {/* Notification bell */}
+          <NotificationBell />
         </header>
 
         <div className="flex-1 overflow-y-auto">
