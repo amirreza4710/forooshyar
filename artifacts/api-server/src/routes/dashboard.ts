@@ -1,25 +1,25 @@
 import { Router } from "express";
 import { db, ordersTable, customersTable, productsTable } from "@workspace/db";
-import { sql } from "drizzle-orm";
+import { sql, count, sum } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
 
 const router = Router();
 
 router.get("/dashboard/summary", requireAuth, async (req, res): Promise<void> => {
-  const [salesRow] = await db.execute(sql`SELECT COALESCE(SUM(total), 0) as total_sales FROM orders`);
-  const [orderCountRow] = await db.execute(sql`SELECT COUNT(*) as count FROM orders`);
-  const [customerCountRow] = await db.execute(sql`SELECT COUNT(*) as count FROM customers`);
-  const [productCountRow] = await db.execute(sql`SELECT COUNT(*) as count FROM products`);
+  const [salesRow] = await db.select({ total: sum(ordersTable.total) }).from(ordersTable);
+  const [orderCountRow] = await db.select({ count: count() }).from(ordersTable);
+  const [customerCountRow] = await db.select({ count: count() }).from(customersTable);
+  const [productCountRow] = await db.select({ count: count() }).from(productsTable);
 
   const recentOrders = await db.select().from(ordersTable)
     .orderBy(sql`${ordersTable.createdAt} desc`)
-    .limit(5);
+    .limit(8);
 
   res.json({
-    totalSales: parseInt(String((salesRow as { total_sales: string }).total_sales)) || 0,
-    orderCount: parseInt(String((orderCountRow as { count: string }).count)) || 0,
-    customerCount: parseInt(String((customerCountRow as { count: string }).count)) || 0,
-    productCount: parseInt(String((productCountRow as { count: string }).count)) || 0,
+    totalSales: Number(salesRow?.total ?? 0),
+    orderCount: Number(orderCountRow?.count ?? 0),
+    customerCount: Number(customerCountRow?.count ?? 0),
+    productCount: Number(productCountRow?.count ?? 0),
     recentOrders: recentOrders.map(o => ({
       ...o,
       items: o.items as unknown[],
@@ -29,7 +29,7 @@ router.get("/dashboard/summary", requireAuth, async (req, res): Promise<void> =>
 });
 
 router.get("/dashboard/sales-chart", requireAuth, async (req, res): Promise<void> => {
-  const rows = await db.execute(sql`
+  const result = await db.execute(sql`
     SELECT
       TO_CHAR(created_at AT TIME ZONE 'Asia/Tehran', 'YYYY-MM-DD') as day,
       COALESCE(SUM(total), 0) as total
@@ -44,18 +44,19 @@ router.get("/dashboard/sales-chart", requireAuth, async (req, res): Promise<void
     '3': 'چهارشنبه', '4': 'پنجشنبه', '5': 'جمعه', '6': 'شنبه',
   };
 
-  const result = (rows.rows as Array<{ day: string; total: string }>).map(r => {
+  const rows = (result.rows ?? []) as Array<{ day: string; total: string }>;
+  const chartData = rows.map(r => {
     const d = new Date(r.day);
     return { label: dayNames[String(d.getDay())] ?? r.day, value: parseInt(r.total) || 0 };
   });
 
-  if (result.length === 0) {
+  if (chartData.length === 0) {
     const labels = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'امروز'];
     res.json(labels.map(label => ({ label, value: 0 })));
     return;
   }
 
-  res.json(result);
+  res.json(chartData);
 });
 
 export default router;

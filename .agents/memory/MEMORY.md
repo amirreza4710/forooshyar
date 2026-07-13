@@ -1,0 +1,2 @@
+- [Drizzle execute vs select](drizzle-execute.md) — `db.execute()` returns `{ rows: [] }` not a spreadable array; use `.rows`
+- [Nadraan auth flow](nadraan-auth.md) — JWT in localStorage "nadraan_token"; injected via setAuthTokenGetter at boot; ApiError must be exported from api-client-react index
