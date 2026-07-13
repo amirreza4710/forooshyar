@@ -74,4 +74,12 @@ router.patch("/orders/:id", requireAuth, async (req, res): Promise<void> => {
   res.json(serializeOrder(order));
 });
 
+router.delete("/orders/:id", requireAuth, async (req, res): Promise<void> => {
+  const params = UpdateOrderParams.safeParse({ id: req.params.id });
+  if (!params.success) { res.status(400).json({ error: "Invalid id" }); return; }
+  const [order] = await db.delete(ordersTable).where(eq(ordersTable.id, params.data.id)).returning();
+  if (!order) { res.status(404).json({ error: "Order not found" }); return; }
+  res.status(204).end();
+});
+
 export default router;
