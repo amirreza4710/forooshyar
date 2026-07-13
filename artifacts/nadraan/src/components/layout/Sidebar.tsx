@@ -1,18 +1,19 @@
 import { useLocation } from "wouter";
 import { useAuth } from "@/App";
 import {
-  LayoutDashboard, Plus, ClipboardList, Package, Users, UserCircle, Moon, Sun, LogOut, Building2
+  LayoutDashboard, Plus, ClipboardList, Package, Users,
+  UserCircle, Moon, Sun, LogOut, Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "داشبورد", icon: LayoutDashboard },
-  { href: "/new-order", label: "ثبت سفارش", icon: Plus },
-  { href: "/orders", label: "لیست سفارشات", icon: ClipboardList },
-  { href: "/products", label: "کاتالوگ محصولات", icon: Package },
-  { href: "/customers", label: "مشتریان", icon: Users },
-  { href: "/users", label: "تیم فروش", icon: Building2 },
-  { href: "/profile", label: "پروفایل من", icon: UserCircle },
+  { href: "/",            label: "داشبورد",         icon: LayoutDashboard },
+  { href: "/new-order",   label: "ثبت سفارش",        icon: Plus },
+  { href: "/orders",      label: "لیست سفارشات",     icon: ClipboardList },
+  { href: "/products",    label: "کاتالوگ محصولات",  icon: Package },
+  { href: "/customers",   label: "مشتریان",           icon: Users },
+  { href: "/users",       label: "تیم فروش",          icon: Building2 },
+  { href: "/profile",     label: "پروفایل من",        icon: UserCircle },
 ];
 
 function toggleTheme() {
@@ -26,35 +27,27 @@ function toggleTheme() {
   }
 }
 
-function isDark() {
-  return document.documentElement.classList.contains("dark");
-}
-
-export default function Sidebar({ onClose }: { onClose?: () => void }) {
+export default function Sidebar({ onNavClick }: { onNavClick?: () => void }) {
   const [location, navigate] = useLocation();
   const { user, logout } = useAuth();
 
-  const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+  const isActive = (href: string) =>
+    href === "/" ? location === "/" || location === "" : location.startsWith(href);
 
   function go(href: string) {
     navigate(href);
+    onNavClick?.();
   }
 
-  const isActive = (href: string) => {
-    const full = location;
-    if (href === "/") return full === "/" || full === "";
-    return full.startsWith(href);
-  };
-
   return (
-    <aside className="flex flex-col w-60 shrink-0 h-screen border-l border-sidebar-border bg-sidebar">
+    <aside className="flex flex-col w-60 shrink-0 h-full border-l border-sidebar-border bg-sidebar">
       {/* Logo */}
-      <div className="flex items-center gap-2 px-4 py-5 border-b border-sidebar-border">
-        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+      <div className="flex items-center gap-2 px-4 py-4 border-b border-sidebar-border">
+        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
           <span className="text-white text-xs font-bold">ن</span>
         </div>
-        <div>
-          <div className="text-sm font-bold text-sidebar-foreground">نادران‌گستر</div>
+        <div className="min-w-0">
+          <div className="text-sm font-bold text-sidebar-foreground truncate">نادران‌گستر</div>
           <div className="text-xs text-muted-foreground">مدیریت پخش</div>
         </div>
       </div>
@@ -70,27 +63,27 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-right",
                   isActive(href)
                     ? "bg-primary text-primary-foreground"
-                    : "text-sidebar-foreground hover:bg-white/5"
+                    : "text-sidebar-foreground hover:bg-white/5",
                 )}
               >
                 <Icon size={16} className="shrink-0" />
-                <span>{label}</span>
+                <span className="truncate">{label}</span>
               </button>
             </li>
           ))}
         </ul>
       </nav>
 
-      {/* Bottom actions */}
+      {/* Bottom */}
       <div className="p-3 border-t border-sidebar-border space-y-1">
         <button
           onClick={toggleTheme}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground hover:bg-white/5 transition-colors"
         >
           <Moon size={15} className="shrink-0 dark:block hidden" />
-          <Sun size={15} className="shrink-0 dark:hidden block" />
-          <span className="dark:hidden">حالت روشن</span>
-          <span className="dark:block hidden">حالت تاریک</span>
+          <Sun  size={15} className="shrink-0 dark:hidden block" />
+          <span className="dark:hidden text-sm">حالت روشن</span>
+          <span className="dark:block hidden text-sm">حالت تاریک</span>
         </button>
 
         {user && (
@@ -102,7 +95,10 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
               <div className="text-xs font-medium text-sidebar-foreground truncate">{user.name}</div>
               <div className="text-xs text-muted-foreground truncate">{user.role}</div>
             </div>
-            <button onClick={logout} className="text-muted-foreground hover:text-destructive transition-colors">
+            <button
+              onClick={logout}
+              className="text-muted-foreground hover:text-destructive transition-colors p-0.5"
+            >
               <LogOut size={14} />
             </button>
           </div>
