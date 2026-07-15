@@ -74,7 +74,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loginMut.isPending}
-              className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition disabled:opacity-60"
+              className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition disabled:opacity-60 shadow-sm min-h-[48px]"
             >
               {loginMut.isPending ? "در حال ورود..." : "ورود"}
             </button>

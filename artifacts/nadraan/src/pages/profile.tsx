@@ -32,7 +32,7 @@ export default function ProfilePage() {
   const doneCount   = myOrders.filter(o => o.status === "تکمیل شده").length;
 
   return (
-    <div className="p-4 sm:p-6 max-w-3xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-3xl mx-auto pb-24 lg:pb-6">
       <h1 className="text-base sm:text-lg font-bold mb-5">پروفایل من</h1>
 
       {/* User card */}

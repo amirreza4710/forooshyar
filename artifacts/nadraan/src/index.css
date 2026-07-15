@@ -190,6 +190,20 @@
 }
 
 @layer utilities {
+  /* Hide scrollbar but keep scrollable */
+  .scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+
+  /* Better focus ring for accessibility */
+  :focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 2px; border-radius: 4px; }
+
+  /* Smooth page transitions */
+  .page-enter { animation: fadeIn 150ms ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Bottom nav safe area */
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+
   input[type="search"]::-webkit-search-cancel-button { @apply hidden; }
   [contenteditable][data-placeholder]:empty::before {
     content: attr(data-placeholder);

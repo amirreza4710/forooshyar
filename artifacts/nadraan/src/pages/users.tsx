@@ -76,13 +76,16 @@ export default function UsersPage() {
   const F = (k: keyof typeof form, v: string) => { setForm(f => ({ ...f, [k]: v })); setFormError(""); };
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="p-4 sm:p-6 pb-24 lg:pb-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 sm:mb-5">
-        <h1 className="text-base sm:text-lg font-bold">تیم فروش</h1>
+        <div>
+          <h1 className="text-base sm:text-lg font-bold">تیم فروش</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">{(users.length).toLocaleString("fa-IR")} نماینده</p>
+        </div>
         <button
           onClick={() => { setForm({ ...EMPTY }); setFormError(""); setModal(true); }}
-          className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg bg-primary text-white text-xs sm:text-sm font-medium hover:opacity-90 transition"
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-primary text-white text-sm font-medium hover:opacity-90 transition shadow-sm min-h-[40px]"
         >
           <Plus size={14} />
           <span className="hidden sm:inline">نماینده جدید</span>
@@ -134,7 +137,7 @@ export default function UsersPage() {
               </div>
               <button
                 onClick={() => setDeleteId(u.id)}
-                className="text-muted-foreground hover:text-destructive transition-colors p-1 shrink-0"
+                className="text-muted-foreground hover:text-destructive transition-colors p-2 shrink-0 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-lg hover:bg-destructive/10"
                 aria-label="حذف کاربر"
               >
                 <Trash2 size={13} />
