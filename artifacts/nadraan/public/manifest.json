@@ -1,0 +1,16 @@
+{
+  "name": "نادران‌گستر",
+  "short_name": "نادران",
+  "description": "پلتفرم مدیریت پخش و فروش",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0e1729",
+  "theme_color": "#1a2744",
+  "orientation": "portrait-primary",
+  "lang": "fa",
+  "dir": "rtl",
+  "icons": [
+    { "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any maskable" }
+  ],
+  "categories": ["business", "productivity"]
+}

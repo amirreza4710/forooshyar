@@ -5,7 +5,8 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Pencil, Trash2, X, Users, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, X, Users, ChevronUp, ChevronDown, Download } from "lucide-react";
+import { exportCSV, todayStr } from "@/lib/csv";
 import type { Customer } from "@workspace/api-client-react";
 
 const EMPTY = { name: "", code: "", phone: "", address: "" };
@@ -117,11 +118,26 @@ export default function CustomersPage() {
           <h1 className="text-base sm:text-lg font-bold">مشتریان</h1>
           <p className="text-xs text-muted-foreground mt-0.5">{(sorted.length).toLocaleString("fa-IR")} مشتری</p>
         </div>
-        <button onClick={openCreate} className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-primary text-white text-sm font-medium hover:opacity-90 transition shadow-sm min-h-[40px]">
-          <Plus size={15} aria-hidden />
-          <span className="hidden sm:inline">مشتری جدید</span>
-          <span className="sm:hidden">جدید</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              const headers = ["نام مشتری", "شماره تماس", "آدرس", "تاریخ ثبت"];
+              const rows = sorted.map(c => [[c.name, c.phone ?? "", c.address ?? "", formatDate(c.createdAt ?? "")]]);
+              exportCSV(`مشتریان-${todayStr()}.csv`, headers, rows);
+              toast({ title: "✅ فایل CSV دانلود شد" });
+            }}
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 hover:bg-muted/20 transition-all min-h-[40px]"
+            aria-label="خروجی CSV"
+          >
+            <Download size={14} aria-hidden />
+            <span className="hidden sm:inline">CSV</span>
+          </button>
+          <button onClick={openCreate} className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-primary text-white text-sm font-medium hover:opacity-90 transition shadow-sm min-h-[40px]">
+            <Plus size={15} aria-hidden />
+            <span className="hidden sm:inline">مشتری جدید</span>
+            <span className="sm:hidden">جدید</span>
+          </button>
+        </div>
       </div>
 
       {/* Search + View Toggle */}
