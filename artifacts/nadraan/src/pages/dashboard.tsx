@@ -5,11 +5,15 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 function n(v: number | undefined) { return (v ?? 0).toLocaleString("fa-IR"); }
 
 const STATUS_STYLE: Record<string, string> = {
-  "در انتظار":   "text-yellow-500",
-  "تایید شده":   "text-blue-400",
-  "تکمیل شده":  "text-emerald-400",
-  "لغو شده":     "text-destructive",
+  "در انتظار":  "text-yellow-500",
+  "تایید شده":  "text-blue-400",
+  "تکمیل شده": "text-emerald-400",
+  "لغو شده":   "text-destructive",
 };
+
+function Skeleton({ className }: { className: string }) {
+  return <div className={`animate-pulse bg-muted/50 rounded-xl ${className}`} />;
+}
 
 export default function DashboardPage() {
   const { data: summary, isLoading: loadingSum } = useGetDashboardSummary();
@@ -21,52 +25,49 @@ export default function DashboardPage() {
 
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
-      <h1 className="text-lg font-bold mb-5">داشبورد</h1>
+      <h1 className="text-base sm:text-lg font-bold mb-5">داشبورد</h1>
 
-      {/* KPI Cards — 2 cols on mobile, 4 on desktop */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-        <KpiCard
-          title="فروش کل"
-          value={loadingSum ? "..." : `${n((summary as any)?.totalSales)}`}
-          sub="ریال"
-          icon={<TrendingUp size={17} />}
-          color="text-primary" bg="bg-primary/10"
-        />
-        <KpiCard
-          title="سفارشات"
-          value={loadingSum ? "..." : n((summary as any)?.orderCount)}
-          sub="سفارش"
-          icon={<ShoppingCart size={17} />}
-          color="text-emerald-400" bg="bg-emerald-400/10"
-        />
-        <KpiCard
-          title="مشتریان"
-          value={loadingSum ? "..." : n((summary as any)?.customerCount)}
-          sub="مشتری"
-          icon={<Users size={17} />}
-          color="text-purple-400" bg="bg-purple-400/10"
-        />
-        <KpiCard
-          title="محصولات"
-          value={loadingSum ? "..." : n((summary as any)?.productCount)}
-          sub="قلم"
-          icon={<Package size={17} />}
-          color="text-orange-400" bg="bg-orange-400/10"
-        />
+        {loadingSum ? (
+          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24" />)
+        ) : (
+          <>
+            <KpiCard
+              title="فروش کل" value={n((summary as any)?.totalSales)} sub="ریال"
+              icon={<TrendingUp size={17} />} color="text-primary" bg="bg-primary/10"
+            />
+            <KpiCard
+              title="سفارشات" value={n((summary as any)?.orderCount)} sub="سفارش"
+              icon={<ShoppingCart size={17} />} color="text-emerald-400" bg="bg-emerald-400/10"
+            />
+            <KpiCard
+              title="مشتریان" value={n((summary as any)?.customerCount)} sub="مشتری"
+              icon={<Users size={17} />} color="text-purple-400" bg="bg-purple-400/10"
+            />
+            <KpiCard
+              title="محصولات" value={n((summary as any)?.productCount)} sub="قلم"
+              icon={<Package size={17} />} color="text-orange-400" bg="bg-orange-400/10"
+            />
+          </>
+        )}
       </div>
 
-      {/* Chart + Recent orders — stacked on mobile, side-by-side on lg */}
+      {/* Chart + Recent orders */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Chart */}
+        {/* Sales Chart */}
         <div className="lg:col-span-2 bg-card border border-card-border rounded-xl p-4 sm:p-5">
           <h2 className="text-sm font-semibold mb-4">فروش ۷ روز اخیر</h2>
           {loadingChart ? (
-            <div className="h-44 flex items-center justify-center text-muted-foreground text-sm">
-              در حال بارگذاری...
+            <Skeleton className="h-52" />
+          ) : chartData.length === 0 ? (
+            <div className="h-52 flex flex-col items-center justify-center text-muted-foreground gap-2">
+              <TrendingUp size={32} className="opacity-20" />
+              <span className="text-sm">داده‌ای برای نمایش وجود ندارد</span>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={chartData} margin={{ top: 0, right: 4, left: 0, bottom: 0 }}>
+            <ResponsiveContainer width="100%" height={210}>
+              <BarChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis
                   dataKey="label"
@@ -76,8 +77,8 @@ export default function DashboardPage() {
                 <YAxis
                   tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                   axisLine={false} tickLine={false}
-                  tickFormatter={v => v >= 1000 ? (v / 1000).toFixed(0) + "K" : String(v)}
-                  width={36}
+                  tickFormatter={v => v >= 1_000_000 ? (v / 1_000_000).toFixed(1) + "M" : v >= 1000 ? (v / 1000).toFixed(0) + "K" : String(v)}
+                  width={40}
                 />
                 <Tooltip
                   contentStyle={{
@@ -86,8 +87,9 @@ export default function DashboardPage() {
                     borderRadius: 8, fontSize: 12, direction: "rtl",
                   }}
                   formatter={(v: number) => [`${n(v)} ریال`, "فروش"]}
+                  labelStyle={{ color: "hsl(var(--muted-foreground))", fontSize: 11 }}
                 />
-                <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} maxBarSize={48} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -96,17 +98,22 @@ export default function DashboardPage() {
         {/* Recent Orders */}
         <div className="bg-card border border-card-border rounded-xl p-4 sm:p-5">
           <h2 className="text-sm font-semibold mb-4">آخرین سفارشات</h2>
-          {recentOrders.length === 0 ? (
-            <div className="text-center text-muted-foreground text-sm py-8">
-              سفارشی ثبت نشده
+          {loadingSum ? (
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10" />)}
+            </div>
+          ) : recentOrders.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-muted-foreground gap-2">
+              <ShoppingCart size={32} className="opacity-20" />
+              <span className="text-sm">هنوز سفارشی ثبت نشده</span>
             </div>
           ) : (
-            <ul className="space-y-3">
+            <ul className="space-y-2.5">
               {recentOrders.slice(0, 7).map((o: any) => (
-                <li key={o.id} className="flex items-center gap-2">
+                <li key={o.id} className="flex items-center gap-2 py-1">
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-medium truncate">{o.customerName}</div>
-                    <div className="text-xs text-muted-foreground">{o.code}</div>
+                    <div className="text-xs text-muted-foreground font-mono">{o.code}</div>
                   </div>
                   <div className="text-left shrink-0">
                     <div className="text-xs font-bold">{n(o.total)}</div>
@@ -133,8 +140,8 @@ function KpiCard({ title, value, sub, icon, color, bg }: {
       <div className={`w-9 h-9 rounded-lg ${bg} ${color} flex items-center justify-center mb-3`}>
         {icon}
       </div>
-      <div className="text-lg sm:text-xl font-bold leading-tight">{value}</div>
-      <div className="text-xs text-muted-foreground mt-0.5">{title}{sub && ` · ${sub}`}</div>
+      <div className="text-lg sm:text-xl font-bold leading-tight tabular-nums">{value}</div>
+      <div className="text-xs text-muted-foreground mt-0.5">{title}{sub && <span className="opacity-60"> · {sub}</span>}</div>
     </div>
   );
 }
