@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { useAuth } from "@/App";
+import { useAuth } from "@/lib/auth-context";
 import {
   LayoutDashboard, Plus, ClipboardList, Package, Users,
   UserCircle, Moon, Sun, LogOut, Building2,
