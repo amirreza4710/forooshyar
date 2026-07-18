@@ -1,4 +1,5 @@
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { getUser, getToken, clearAuth, type AuthUser } from "./auth";
 
 export interface AuthContextType {
@@ -24,18 +25,14 @@ export function useAuth() {
 }
 
 /**
- * Provider component that manages auth state
+ * Provider component that manages auth state.
+ * Must be rendered inside QueryClientProvider (uses useQueryClient for logout cleanup).
  * Typically wraps the entire app in App.tsx
  */
-export function AuthProvider({
-  children,
-  queryClient,
-}: {
-  children: ReactNode;
-  queryClient: any;
-}) {
-  const [user, setUser] = require("react").useState<AuthUser | null>(getUser);
-  const [token, setToken] = require("react").useState<string | null>(getToken);
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
+  const [user, setUser] = useState<AuthUser | null>(getUser);
+  const [token, setToken] = useState<string | null>(getToken);
 
   function setAuthWithToken(u: AuthUser, t: string) {
     setUser(u);

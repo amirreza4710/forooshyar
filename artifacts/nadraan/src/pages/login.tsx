@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useLogin } from "@workspace/api-client-react";
-import { useAuth } from "@/App";
+import { useAuth } from "@/lib/auth-context";
 import { saveAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 
