@@ -1,4 +1,4 @@
-import { useAuth } from "@/App";
+import { useAuth } from "@/lib/auth-context";
 import { useListOrders } from "@workspace/api-client-react";
 import { ShoppingCart, TrendingUp, Clock, CheckCircle2, UserCircle, LogOut, Download } from "lucide-react";
 import { useLocation } from "wouter";

@@ -45,11 +45,11 @@ export default function NewOrderPage() {
   const createOrder = useCreateOrder({
     mutation: {
       onSuccess() {
-        toast({ title: "سفارش ثبت شد" });
+        toast({ title: "✅ سفارش با موفقیت ثبت شد", description: `مبلغ کل: ${n(total)} ریال` });
         setCart([]); setCustomerId(null); setCartOpen(false);
         qc.invalidateQueries({ queryKey: getListOrdersQueryKey() });
       },
-      onError() { toast({ title: "خطا در ثبت سفارش", variant: "destructive" }); },
+      onError() { toast({ title: "خطا در ثبت سفارش", description: "لطفاً دوباره تلاش کنید", variant: "destructive" }); },
     },
   });
 
@@ -109,18 +109,30 @@ export default function NewOrderPage() {
                     <div className="text-xs font-medium leading-snug truncate">{item.productName}</div>
                     <div className="text-xs text-muted-foreground">{n(item.price)} ریال</div>
                   </div>
-                  <button onClick={() => removeFromCart(item.productId)} className="text-muted-foreground hover:text-destructive transition-colors shrink-0">
-                    <Trash2 size={13} />
+                  <button
+                    onClick={() => removeFromCart(item.productId)}
+                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0 w-9 h-9 -m-1.5 rounded-lg flex items-center justify-center"
+                    aria-label="حذف از سبد"
+                  >
+                    <Trash2 size={15} />
                   </button>
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => updateQty(item.productId, -1)} className="w-6 h-6 rounded-full border border-border flex items-center justify-center hover:bg-destructive/10">
-                      <Minus size={11} />
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => updateQty(item.productId, -1)}
+                      className="w-11 h-11 rounded-full border border-border flex items-center justify-center hover:bg-destructive/10 active:bg-destructive/20 transition-colors"
+                      aria-label="کاهش تعداد"
+                    >
+                      <Minus size={14} />
                     </button>
-                    <span className="text-sm font-bold w-5 text-center">{item.qty}</span>
-                    <button onClick={() => updateQty(item.productId, 1)} className="w-6 h-6 rounded-full border border-border flex items-center justify-center hover:bg-primary/10">
-                      <Plus size={11} />
+                    <span className="text-sm font-bold w-6 text-center">{item.qty}</span>
+                    <button
+                      onClick={() => updateQty(item.productId, 1)}
+                      className="w-11 h-11 rounded-full border border-border flex items-center justify-center hover:bg-primary/10 active:bg-primary/20 transition-colors"
+                      aria-label="افزایش تعداد"
+                    >
+                      <Plus size={14} />
                     </button>
                   </div>
                   <span className="text-xs font-bold">{n(item.price * item.qty)}</span>
@@ -182,7 +194,7 @@ export default function NewOrderPage() {
             <select
               value={category}
               onChange={e => setCategory(e.target.value)}
-              className="px-2 py-2 rounded-lg border border-input bg-background text-xs focus:outline-none max-w-[110px]"
+              className="px-2 py-2 rounded-lg border border-input bg-background text-xs focus:outline-none max-w-[140px] sm:max-w-[180px]"
             >
               {categories.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -238,6 +250,28 @@ export default function NewOrderPage() {
             </div>
           )}
         </div>
+
+        {/* Mobile sticky checkout bar — always visible, no need to open the cart drawer */}
+        {!cartOpen && cart.length > 0 && (
+          <div
+            className="lg:hidden shrink-0 border-t border-border bg-card p-3 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] flex items-center gap-3"
+            style={{ marginBottom: "calc(4rem + env(safe-area-inset-bottom))" }}
+          >
+            <div className="flex-1 min-w-0">
+              <div className="text-[11px] text-muted-foreground leading-none mb-0.5">
+                {cart.length} قلم
+              </div>
+              <div className="text-sm font-bold leading-none">{n(total)} ریال</div>
+            </div>
+            <button
+              onClick={() => (customerId ? submit() : setCartOpen(true))}
+              disabled={createOrder.isPending}
+              className="flex-1 py-3 rounded-lg bg-primary text-white font-medium text-sm hover:opacity-90 active:opacity-80 transition disabled:opacity-50"
+            >
+              {createOrder.isPending ? "در حال ثبت..." : !customerId ? "انتخاب مشتری" : "ثبت سفارش"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ── Desktop cart sidebar ── */}
