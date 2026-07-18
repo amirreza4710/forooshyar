@@ -84,15 +84,13 @@ pnpm run build        # build کامل (بعد از typecheck)
 
 این ریپو با [Graphify](https://github.com/Graphify-Labs/graphify) نقشه‌برداری شده — یه knowledge graph از کل کدبیس (۱۸۰۹ نود، ۲۶۱۷ یال، ۲۲۷ زیرسیستم شناسایی‌شده) که نشون می‌ده کدوم فایل‌ها به کدوم وصلن، کدوم توابع "hub" هستن، و کجا وابستگی حلقوی یا کد تکراری وجود داره.
 
-خروجی‌ها (اگه به ریپو اضافه شدن):
-- `graphify-out/graph.html` — گراف تعاملی، قابل باز کردن در مرورگر
-- `graphify-out/GRAPH_REPORT.md` — گزارش متنی زیرسیستم‌ها و god nodeها
+خروجی‌ها (توی ریپو موجودن):
+- [`graphify-out/graph.html`](./graphify-out/graph.html) — گراف تعاملی؛ دانلود کن و توی مرورگر باز کن (گیت‌هاب HTML رو مستقیم رندر نمی‌کنه)
+- [`graphify-out/GRAPH_REPORT.md`](./graphify-out/GRAPH_REPORT.md) — گزارش متنی زیرسیستم‌ها و god nodeها
 
 برای رفرش کردن گراف بعد از تغییرات کد (بدون نیاز به API key، فقط کد لوکال):
 ```bash
-pip install graphifyy
-graphify extract . --code-only --no-cluster
-graphify cluster-only . --no-label
+pnpm run graph:generate
 ```
 
 ---
@@ -101,7 +99,6 @@ graphify cluster-only . --no-label
 
 | اولویت | کار | وضعیت |
 |---|---|---|
-| بالا | شکستن import cycle در نویگیشن (`App`/`AppLayout`/`Sidebar`) | باز |
-| متوسط | بررسی extract کردن UI kit مشترک به یه پکیج workspace جدا (`@workspace/ui`) | باز |
+| بالا | شکستن import cycle در نویگیشن (`App`/`AppLayout`/`Sidebar`/`login`/`profile`) | ✅ بسته |
 
 این آیتم‌ها به‌عنوان GitHub Issue برای Copilot Coding Agent هم قابل واگذاری‌ان.
