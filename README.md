@@ -25,7 +25,6 @@
 artifacts/
   api-server/       بک‌اند Express — routes, auth, business logic
   nadraan/           فرانت‌اند اصلی (production)
-  mockup-sandbox/    محیط پیش‌نمایش/موکاپ — UI kit مشابه nadraan، production نیست
 
 lib/
   db/                اسکیمای Drizzle + migrations (customers, orders, products, users)
@@ -76,7 +75,6 @@ pnpm run build        # build کامل (بعد از typecheck)
 
 ## نکات معماری مهم برای توسعه‌دهنده‌ی بعدی
 
-- **`artifacts/mockup-sandbox` پروداکشن نیست.** UI kit توش (کامپوننت‌های shadcn) کپی مستقل از `nadraan`ه، نه shared package. فیچر جدید رو مستقیم اونجا اضافه نکن.
 - **API contract-first:** هر تغییر در API باید از `lib/api-spec` (OpenAPI) شروع بشه، نه مستقیم از route یا hook.
 - **Known issue — Import cycle:** بین `App.tsx → AppLayout.tsx → Sidebar.tsx → App.tsx` یه وابستگی حلقوی وجود داره که باید در یه رفکتور جدا شکسته بشه (به `GRAPH_REPORT.md` مراجعه کن).
 
@@ -104,7 +102,6 @@ graphify cluster-only . --no-label
 | اولویت | کار | وضعیت |
 |---|---|---|
 | بالا | شکستن import cycle در نویگیشن (`App`/`AppLayout`/`Sidebar`) | باز |
-| متوسط | یکی‌سازی helper تکراری `cn()` بین nadraan و mockup-sandbox | باز |
 | متوسط | بررسی extract کردن UI kit مشترک به یه پکیج workspace جدا (`@workspace/ui`) | باز |
 
 این آیتم‌ها به‌عنوان GitHub Issue برای Copilot Coding Agent هم قابل واگذاری‌ان.
