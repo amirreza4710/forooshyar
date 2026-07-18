@@ -394,6 +394,7 @@ components:
       properties:
         status:
           type: string
+          enum: ["ok"]
       required: [status]
 
     ErrorResponse:
@@ -591,6 +592,7 @@ components:
           type: integer
         status:
           type: string
+          enum: ["در انتظار", "تایید شده", "تکمیل شده", "لغو شده"]
         items:
           type: array
           items:
@@ -614,6 +616,7 @@ components:
       properties:
         status:
           type: string
+          enum: ["در انتظار", "تایید شده", "تکمیل شده", "لغو شده"]
 
     # ── Dashboard ──
     DashboardSummary:
