@@ -183,9 +183,9 @@ export default function ProductsPage() {
                   <td className="px-3 sm:px-4 py-3 font-bold text-sm whitespace-nowrap tabular-nums">{n(p.price)}</td>
                   <td className="px-3 sm:px-4 py-3 whitespace-nowrap"><StockBadge stock={p.stock ?? 0} /></td>
                   <td className="px-3 sm:px-4 py-3">
-                    <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => openEdit(p)} className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center" aria-label="ویرایش"><Pencil size={13} /></button>
-                      <button onClick={() => setDeleteId(p.id)} className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center" aria-label="حذف"><Trash2 size={13} /></button>
+                    <div className="flex items-center gap-1 justify-end opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => openEdit(p)} className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors" aria-label="ویرایش"><Pencil size={15} /></button>
+                      <button onClick={() => setDeleteId(p.id)} className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" aria-label="حذف"><Trash2 size={15} /></button>
                     </div>
                   </td>
                 </tr>

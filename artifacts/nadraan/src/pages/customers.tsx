@@ -148,8 +148,8 @@ export default function CustomersPage() {
             className="w-full pr-8 pl-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition" />
         </div>
         <div className="flex items-center border border-border rounded-lg overflow-hidden shrink-0">
-          <button onClick={() => setViewMode("table")} className={`px-2.5 py-2 text-xs transition-colors ${viewMode === "table" ? "bg-primary text-white" : "text-muted-foreground hover:bg-muted/30"}`} aria-label="نمای جدول">☰</button>
-          <button onClick={() => setViewMode("grid")}  className={`px-2.5 py-2 text-xs transition-colors ${viewMode === "grid"  ? "bg-primary text-white" : "text-muted-foreground hover:bg-muted/30"}`} aria-label="نمای کارت">⊞</button>
+          <button onClick={() => setViewMode("table")} className={`min-w-[40px] min-h-[40px] flex items-center justify-center text-sm transition-colors ${viewMode === "table" ? "bg-primary text-white" : "text-muted-foreground hover:bg-muted/30"}`} aria-label="نمای جدول">☰</button>
+          <button onClick={() => setViewMode("grid")}  className={`min-w-[40px] min-h-[40px] flex items-center justify-center text-sm transition-colors ${viewMode === "grid"  ? "bg-primary text-white" : "text-muted-foreground hover:bg-muted/30"}`} aria-label="نمای کارت">⊞</button>
         </div>
       </div>
 
@@ -175,9 +175,9 @@ export default function CustomersPage() {
                     <div className="text-xs text-muted-foreground mt-0.5 truncate">{c.address}</div>
                     <div className="text-xs text-muted-foreground mt-1">عضو از: {formatDate(c.createdAt ?? "")}</div>
                   </div>
-                  <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => openEdit(c)} className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors" aria-label="ویرایش"><Pencil size={13} /></button>
-                    <button onClick={() => setDeleteId(c.id)} className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" aria-label="حذف"><Trash2 size={13} /></button>
+                  <div className="flex gap-1 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => openEdit(c)} className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors" aria-label="ویرایش"><Pencil size={15} /></button>
+                    <button onClick={() => setDeleteId(c.id)} className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" aria-label="حذف"><Trash2 size={15} /></button>
                   </div>
                 </div>
               ))}
@@ -222,9 +222,9 @@ export default function CustomersPage() {
                     <td className="px-4 py-3 text-xs text-muted-foreground max-w-[180px] truncate">{c.address || <span className="opacity-40">—</span>}</td>
                     <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{formatDate(c.createdAt ?? "")}</td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => openEdit(c)} className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors" aria-label="ویرایش"><Pencil size={13} /></button>
-                        <button onClick={() => setDeleteId(c.id)} className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" aria-label="حذف"><Trash2 size={13} /></button>
+                      <div className="flex items-center gap-1 justify-end opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => openEdit(c)} className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors" aria-label="ویرایش"><Pencil size={15} /></button>
+                        <button onClick={() => setDeleteId(c.id)} className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" aria-label="حذف"><Trash2 size={15} /></button>
                       </div>
                     </td>
                   </tr>
