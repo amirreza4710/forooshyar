@@ -137,10 +137,10 @@ export default function UsersPage() {
               </div>
               <button
                 onClick={() => setDeleteId(u.id)}
-                className="text-muted-foreground hover:text-destructive transition-colors p-2 shrink-0 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-lg hover:bg-destructive/10"
+                className="text-muted-foreground hover:text-destructive transition-colors shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg hover:bg-destructive/10"
                 aria-label="حذف کاربر"
               >
-                <Trash2 size={13} />
+                <Trash2 size={15} />
               </button>
             </div>
           ))}
