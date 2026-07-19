@@ -5,8 +5,10 @@
  * نادران‌گستر - پلتفرم مدیریت پخش و فروش
  * OpenAPI spec version: 0.1.0
  */
-import type { OrderUpdateStatus } from './orderUpdateStatus';
 
-export interface OrderUpdate {
-  status?: OrderUpdateStatus;
-}
+export type HealthStatusStatus = typeof HealthStatusStatus[keyof typeof HealthStatusStatus];
+
+
+export const HealthStatusStatus = {
+  ok: 'ok',
+} as const;

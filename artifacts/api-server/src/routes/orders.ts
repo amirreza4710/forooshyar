@@ -29,36 +29,57 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
   const user = (req as Request & { user: JwtPayload }).user;
   const { customerId, items } = parsed.data;
 
-  const allOrders = await db.select().from(ordersTable);
-  const code = "ORD-" + String(9000 + allOrders.length + 1);
+  const order = await db.transaction(async (tx) => {
+    let total = 0;
 
-  let total = 0;
-  for (const item of items) {
-    total += item.price * item.qty;
-    await db.update(productsTable)
-      .set({ stock: sql`${productsTable.stock} - ${item.qty}` })
-      .where(eq(productsTable.id, item.productId));
-  }
+    for (const item of items) {
+      total += item.price * item.qty;
 
-  const customers = await db.execute(sql`SELECT name FROM customers WHERE id = ${customerId}`);
-  const customerName = (customers.rows[0] as { name: string })?.name ?? "ناشناس";
+      // Lock the product row so concurrent orders can't both read stale stock
+      const [product] = await tx.execute(
+        sql`SELECT stock FROM products WHERE id = ${item.productId} FOR UPDATE`,
+      ).then(r => r.rows as { stock: number }[]);
 
-  const [order] = await db.insert(ordersTable).values({
-    code,
-    customerId,
-    customerName,
-    userId: user.id,
-    repName: user.name,
-    total,
-    status: "در انتظار",
-    items: items as unknown as object,
-  }).returning();
+      if (!product) {
+        throw Object.assign(new Error(`محصول با شناسه ${item.productId} یافت نشد`), { status: 400 });
+      }
+      if (product.stock < item.qty) {
+        throw Object.assign(
+          new Error(`موجودی کافی نیست (محصول #${item.productId}): موجود ${product.stock}, درخواستی ${item.qty}`),
+          { status: 409 },
+        );
+      }
+
+      await tx.update(productsTable)
+        .set({ stock: sql`${productsTable.stock} - ${item.qty}` })
+        .where(eq(productsTable.id, item.productId));
+    }
+
+    const allOrders = await tx.select().from(ordersTable);
+    const code = "ORD-" + String(9000 + allOrders.length + 1);
+
+    const customers = await tx.execute(sql`SELECT name FROM customers WHERE id = ${customerId}`);
+    const customerName = (customers.rows[0] as { name: string })?.name ?? "ناشناس";
+
+    const [inserted] = await tx.insert(ordersTable).values({
+      code,
+      customerId,
+      customerName,
+      userId: user.id,
+      repName: user.name,
+      total,
+      status: "در انتظار",
+      items: items as unknown as object,
+    }).returning();
+
+    return inserted;
+  });
 
   broadcast({
     type: "order_created",
-    message: `سفارش ${code} برای ${customerName} ثبت شد`,
+    message: `سفارش ${order.code} برای ${order.customerName} ثبت شد`,
     actor: user.name,
-    meta: { orderId: order.id, code, customerName, total },
+    meta: { orderId: order.id, code: order.code, customerName: order.customerName, total: order.total },
   });
 
   res.status(201).json(serializeOrder(order));

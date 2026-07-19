@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { OrderItem } from './orderItem';
+import type { OrderStatus } from './orderStatus';
 
 export interface Order {
   id: number;
@@ -16,7 +17,7 @@ export interface Order {
   userId?: number | null;
   repName: string;
   total: number;
-  status: string;
+  status: OrderStatus;
   items?: OrderItem[];
   createdAt: string;
 }

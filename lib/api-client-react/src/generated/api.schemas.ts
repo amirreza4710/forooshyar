@@ -5,8 +5,15 @@
  * نادران‌گستر - پلتفرم مدیریت پخش و فروش
  * OpenAPI spec version: 0.1.0
  */
+export type HealthStatusStatus = typeof HealthStatusStatus[keyof typeof HealthStatusStatus];
+
+
+export const HealthStatusStatus = {
+  ok: 'ok',
+} as const;
+
 export interface HealthStatus {
-  status: string;
+  status: HealthStatusStatus;
 }
 
 export interface ErrorResponse {
@@ -109,6 +116,16 @@ export interface OrderItem {
   price: number;
 }
 
+export type OrderStatus = typeof OrderStatus[keyof typeof OrderStatus];
+
+
+export const OrderStatus = {
+  در_انتظار: 'در انتظار',
+  تایید_شده: 'تایید شده',
+  تکمیل_شده: 'تکمیل شده',
+  لغو_شده: 'لغو شده',
+} as const;
+
 export interface Order {
   id: number;
   code?: string;
@@ -118,7 +135,7 @@ export interface Order {
   userId?: number | null;
   repName: string;
   total: number;
-  status: string;
+  status: OrderStatus;
   items?: OrderItem[];
   createdAt: string;
 }
@@ -128,8 +145,18 @@ export interface OrderInput {
   items: OrderItem[];
 }
 
+export type OrderUpdateStatus = typeof OrderUpdateStatus[keyof typeof OrderUpdateStatus];
+
+
+export const OrderUpdateStatus = {
+  در_انتظار: 'در انتظار',
+  تایید_شده: 'تایید شده',
+  تکمیل_شده: 'تکمیل شده',
+  لغو_شده: 'لغو شده',
+} as const;
+
 export interface OrderUpdate {
-  status?: string;
+  status?: OrderUpdateStatus;
 }
 
 export interface DashboardSummary {

@@ -1,7 +1,14 @@
 import jwt from "jsonwebtoken";
 import type { Request, Response, NextFunction } from "express";
 
-const JWT_SECRET = process.env.SESSION_SECRET ?? "nadraan-secret-key-2024";
+const JWT_SECRET: string = process.env["SESSION_SECRET"] ?? "";
+
+if (JWT_SECRET.length < 16) {
+  throw new Error(
+    "SESSION_SECRET environment variable is required (min 16 chars) but was not provided or is too short. " +
+    "Set it in your environment/secrets before starting the server — never commit a hardcoded secret.",
+  );
+}
 
 export interface JwtPayload {
   id: number;

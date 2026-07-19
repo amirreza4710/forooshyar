@@ -12,7 +12,7 @@ import * as zod from 'zod';
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
-  "status": zod.string()
+  "status": zod.enum(['ok'])
 })
 
 
@@ -270,7 +270,7 @@ export const ListOrdersResponseItem = zod.object({
   "userId": zod.number().nullish(),
   "repName": zod.string(),
   "total": zod.number(),
-  "status": zod.string(),
+  "status": zod.enum(['در انتظار', 'تایید شده', 'تکمیل شده', 'لغو شده']),
   "items": zod.array(zod.object({
   "productId": zod.number(),
   "productName": zod.string(),
@@ -303,7 +303,7 @@ export const CreateOrderResponse = zod.object({
   "userId": zod.number().nullish(),
   "repName": zod.string(),
   "total": zod.number(),
-  "status": zod.string(),
+  "status": zod.enum(['در انتظار', 'تایید شده', 'تکمیل شده', 'لغو شده']),
   "items": zod.array(zod.object({
   "productId": zod.number(),
   "productName": zod.string(),
@@ -329,7 +329,7 @@ export const GetOrderResponse = zod.object({
   "userId": zod.number().nullish(),
   "repName": zod.string(),
   "total": zod.number(),
-  "status": zod.string(),
+  "status": zod.enum(['در انتظار', 'تایید شده', 'تکمیل شده', 'لغو شده']),
   "items": zod.array(zod.object({
   "productId": zod.number(),
   "productName": zod.string(),
@@ -348,7 +348,7 @@ export const UpdateOrderParams = zod.object({
 })
 
 export const UpdateOrderBody = zod.object({
-  "status": zod.string().optional()
+  "status": zod.enum(['در انتظار', 'تایید شده', 'تکمیل شده', 'لغو شده']).optional()
 })
 
 export const UpdateOrderResponse = zod.object({
@@ -359,7 +359,7 @@ export const UpdateOrderResponse = zod.object({
   "userId": zod.number().nullish(),
   "repName": zod.string(),
   "total": zod.number(),
-  "status": zod.string(),
+  "status": zod.enum(['در انتظار', 'تایید شده', 'تکمیل شده', 'لغو شده']),
   "items": zod.array(zod.object({
   "productId": zod.number(),
   "productName": zod.string(),
@@ -386,7 +386,7 @@ export const GetDashboardSummaryResponse = zod.object({
   "userId": zod.number().nullish(),
   "repName": zod.string(),
   "total": zod.number(),
-  "status": zod.string(),
+  "status": zod.enum(['در انتظار', 'تایید شده', 'تکمیل شده', 'لغو شده']),
   "items": zod.array(zod.object({
   "productId": zod.number(),
   "productName": zod.string(),
