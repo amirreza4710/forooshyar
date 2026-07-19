@@ -21,3 +21,11 @@ timeoutMs = 20000
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.development]
+SESSION_SECRET = "Rpf68gvYm1XY+Yl8ulM/BoDd/+APBI5TJw12G4PTau0="
+
+[userenv.production]
+SESSION_SECRET = "Rpf68gvYm1XY+Yl8ulM/BoDd/+APBI5TJw12G4PTau0="
