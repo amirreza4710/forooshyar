@@ -40,3 +40,20 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
     res.status(401).json({ error: "Invalid or expired token" });
   }
 }
+
+/**
+ * Restricts a route to specific roles. Must be used AFTER requireAuth
+ * (relies on req.user being set). Role is read from the JWT issued at
+ * login — if an admin's role is changed, they keep old-role access
+ * until their token expires/re-logs in (max 7 days).
+ */
+export function requireRole(...allowedRoles: string[]) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const user = (req as Request & { user?: JwtPayload }).user;
+    if (!user || !allowedRoles.includes(user.role)) {
+      res.status(403).json({ error: "دسترسی غیرمجاز — این عملیات نیاز به نقش مدیریتی دارد" });
+      return;
+    }
+    next();
+  };
+}
