@@ -1,11 +1,11 @@
 import { useState } from "react";
 import {
-  useListUsers, useCreateUser, useDeleteUser,
+  useListUsers, useCreateUser, useUpdateUser, useDeleteUser,
   getListUsersQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Trash2, X, Building2, Users } from "lucide-react";
+import { Plus, Search, Trash2, Pencil, KeyRound, X, Building2, Users } from "lucide-react";
 import type { User } from "@workspace/api-client-react";
 
 const ROLES = ["نماینده فروش", "مدیر فروش / نماینده", "سرپرست"];
@@ -36,6 +36,9 @@ export default function UsersPage() {
   const [form, setForm]           = useState({ ...EMPTY });
   const [deleteId, setDeleteId]   = useState<number | null>(null);
   const [formError, setFormError] = useState("");
+  const [editUser, setEditUser]   = useState<User | null>(null);
+  const [editForm, setEditForm]   = useState({ name: "", role: ROLES[0], newPassword: "" });
+  const [editError, setEditError] = useState("");
 
   const create = useCreateUser({
     mutation: {
@@ -45,6 +48,17 @@ export default function UsersPage() {
         setModal(false); setFormError("");
       },
       onError() { toast({ title: "خطا در ذخیره", variant: "destructive" }); },
+    },
+  });
+
+  const update = useUpdateUser({
+    mutation: {
+      onSuccess() {
+        toast({ title: "✅ تغییرات ذخیره شد" });
+        qc.invalidateQueries({ queryKey: getListUsersQueryKey() });
+        setEditUser(null); setEditError("");
+      },
+      onError() { toast({ title: "خطا در ذخیره تغییرات", variant: "destructive" }); },
     },
   });
 
@@ -74,6 +88,29 @@ export default function UsersPage() {
   }
 
   const F = (k: keyof typeof form, v: string) => { setForm(f => ({ ...f, [k]: v })); setFormError(""); };
+
+  function openEdit(u: User) {
+    setEditForm({ name: u.name ?? "", role: u.role ?? ROLES[0], newPassword: "" });
+    setEditError("");
+    setEditUser(u);
+  }
+
+  function submitEdit() {
+    if (!editUser) return;
+    if (!editForm.name.trim()) { setEditError("نام کامل الزامی است"); return; }
+    if (editForm.newPassword && editForm.newPassword.length < 3) {
+      setEditError("رمز عبور جدید باید حداقل ۳ کاراکتر باشد"); return;
+    }
+    setEditError("");
+    update.mutate({
+      id: editUser.id,
+      data: {
+        name: editForm.name,
+        role: editForm.role,
+        ...(editForm.newPassword ? { password: editForm.newPassword } : {}),
+      },
+    });
+  }
 
   return (
     <div className="p-4 sm:p-6 pb-24 lg:pb-6">
@@ -135,13 +172,22 @@ export default function UsersPage() {
                   عضو از: {formatDate(u.createdAt ?? "")}
                 </div>
               </div>
-              <button
-                onClick={() => setDeleteId(u.id)}
-                className="text-muted-foreground hover:text-destructive transition-colors shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg hover:bg-destructive/10"
-                aria-label="حذف کاربر"
-              >
-                <Trash2 size={15} />
-              </button>
+              <div className="flex flex-col gap-1 shrink-0">
+                <button
+                  onClick={() => openEdit(u)}
+                  className="text-muted-foreground hover:text-primary transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg hover:bg-primary/10"
+                  aria-label="ویرایش / ریست رمز عبور"
+                >
+                  <Pencil size={15} />
+                </button>
+                <button
+                  onClick={() => setDeleteId(u.id)}
+                  className="text-muted-foreground hover:text-destructive transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg hover:bg-destructive/10"
+                  aria-label="حذف کاربر"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -188,6 +234,60 @@ export default function UsersPage() {
                 </button>
                 <button onClick={submit} disabled={create.isPending} className="px-4 py-2 text-sm rounded-lg bg-primary text-white hover:opacity-90 disabled:opacity-60">
                   {create.isPending ? "در حال ذخیره..." : "ذخیره"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit modal — name, role, optional password reset */}
+      {editUser && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-card border border-card-border rounded-t-2xl sm:rounded-xl shadow-xl w-full sm:max-w-sm">
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <div className="flex items-center gap-2">
+                <Pencil size={15} className="text-primary" />
+                <h3 className="text-sm font-semibold">ویرایش {editUser.name}</h3>
+              </div>
+              <button onClick={() => { setEditUser(null); setEditError(""); }} className="text-muted-foreground hover:text-foreground transition-colors">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="p-4 space-y-3">
+              <Field label="نام کامل">
+                <input value={editForm.name} onChange={e => { setEditForm(f => ({ ...f, name: e.target.value })); setEditError(""); }} className={inp} />
+              </Field>
+              <Field label="نقش">
+                <select value={editForm.role} onChange={e => setEditForm(f => ({ ...f, role: e.target.value }))} className={inp}>
+                  {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </Field>
+              <div className="pt-2 border-t border-border">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <KeyRound size={13} className="text-muted-foreground" />
+                  <label className="text-xs font-medium text-muted-foreground">ریست رمز عبور (اختیاری)</label>
+                </div>
+                <input
+                  value={editForm.newPassword}
+                  onChange={e => { setEditForm(f => ({ ...f, newPassword: e.target.value })); setEditError(""); }}
+                  className={inp} dir="ltr" type="text"
+                  placeholder="خالی بذار یعنی رمز عوض نشه"
+                />
+              </div>
+
+              {editError && (
+                <div className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">
+                  {editError}
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2 justify-end">
+                <button onClick={() => { setEditUser(null); setEditError(""); }} className="px-4 py-2 text-sm rounded-lg border border-border text-muted-foreground hover:bg-muted/20">
+                  انصراف
+                </button>
+                <button onClick={submitEdit} disabled={update.isPending} className="px-4 py-2 text-sm rounded-lg bg-primary text-white hover:opacity-90 disabled:opacity-60">
+                  {update.isPending ? "در حال ذخیره..." : "ذخیره"}
                 </button>
               </div>
             </div>
