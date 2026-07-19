@@ -9,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8439ceb3`
+- Built from commit: `4a4ae3da`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -232,7 +232,7 @@ Nodes (21): AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialo
 
 ### Community 11 - "Community 11"
 Cohesion: 0.11
-Nodes (20): ADMIN_ROLES, EMPTY, formatDate(), ROLE_COLOR, ROLES, UsersPage(), getCreateUserMutationOptions(), getDeleteUserMutationOptions() (+12 more)
+Nodes (20): ADMIN_ROLES, EMPTY, formatDate(), ROLE_COLOR, ROLES, UsersPage(), deleteUser(), getCreateUserMutationOptions() (+12 more)
 
 ### Community 12 - "Community 12"
 Cohesion: 0.13
@@ -240,7 +240,7 @@ Nodes (15): exportCSV(), todayStr(), AVATAR_COLORS, avatarColor(), CustomersPage
 
 ### Community 13 - "Community 13"
 Cohesion: 0.12
-Nodes (17): EMPTY, inp(), n(), ProductsPage(), SortDir, SortKey, StockBadge(), deleteProduct() (+9 more)
+Nodes (17): EMPTY, inp(), n(), ProductsPage(), SortDir, SortKey, StockBadge(), createProduct() (+9 more)
 
 ### Community 14 - "Community 14"
 Cohesion: 0.10
@@ -252,7 +252,7 @@ Nodes (17): ButtonGroup(), ButtonGroupSeparator(), ButtonGroupText(), buttonGrou
 
 ### Community 16 - "Community 16"
 Cohesion: 0.11
-Nodes (20): customFetch(), isRequest(), mergeHeaders(), resolveMethod(), createCustomer(), createOrder(), createProduct(), createUser() (+12 more)
+Nodes (20): customFetch(), isRequest(), mergeHeaders(), resolveMethod(), createCustomer(), createOrder(), createUser(), deleteProduct() (+12 more)
 
 ### Community 17 - "Community 17"
 Cohesion: 0.11
@@ -296,7 +296,7 @@ Nodes (10): router, router, router, router, CreateProductBody, DeleteProductPara
 
 ### Community 27 - "Community 27"
 Cohesion: 0.13
-Nodes (15): devDependencies, date-fns, @hookform/resolvers, @radix-ui/react-label, @radix-ui/react-progress, @radix-ui/react-separator, @radix-ui/react-switch, tailwind-merge (+7 more)
+Nodes (15): devDependencies, class-variance-authority, date-fns, @radix-ui/react-label, @radix-ui/react-progress, @radix-ui/react-separator, @radix-ui/react-switch, tailwind-merge (+7 more)
 
 ### Community 28 - "Community 28"
 Cohesion: 0.13
