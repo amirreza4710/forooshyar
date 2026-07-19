@@ -4,9 +4,12 @@ import {
   getListUsersQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Trash2, Pencil, KeyRound, X, Building2, Users } from "lucide-react";
 import type { User } from "@workspace/api-client-react";
+
+const ADMIN_ROLES = ["سرپرست", "مدیر فروش / نماینده"];
 
 const ROLES = ["نماینده فروش", "مدیر فروش / نماینده", "سرپرست"];
 const EMPTY = { username: "", name: "", role: "نماینده فروش", password: "1234" };
@@ -29,6 +32,8 @@ export default function UsersPage() {
   const { data: raw, isLoading } = useListUsers();
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { user: currentUser } = useAuth();
+  const isAdmin = !!currentUser && ADMIN_ROLES.includes(currentUser.role);
 
   const users: User[] = Array.isArray(raw) ? raw : [];
   const [search, setSearch]       = useState("");
@@ -120,14 +125,16 @@ export default function UsersPage() {
           <h1 className="text-base sm:text-lg font-bold">تیم فروش</h1>
           <p className="text-xs text-muted-foreground mt-0.5">{(users.length).toLocaleString("fa-IR")} نماینده</p>
         </div>
-        <button
-          onClick={() => { setForm({ ...EMPTY }); setFormError(""); setModal(true); }}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-primary text-white text-sm font-medium hover:opacity-90 transition shadow-sm min-h-[40px]"
-        >
-          <Plus size={14} />
-          <span className="hidden sm:inline">نماینده جدید</span>
-          <span className="sm:hidden">جدید</span>
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => { setForm({ ...EMPTY }); setFormError(""); setModal(true); }}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-primary text-white text-sm font-medium hover:opacity-90 transition shadow-sm min-h-[40px]"
+          >
+            <Plus size={14} />
+            <span className="hidden sm:inline">نماینده جدید</span>
+            <span className="sm:hidden">جدید</span>
+          </button>
+        )}
       </div>
 
       {/* Search */}
@@ -172,22 +179,24 @@ export default function UsersPage() {
                   عضو از: {formatDate(u.createdAt ?? "")}
                 </div>
               </div>
-              <div className="flex flex-col gap-1 shrink-0">
-                <button
-                  onClick={() => openEdit(u)}
-                  className="text-muted-foreground hover:text-primary transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg hover:bg-primary/10"
-                  aria-label="ویرایش / ریست رمز عبور"
-                >
-                  <Pencil size={15} />
-                </button>
-                <button
-                  onClick={() => setDeleteId(u.id)}
-                  className="text-muted-foreground hover:text-destructive transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg hover:bg-destructive/10"
-                  aria-label="حذف کاربر"
-                >
-                  <Trash2 size={15} />
-                </button>
-              </div>
+              {isAdmin && (
+                <div className="flex flex-col gap-1 shrink-0">
+                  <button
+                    onClick={() => openEdit(u)}
+                    className="text-muted-foreground hover:text-primary transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg hover:bg-primary/10"
+                    aria-label="ویرایش / ریست رمز عبور"
+                  >
+                    <Pencil size={15} />
+                  </button>
+                  <button
+                    onClick={() => setDeleteId(u.id)}
+                    className="text-muted-foreground hover:text-destructive transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg hover:bg-destructive/10"
+                    aria-label="حذف کاربر"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
