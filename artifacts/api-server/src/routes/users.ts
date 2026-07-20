@@ -1,7 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { db, usersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { requireAuth, requireRole } from "../lib/auth";
 import { CreateUserBody, UpdateUserBody, UpdateUserParams, DeleteUserParams } from "@workspace/api-zod";
 
@@ -11,7 +11,7 @@ const router = Router();
 const ADMIN_ROLES = ["سرپرست", "مدیر فروش / نماینده"];
 
 router.get("/users", requireAuth, async (req, res): Promise<void> => {
-  const users = await db.select().from(usersTable);
+  const users = await db.select().from(usersTable).where(isNull(usersTable.deletedAt));
   res.json(users.map(u => ({ id: u.id, username: u.username, name: u.name, role: u.role, createdAt: u.createdAt.toISOString() })));
 });
 
@@ -41,7 +41,9 @@ router.patch("/users/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req,
   if (body.data.name) updates.name = body.data.name;
   if (body.data.role) updates.role = body.data.role;
   if (body.data.password) updates.password = await bcrypt.hash(body.data.password, 10);
-  const [user] = await db.update(usersTable).set(updates).where(eq(usersTable.id, params.data.id)).returning();
+  const [user] = await db.update(usersTable).set(updates)
+    .where(and(eq(usersTable.id, params.data.id), isNull(usersTable.deletedAt)))
+    .returning();
   if (!user) { res.status(404).json({ error: "User not found" }); return; }
   res.json({ id: user.id, username: user.username, name: user.name, role: user.role, createdAt: user.createdAt.toISOString() });
 });
@@ -49,7 +51,11 @@ router.patch("/users/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req,
 router.delete("/users/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req, res): Promise<void> => {
   const params = DeleteUserParams.safeParse({ id: req.params.id });
   if (!params.success) { res.status(400).json({ error: "Invalid id" }); return; }
-  await db.delete(usersTable).where(eq(usersTable.id, params.data.id));
+  // soft-delete: کاربر سفارش‌دار با حذف قطعی به‌خاطر کلید خارجی از orders کرش می‌کنه
+  const [user] = await db.update(usersTable).set({ deletedAt: new Date() })
+    .where(and(eq(usersTable.id, params.data.id), isNull(usersTable.deletedAt)))
+    .returning();
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
   res.status(204).send();
 });
 

@@ -15,14 +15,16 @@ export const ordersTable = pgTable("orders", {
   status: text("status").notNull().default("در انتظار"),
   items: jsonb("items").notNull().default([]),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 }, (table) => ({
   // برای ORDER BY created_at desc که همه‌جا استفاده میشه (لیست سفارش‌ها، داشبورد)
   createdAtIdx: index("orders_created_at_idx").on(table.createdAt),
   // کلید خارجی — پستگرس خودکار ایندکس نمی‌سازه؛ لازم برای حذف/آپدیت مشتری و فیلتر آینده
   customerIdIdx: index("orders_customer_id_idx").on(table.customerId),
   userIdIdx: index("orders_user_id_idx").on(table.userId),
+  deletedAtIdx: index("orders_deleted_at_idx").on(table.deletedAt),
 }));
 
-export const insertOrderSchema = createInsertSchema(ordersTable).omit({ id: true, createdAt: true });
+export const insertOrderSchema = createInsertSchema(ordersTable).omit({ id: true, createdAt: true, deletedAt: true });
 export type InsertOrder = z.infer<typeof insertOrderSchema>;
 export type Order = typeof ordersTable.$inferSelect;

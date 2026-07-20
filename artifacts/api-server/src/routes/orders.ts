@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, ordersTable, productsTable } from "@workspace/db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and, isNull } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
 import { CreateOrderBody, UpdateOrderBody, UpdateOrderParams, GetOrderParams } from "@workspace/api-zod";
 import { broadcast } from "../lib/notifications";
@@ -18,7 +18,9 @@ function serializeOrder(o: typeof ordersTable.$inferSelect) {
 }
 
 router.get("/orders", requireAuth, async (req, res): Promise<void> => {
-  const orders = await db.select().from(ordersTable).orderBy(sql`${ordersTable.createdAt} desc`);
+  const orders = await db.select().from(ordersTable)
+    .where(isNull(ordersTable.deletedAt))
+    .orderBy(sql`${ordersTable.createdAt} desc`);
   res.json(orders.map(serializeOrder));
 });
 
@@ -37,7 +39,7 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
 
       // Lock the product row so concurrent orders can't both read stale stock
       const [product] = await tx.execute(
-        sql`SELECT stock FROM products WHERE id = ${item.productId} FOR UPDATE`,
+        sql`SELECT stock FROM products WHERE id = ${item.productId} AND deleted_at IS NULL FOR UPDATE`,
       ).then(r => r.rows as { stock: number }[]);
 
       if (!product) {
@@ -58,8 +60,11 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
     const allOrders = await tx.select().from(ordersTable);
     const code = "ORD-" + String(9000 + allOrders.length + 1);
 
-    const customers = await tx.execute(sql`SELECT name FROM customers WHERE id = ${customerId}`);
-    const customerName = (customers.rows[0] as { name: string })?.name ?? "ناشناس";
+    const customers = await tx.execute(sql`SELECT name FROM customers WHERE id = ${customerId} AND deleted_at IS NULL`);
+    const customerName = (customers.rows[0] as { name: string })?.name;
+    if (!customerName) {
+      throw Object.assign(new Error(`مشتری با شناسه ${customerId} یافت نشد`), { status: 400 });
+    }
 
     const [inserted] = await tx.insert(ordersTable).values({
       code,
@@ -88,7 +93,8 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
 router.get("/orders/:id", requireAuth, async (req, res): Promise<void> => {
   const params = GetOrderParams.safeParse({ id: req.params.id });
   if (!params.success) { res.status(400).json({ error: "Invalid id" }); return; }
-  const [order] = await db.select().from(ordersTable).where(eq(ordersTable.id, params.data.id));
+  const [order] = await db.select().from(ordersTable)
+    .where(and(eq(ordersTable.id, params.data.id), isNull(ordersTable.deletedAt)));
   if (!order) { res.status(404).json({ error: "Order not found" }); return; }
   res.json(serializeOrder(order));
 });
@@ -98,7 +104,9 @@ router.patch("/orders/:id", requireAuth, async (req, res): Promise<void> => {
   if (!params.success) { res.status(400).json({ error: "Invalid id" }); return; }
   const body = UpdateOrderBody.safeParse(req.body);
   if (!body.success) { res.status(400).json({ error: body.error.message }); return; }
-  const [order] = await db.update(ordersTable).set(body.data).where(eq(ordersTable.id, params.data.id)).returning();
+  const [order] = await db.update(ordersTable).set(body.data)
+    .where(and(eq(ordersTable.id, params.data.id), isNull(ordersTable.deletedAt)))
+    .returning();
   if (!order) { res.status(404).json({ error: "Order not found" }); return; }
 
   const user = (req as Request & { user: JwtPayload }).user;
@@ -117,7 +125,10 @@ router.patch("/orders/:id", requireAuth, async (req, res): Promise<void> => {
 router.delete("/orders/:id", requireAuth, async (req, res): Promise<void> => {
   const params = UpdateOrderParams.safeParse({ id: req.params.id });
   if (!params.success) { res.status(400).json({ error: "Invalid id" }); return; }
-  const [order] = await db.delete(ordersTable).where(eq(ordersTable.id, params.data.id)).returning();
+  // soft-delete: سفارش برای سابقه‌ی مالی و گزارش‌گیری نگه داشته میشه، فقط از لیست‌ها کنار میره
+  const [order] = await db.update(ordersTable).set({ deletedAt: new Date() })
+    .where(and(eq(ordersTable.id, params.data.id), isNull(ordersTable.deletedAt)))
+    .returning();
   if (!order) { res.status(404).json({ error: "Order not found" }); return; }
 
   const user = (req as Request & { user: JwtPayload }).user;
