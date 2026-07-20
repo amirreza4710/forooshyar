@@ -1,7 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { db, usersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { signToken, requireAuth } from "../lib/auth";
 import { LoginBody } from "@workspace/api-zod";
 import type { JwtPayload } from "../lib/auth";
@@ -16,7 +16,8 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     return;
   }
   const { username, password } = parsed.data;
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.username, username));
+  const [user] = await db.select().from(usersTable)
+    .where(and(eq(usersTable.username, username), isNull(usersTable.deletedAt)));
   if (!user) {
     res.status(401).json({ error: "نام کاربری یا رمز عبور اشتباه است" });
     return;
@@ -32,7 +33,8 @@ router.post("/auth/login", async (req, res): Promise<void> => {
 
 router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
   const user = (req as Request & { user: JwtPayload }).user;
-  const [dbUser] = await db.select().from(usersTable).where(eq(usersTable.id, user.id));
+  const [dbUser] = await db.select().from(usersTable)
+    .where(and(eq(usersTable.id, user.id), isNull(usersTable.deletedAt)));
   if (!dbUser) {
     res.status(404).json({ error: "User not found" });
     return;

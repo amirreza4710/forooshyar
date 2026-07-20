@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, productsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
 import { CreateProductBody, UpdateProductBody, UpdateProductParams, DeleteProductParams } from "@workspace/api-zod";
 import { broadcast } from "../lib/notifications";
@@ -10,7 +10,9 @@ import type { JwtPayload } from "../lib/auth";
 const router = Router();
 
 router.get("/products", requireAuth, async (req, res): Promise<void> => {
-  const products = await db.select().from(productsTable).orderBy(productsTable.name);
+  const products = await db.select().from(productsTable)
+    .where(isNull(productsTable.deletedAt))
+    .orderBy(productsTable.name);
   res.json(products.map(p => ({ ...p, createdAt: p.createdAt.toISOString() })));
 });
 
@@ -37,7 +39,9 @@ router.patch("/products/:id", requireAuth, async (req, res): Promise<void> => {
   if (!params.success) { res.status(400).json({ error: "Invalid id" }); return; }
   const body = UpdateProductBody.safeParse(req.body);
   if (!body.success) { res.status(400).json({ error: body.error.message }); return; }
-  const [prod] = await db.update(productsTable).set(body.data).where(eq(productsTable.id, params.data.id)).returning();
+  const [prod] = await db.update(productsTable).set(body.data)
+    .where(and(eq(productsTable.id, params.data.id), isNull(productsTable.deletedAt)))
+    .returning();
   if (!prod) { res.status(404).json({ error: "Product not found" }); return; }
 
   const user = (req as Request & { user: JwtPayload }).user;
@@ -54,17 +58,20 @@ router.patch("/products/:id", requireAuth, async (req, res): Promise<void> => {
 router.delete("/products/:id", requireAuth, async (req, res): Promise<void> => {
   const params = DeleteProductParams.safeParse({ id: req.params.id });
   if (!params.success) { res.status(400).json({ error: "Invalid id" }); return; }
-  const [prod] = await db.delete(productsTable).where(eq(productsTable.id, params.data.id)).returning();
+  // soft-delete: تا بشه محصول رو برگردوند و سابقه‌ی سفارش‌های قبلی (که items رو
+  // به‌صورت جدا و مستقل ذخیره می‌کنن) دست‌نخورده بمونه
+  const [prod] = await db.update(productsTable).set({ deletedAt: new Date() })
+    .where(and(eq(productsTable.id, params.data.id), isNull(productsTable.deletedAt)))
+    .returning();
+  if (!prod) { res.status(404).json({ error: "Product not found" }); return; }
 
   const user = (req as Request & { user: JwtPayload }).user;
-  if (prod) {
-    broadcast({
-      type: "product_deleted",
-      message: `محصول «${prod.name}» حذف شد`,
-      actor: user.name,
-      meta: { productId: prod.id, name: prod.name },
-    });
-  }
+  broadcast({
+    type: "product_deleted",
+    message: `محصول «${prod.name}» حذف شد`,
+    actor: user.name,
+    meta: { productId: prod.id, name: prod.name },
+  });
 
   res.status(204).send();
 });

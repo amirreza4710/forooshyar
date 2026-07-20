@@ -1,17 +1,18 @@
 import { Router } from "express";
 import { db, ordersTable, customersTable, productsTable } from "@workspace/db";
-import { sql, count, sum } from "drizzle-orm";
+import { sql, count, sum, isNull } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
 
 const router = Router();
 
 router.get("/dashboard/summary", requireAuth, async (req, res): Promise<void> => {
-  const [salesRow] = await db.select({ total: sum(ordersTable.total) }).from(ordersTable);
-  const [orderCountRow] = await db.select({ count: count() }).from(ordersTable);
-  const [customerCountRow] = await db.select({ count: count() }).from(customersTable);
-  const [productCountRow] = await db.select({ count: count() }).from(productsTable);
+  const [salesRow] = await db.select({ total: sum(ordersTable.total) }).from(ordersTable).where(isNull(ordersTable.deletedAt));
+  const [orderCountRow] = await db.select({ count: count() }).from(ordersTable).where(isNull(ordersTable.deletedAt));
+  const [customerCountRow] = await db.select({ count: count() }).from(customersTable).where(isNull(customersTable.deletedAt));
+  const [productCountRow] = await db.select({ count: count() }).from(productsTable).where(isNull(productsTable.deletedAt));
 
   const recentOrders = await db.select().from(ordersTable)
+    .where(isNull(ordersTable.deletedAt))
     .orderBy(sql`${ordersTable.createdAt} desc`)
     .limit(8);
 
@@ -34,7 +35,7 @@ router.get("/dashboard/sales-chart", requireAuth, async (req, res): Promise<void
       TO_CHAR(created_at AT TIME ZONE 'Asia/Tehran', 'YYYY-MM-DD') as day,
       COALESCE(SUM(total), 0) as total
     FROM orders
-    WHERE created_at >= NOW() - INTERVAL '7 days'
+    WHERE created_at >= NOW() - INTERVAL '7 days' AND deleted_at IS NULL
     GROUP BY day
     ORDER BY day ASC
   `);
