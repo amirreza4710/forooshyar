@@ -1,15 +1,42 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import {
   useListProducts, useCreateProduct, useUpdateProduct, useDeleteProduct,
   getListProductsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Pencil, Trash2, X, Package, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, X, Package, ChevronUp, ChevronDown, Camera, Upload, ImageOff } from "lucide-react";
 import type { Product } from "@workspace/api-client-react";
 
 function n(v: number) { return v.toLocaleString("fa-IR"); }
 const EMPTY = { name: "", code: "", category: "", pack: "", price: 0, stock: 0, image: "📦" };
+
+// عکس واقعی به‌صورت data-URL شروع می‌شه؛ اگر نباشه یعنی همون کانونشن قدیمی (ایموجی متنی) هست
+const isRealImage = (v?: string) => !!v && (v.startsWith("data:image") || v.startsWith("http"));
+
+// فایل انتخاب‌شده رو روی کلاینت به یک JPEG فشرده (حداکثر ۴۸۰px عرض) تبدیل می‌کنه
+// تا داخل ستون متنی image (بدون نیاز به اندپوینت آپلود جدا) قابل ذخیره باشه.
+function compressImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error);
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, 480 / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.72));
+      };
+      img.onerror = reject;
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 type SortKey = "name" | "price" | "stock";
 type SortDir = "asc" | "desc";
@@ -22,6 +49,14 @@ function StockBadge({ stock }: { stock: number }) {
   if (stock === 0) return <span className="text-xs font-medium text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full">ناموجود</span>;
   if (stock < 50)  return <span className="text-xs font-medium text-yellow-500 bg-yellow-500/10 border border-yellow-500/20 px-2 py-0.5 rounded-full">{n(stock)}</span>;
   return <span className="text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">{n(stock)}</span>;
+}
+
+// نمایش تصویر محصول: عکس واقعی (data-URL/URL) یا ایموجی قدیمی، هر دو
+function ProductThumb({ image, name, size = "text-xl" }: { image?: string; name: string; size?: string }) {
+  if (isRealImage(image)) {
+    return <img src={image} alt={name} className="w-8 h-8 rounded-md object-cover shrink-0 border border-border" />;
+  }
+  return <span className={`${size} shrink-0`} role="img" aria-label={name}>{image || "📦"}</span>;
 }
 
 export default function ProductsPage() {
@@ -39,6 +74,9 @@ export default function ProductsPage() {
   const [deleteId, setDeleteId]     = useState<number | null>(null);
   const [sortKey, setSortKey]       = useState<SortKey>("name");
   const [sortDir, setSortDir]       = useState<SortDir>("asc");
+  const [uploading, setUploading]   = useState(false);
+  const cameraInput = useRef<HTMLInputElement>(null);
+  const fileInput   = useRef<HTMLInputElement>(null);
 
   const categories = useMemo(() => ["همه", ...new Set(products.map(p => p.category).filter(Boolean))], [products]);
 
@@ -100,6 +138,21 @@ export default function ProductsPage() {
     modal === "create" ? create.mutate({ data }) : editing && update.mutate({ id: editing.id, data });
   }
   const F = (k: keyof typeof form, v: string) => { setForm(f => ({ ...f, [k]: v })); setFormErrors(e => ({ ...e, [k]: undefined })); };
+
+  async function handleImageFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // اجازه بده همون فایل دوباره هم قابل انتخاب باشه
+    if (!file) return;
+    setUploading(true);
+    try {
+      const dataUrl = await compressImage(file);
+      F("image", dataUrl);
+    } catch {
+      toast({ title: "خطا در پردازش عکس", variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  }
 
   const Th = ({ label, col, className = "" }: { label: string; col?: SortKey; className?: string }) => (
     <th
@@ -173,7 +226,7 @@ export default function ProductsPage() {
                 <tr key={p.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors group">
                   <td className="px-3 sm:px-4 py-3">
                     <div className="flex items-center gap-2.5">
-                      <span className="text-xl shrink-0" role="img" aria-label={p.name}>{p.image ?? "📦"}</span>
+                      <ProductThumb image={p.image} name={p.name} />
                       <span className="font-medium text-sm leading-snug line-clamp-2 max-w-[140px]">{p.name}</span>
                     </div>
                   </td>
@@ -205,17 +258,48 @@ export default function ProductsPage() {
       {modal && (
         <Modal title={modal === "create" ? "محصول جدید" : "ویرایش محصول"} onClose={() => setModal(null)}>
           <div className="space-y-3">
+            {/* Image upload */}
+            <div>
+              <label className="block text-xs font-medium mb-1.5 text-muted-foreground">عکس محصول</label>
+              <div className="flex items-center gap-3">
+                <div className="w-16 h-16 rounded-lg border border-input bg-muted/30 flex items-center justify-center overflow-hidden shrink-0">
+                  {uploading ? (
+                    <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  ) : isRealImage(form.image) ? (
+                    <img src={form.image} alt="پیش‌نمایش" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-2xl" role="img">{form.image || "📦"}</span>
+                  )}
+                </div>
+                <div className="flex flex-col gap-1.5 flex-1">
+                  <div className="flex gap-1.5">
+                    <button type="button" onClick={() => cameraInput.current?.click()}
+                      className="flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-lg border border-input text-xs font-medium hover:bg-muted/30 transition min-h-[38px]">
+                      <Camera size={13} /> از گوشی
+                    </button>
+                    <button type="button" onClick={() => fileInput.current?.click()}
+                      className="flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-lg border border-input text-xs font-medium hover:bg-muted/30 transition min-h-[38px]">
+                      <Upload size={13} /> از سیستم
+                    </button>
+                  </div>
+                  {isRealImage(form.image) && (
+                    <button type="button" onClick={() => F("image", "📦")}
+                      className="flex items-center justify-center gap-1 text-xs text-destructive hover:underline">
+                      <ImageOff size={12} /> حذف عکس
+                    </button>
+                  )}
+                </div>
+              </div>
+              <input ref={cameraInput} type="file" accept="image/*" capture="environment" onChange={handleImageFile} className="hidden" />
+              <input ref={fileInput} type="file" accept="image/*" onChange={handleImageFile} className="hidden" />
+            </div>
+
             <Field label="نام محصول *" error={formErrors.name}>
               <input value={form.name} onChange={e => F("name", e.target.value)} className={inp(!!formErrors.name)} placeholder="مثلاً: آبنبات کپسولی" />
             </Field>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="دسته‌بندی *" error={formErrors.category}>
-                <input value={form.category} onChange={e => F("category", e.target.value)} className={inp(!!formErrors.category)} placeholder="آبنبات" />
-              </Field>
-              <Field label="آیکون">
-                <input value={form.image} onChange={e => F("image", e.target.value)} className={inp(false)} placeholder="🍬" />
-              </Field>
-            </div>
+            <Field label="دسته‌بندی *" error={formErrors.category}>
+              <input value={form.category} onChange={e => F("category", e.target.value)} className={inp(!!formErrors.category)} placeholder="آبنبات" />
+            </Field>
             <Field label="بسته‌بندی">
               <input value={form.pack} onChange={e => F("pack", e.target.value)} className={inp(false)} placeholder="بسته ۳۰ عددی" />
             </Field>
