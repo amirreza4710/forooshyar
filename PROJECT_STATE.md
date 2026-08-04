@@ -5,19 +5,19 @@ This file is the short-term memory of the repository. Every agent must read it b
 ```yaml
 Project Name: Farakhorasan Sales OS
 Repository Mode: Documentation-first enterprise/open-source workflow
-Current Phase: Repository Bootstrap
-Current Sprint: Sprint 0
+Current Phase: Core Business Documentation
+Current Sprint: Sprint 1
 Current Branch: work
-Current Checkpoint: 0.0
-Last Approved Document: Repository Bootstrap Plan
-Last Completed Commit: chore(repo): initialize Farakhorasan Sales OS documentation structure
-Next Document: Business Constitution v1.0
+Current Checkpoint: 1.0
+Last Approved Document: Business Constitution v1.0
+Last Completed Commit: docs(project): add Business Constitution v1.0
+Next Document: Master Specification v2.0
 Next Milestone: Sprint 1 Core Business Documents
 Status: ACTIVE
 ```
 
 ## Current Objective
-Complete the repository bootstrap so the project can move through future sprints with small, documented, reversible commits.
+Establish the core business documentation layer before product requirements, workflows, domain models, and implementation plans are expanded.
 
 ## Sprint Sequence
 1. Sprint 0 — repository bootstrap and governance files.
@@ -27,7 +27,7 @@ Complete the repository bootstrap so the project can move through future sprints
 5. Sprint 4 — development, API, database, frontend, backend, and deployment documents.
 
 ## Immediate Next Step
-Add `docs/02_Business/Business-Constitution-v1.0.md` in a dedicated commit.
+Add `docs/00_Project/Master-Specification-v2.0.md` in a dedicated commit.
 
 ## Agent Loading Strategy
 1. Read this file.
