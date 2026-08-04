@@ -1,68 +1,67 @@
 # Documentation Index
 
-docs/ is the source of truth for Farakhorasan Sales OS. Every product, business, UX, architecture, AI, and development decision should be traceable to this tree.
+`docs/` منبع حقیقت مستندات فراخراسان است. هر تصمیم محصول، کسب‌وکار، UX، معماری و توسعه باید به مالک canonical خود قابل ردیابی باشد.
 
 ## Start Here
 
-1. PROJECT_STATE.md
-2. docs/02_Business/Business-Constitution-v1.0.md
-3. docs/00_Project/Master-Specification-v2.0.md
-4. docs/00_Project/Roadmap.md
-5. Relevant canonical detail document or ADR
+1. `PROJECT_STATE.md`
+2. `AGENTS.md`
+3. `README.md`
+4. `docs/00_Project/governance-v2.4/README.md`
+5. `docs/00_Project/Roadmap.md`
+6. سند canonical یا Decision Record مرتبط
+
+## Current Baseline
+
+- **Checkpoint رسمی:** 1.6 — MVP Delivery Ready
+- **Checkpoint بعدی:** 1.7 — Engineering Foundation Ready (Candidate)
+- **MVP Backlog:** 11 Epic و 32 Feature، Frozen
+- **Current Work:** Sprint 0 Target Environment Verification
+- **New MVP Features in v2.4:** صفر
 
 ## Folder Map
 
-| Folder | Purpose | Owner Agent |
+| Folder | Purpose | Owner |
 |---|---|---|
-| 00_Project/ | Project charter, master specification, roadmap, governance | Product Manager Agent |
-| 01_PRD/ | Product requirements and acceptance criteria | Product Manager Agent |
-| 02_Business/ | Business constitution, policies, commercial rules | Business Analyst Agent |
-| 03_Domain/ | Domain model, entities, bounded contexts, glossary | System Architect Agent |
-| 04_Architecture/ | System architecture, integration, non-functional requirements | System Architect Agent |
-| 05_UX/ | Personas, journeys, flows, usability requirements | UX Designer Agent |
-| 06_UI/ | Screen specs, design system, design tokens | UX Designer Agent / Frontend Agent |
-| 07_Figma/ | Figma handoff plans and generation prompts | UX Designer Agent |
-| 08_AI/ | AI governance, prompts, agents, evaluation | AI Architect Agent |
-| 09_Development/ | API, database, frontend, backend, deployment docs | Backend / Frontend / DevOps Agents |
-| ADR/ | Architecture and long-lived commercial decision records | System Architect Agent |
-| checkpoints/ | Milestone snapshots and approval records | Product Manager Agent |
+| `00_Project/` | Project state، roadmap، checkpoints، governance | Product Manager |
+| `01_PRD/` | Product requirements و acceptance criteria | Product Manager |
+| `02_Business/` | Constitution، policies، commercial rules | Business Analyst |
+| `03_Domain/` | Domain model، entities، bounded contexts | System Architect |
+| `04_Architecture/` | Architecture، integration، NFR | System Architect |
+| `05_UX/` | Personas، journeys، flows | UX Designer |
+| `06_UI/` | Screen specs، design system، tokens | UX/Frontend |
+| `07_Figma/` | Handoff plans و generation prompts | UX Designer |
+| `08_AI/` | AI governance، prompts، agents، evaluation | AI Architect |
+| `09_Development/` | API، database، frontend، backend، deployment | Engineering |
+| `ADR/` | Long-lived architecture/commercial decisions | Architecture/Product |
+| `checkpoints/` | Approval snapshots | Product Manager |
 
-## Current Accepted Decision Records
+## Governance v2.4
+
+بسته جاری در مسیر زیر است:
+
+`docs/00_Project/governance-v2.4/`
+
+شامل:
+
+- Project State & Continuity
+- MVP Feature Admission & Backlog Summary
+- Checkpoint 1.6
+- Sprint 0 Execution Baseline
+- Checkpoint 1.7 Candidate
+- Sprint 0 Validation Report
+- Change Log v2.4
+
+## Accepted Decision Records
 
 - ADR-006 — Pricing & Revenue Architecture
 - ADR-007 — Partner Commercial Model
 - ADR-008 — Event-Informed and Ledger-Based Billing
 
-Existing proposed ADRs remain proposed until separately reviewed.
-
-## Required Document Introduction Order
-
-1. Business Constitution
-2. Master Specification
-3. Roadmap
-4. PRD
-5. Rule Engine
-6. Workflow Engine
-7. Domain Model
-8. KPI Framework
-9. UX
-10. Screen Specification
-11. Wireframe
-12. Interaction Design
-13. Design System
-14. Design Tokens
-15. Figma
-16. Mega Prompt
-17. Prompt Library
-18. AI Agents
-19. Architecture
-20. Development
-21. API
-22. Database
-23. Frontend
-24. Backend
-25. Deployment
-
 ## Change Rule
 
-Update the canonical owner first. Use an ADR for long-lived architecture or commercial structure. Then synchronize the Master Specification reference map, CHANGELOG.md, and PROJECT_STATE.md as needed.
+1. ابتدا مالک canonical تغییر کند.
+2. برای تصمیم پایدار معماری یا تجاری Decision Record ثبت شود.
+3. سپس `PROJECT_STATE.md`، Roadmap، README و Change Log همگام شوند.
+4. Feature جدید پیش‌فرض `POST_MVP_CANDIDATE` است.
+5. بخش Frozen بدون Decision Record باز نمی‌شود.
