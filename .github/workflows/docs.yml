@@ -1,0 +1,40 @@
+name: Documentation checks
+
+on:
+  pull_request:
+    paths:
+      - "docs/**"
+      - "*.md"
+      - ".github/**"
+  push:
+    branches:
+      - main
+      - work
+    paths:
+      - "docs/**"
+      - "*.md"
+      - ".github/**"
+
+jobs:
+  verify-docs-structure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify required documentation paths
+        run: |
+          set -eu
+          test -d docs/00_Project
+          test -d docs/01_PRD
+          test -d docs/02_Business
+          test -d docs/03_Domain
+          test -d docs/04_Architecture
+          test -d docs/05_UX
+          test -d docs/06_UI
+          test -d docs/07_Figma
+          test -d docs/08_AI
+          test -d docs/09_Development
+          test -d docs/checkpoints
+          test -d docs/ADR
+          test -f AGENTS.md
+          test -f PROJECT_STATE.md
