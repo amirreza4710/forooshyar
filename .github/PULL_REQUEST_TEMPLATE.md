@@ -10,6 +10,7 @@
 - [ ] CI/DevOps
 
 ## Scope control
+- [ ] I verified the previous phase/checkpoint/document before starting this change.
 - [ ] This PR is small and reversible.
 - [ ] This PR does not mix unrelated documentation and implementation changes.
 - [ ] The commit history is understandable.

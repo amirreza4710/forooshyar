@@ -42,6 +42,8 @@ Owns AI-assisted workflows, prompt architecture, agent boundaries, and AI govern
 
 ## Working Rules
 - Keep commits small, reversible, and documented.
+- Before starting any new phase, sprint, checkpoint, or document, verify that the previous step is complete and consistent with its acceptance criteria.
+- If the previous step is incomplete, conflicting, or unverified, stop forward progress and fix or document the gap first.
 - Record significant architecture decisions in `docs/ADR/`.
 - Update `PROJECT_STATE.md` when project phase, sprint, checkpoint, status, or next milestone changes.
 - Do not introduce large batches of unrelated documents or code in a single commit.

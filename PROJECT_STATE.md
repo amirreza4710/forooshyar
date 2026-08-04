@@ -34,3 +34,12 @@ Add `docs/00_Project/Master-Specification-v2.0.md` in a dedicated commit.
 2. Read `AGENTS.md`.
 3. Read only the relevant `docs/` folder for the active sprint.
 4. Read implementation code only when the documentation does not answer the question.
+
+
+## Stage Gate Rule
+Before starting `Next Document`, the agent must verify that `Last Approved Document` exists, matches the expected sprint order, and has enough acceptance criteria for the next document to depend on it. If verification fails, do not move forward; update or repair the previous step first.
+
+## Previous Step Verification
+- Last verified step: Business Constitution v1.0
+- Verification status: Complete enough to start Master Specification v2.0
+- Required next verification: Confirm Master Specification v2.0 references Business Constitution v1.0 before PRD work starts.
