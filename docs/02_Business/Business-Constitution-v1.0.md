@@ -264,3 +264,164 @@ Required next documents:
 - Future Master Specification and PRD documents can reference this document as the business foundation.
 - Any conflicting future business decision must update this document or record an ADR.
 - `PROJECT_STATE.md` is updated to point to the next Sprint 1 document.
+
+
+## 21. Product and Commercial Positioning
+
+The internal product vision is a Domain-Driven Business Operating Platform.
+
+The current external market position is narrower and testable: a Sales & Distribution Operating Platform. The broader platform vision must not expand the MVP into unrelated business domains before the sales and distribution operating loop has demonstrated measurable customer value.
+
+The implementation baseline remains a Modular Monolith with explicit Bounded Contexts. Microservices require a future ADR supported by measured scale, ownership, or reliability needs.
+
+## 22. Operating Model Layers
+
+Every material change must flow through four layers:
+
+1. Business Constitution
+2. Product Architecture
+3. Implementation
+4. Operations
+
+A downstream layer must not silently override a decision made in an upstream layer. Conflicts require an ADR or an explicit constitution amendment.
+
+## 23. Business Model Principles
+
+Farakhorasan adopts a Hybrid SaaS Revenue Model.
+
+Revenue sources include:
+
+- Base Organization Subscription
+- Included Billable Seat Allowance
+- Additional Seat Bundles
+- Optional Product Add-ons
+- Metered Services:
+  - AI Usage
+  - API Usage
+  - Communication Usage, including SMS, WhatsApp, calls, and email
+- One-time Onboarding
+- Data Migration
+- Approved Integrations
+- Enterprise Support
+- Future Marketplace Take Rate, only after separate validation and approval
+
+Partner-sourced revenue is a channel attribution, not a separate revenue source. Partner commissions and payouts are Channel Cost and must be accounted for separately from product revenue.
+
+## 24. Pricing Principles
+
+Pricing must be:
+
+1. Value-Based
+2. Versioned
+3. Configurable
+4. Auditable
+5. Tenant-Aware
+6. Partner-Aware
+7. Free of hard-coded prices
+8. Expanded only after measurable customer value is demonstrated
+
+Current figures, discounts, and package ideas are Pricing Hypotheses, not an official Price List.
+
+## 25. Commercial Rules and Pilot Boundary
+
+The following rules are mandatory:
+
+- Four public Starter, Growth, Professional, and Enterprise plans must not be published before market validation.
+- The initial commercial offer is a 30-day Paid Design Partner Pilot for one organization and up to six field users.
+- The pilot includes process setup, initial data migration, training, dashboard access, before-and-after KPI measurement, and a final ROI report.
+- Pilot pricing is organizational and project-based, not positioned as low-cost per-user CRM pricing.
+- After pilot validation, the intended packaging is Core Operations, Scale & Automation, and a contract-specific Enterprise offer.
+- Core identity includes CRM, visits, orders, collections, KPI, commission, and foundational rules.
+- Billing is independent from RBAC. Seat Type is independent from organizational Role.
+- Billable Seat is the billing concept. Its eligibility must be based on configurable, versioned, auditable Business Activity rules.
+- Subscription values, discounts, contract periods, included allowances, and true-up rules must be configurable and versioned.
+- AI and other variable-cost services are Metered Services.
+- Billing Engine, Subscription Management, automated invoicing, Partner Portal, and automated payouts are outside the 30-day MVP.
+- MVP billing is manual and supported by an auditable usage export.
+
+## 26. Partner Commercial Model
+
+A Partner can hold one or more independent capabilities:
+
+- Referral
+- Resale
+- Implementation
+- Technology Integration
+
+The future partner model must support versioned agreements, customer attribution, attribution windows, commission rules, renewal eligibility, clawbacks, payout ledgers, and delegated tenant administration with customer authorization and audit logs.
+
+Partner capabilities are not a linear maturity ladder. No Partner Portal or automated payout workflow is approved for the MVP.
+
+## 27. Billing Architecture Principles
+
+Billing is Event-Informed and Ledger-Based.
+
+The target flow is:
+
+Domain Event → Metering Ingestion → Normalized Billable Event → Immutable Usage Ledger → Rating → Invoice Draft → Reconciliation → Invoice Issued
+
+Raw event streams and user tables are not invoice amount sources. The Rating function may read versioned Subscription, PriceBook, Contract, and Entitlement data, while billable usage must be derived from the immutable usage ledger.
+
+Every billable event contract must include at least:
+
+- event_id
+- idempotency_key
+- tenant_id
+- event_type
+- occurred_at
+- received_at
+- source
+- schema_version
+- quantity
+- unit
+
+The event contract is documented now for future compatibility; its broker, ingestion infrastructure, ledger, and automated billing implementation remain outside the MVP.
+
+## 28. Feature Admission Gate
+
+A Product Capability enters the product only when all four conditions are satisfied:
+
+1. Measured Customer Value
+2. Reusable Capability
+3. Sustainable Unit Economics
+4. Product Constitution Alignment
+
+Architecture Enablers such as security, backup, auditability, and observability may use a controlled exception path. Each exception requires a documented risk, owner, budget, review date, and expiry or exit criterion.
+
+Custom development is accepted only when it is reusable, strategically necessary or revenue-generating, aligned with this constitution, and economically sustainable.
+
+## 29. AI Cost Governance
+
+Every AI capability must document:
+
+- Customer Value Hypothesis
+- Variable Cost per Unit
+- Expected Usage Volume
+- Target Gross Margin
+- Charging Strategy
+- Tenant Budget
+- Usage Cap
+- Fallback Strategy
+- Kill Criteria
+
+Charging may use plan allowance, prepaid usage packs, a fixed add-on, or metered usage. AI must not be added without an explicit cost and margin model.
+
+## 30. Documentation and Change Governance
+
+The Master Specification is the navigation and traceability hub for the documentation system. It does not duplicate detailed rules owned by this constitution or by ADRs.
+
+Material changes must:
+
+1. Identify the canonical owning document.
+2. Record a Change Log entry.
+3. Create or update an ADR when architecture or long-lived commercial structure changes.
+4. Update the Master Specification reference map.
+5. Preserve document status independently: an Accepted ADR does not make the entire constitution Accepted.
+
+## 31. Decision Traceability
+
+The following accepted decisions govern this section:
+
+- ADR-006 — Pricing & Revenue Architecture
+- ADR-007 — Partner Commercial Model
+- ADR-008 — Event-Informed and Ledger-Based Billing
