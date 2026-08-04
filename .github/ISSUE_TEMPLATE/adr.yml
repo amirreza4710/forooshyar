@@ -1,0 +1,33 @@
+name: Architecture decision
+description: Propose or record an Architecture Decision Record.
+title: "ADR: "
+labels: [architecture, adr]
+body:
+  - type: input
+    id: adr-number
+    attributes:
+      label: ADR number
+      placeholder: ADR-005
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What problem, force, or constraint requires a decision?
+    validations:
+      required: true
+  - type: textarea
+    id: decision
+    attributes:
+      label: Proposed decision
+      description: What decision should be recorded?
+    validations:
+      required: true
+  - type: textarea
+    id: consequences
+    attributes:
+      label: Consequences
+      description: List trade-offs, risks, and follow-up work.
+    validations:
+      required: true
