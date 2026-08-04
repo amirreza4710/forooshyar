@@ -1,0 +1,30 @@
+name: Documentation task
+description: Track a documentation addition, update, or review.
+title: "docs: "
+labels: [documentation]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What document or documentation area needs work?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: List the files, folders, or sprint documents affected.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: What must be true for this documentation task to be complete?
+      value: |
+        - [ ] Document is added or updated in the correct `docs/` folder.
+        - [ ] Cross-references are updated when needed.
+        - [ ] `PROJECT_STATE.md` is updated if project state changed.
+    validations:
+      required: true
