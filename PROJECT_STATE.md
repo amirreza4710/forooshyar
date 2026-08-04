@@ -1,61 +1,121 @@
 # PROJECT_STATE.md
 
-This file is the short-term memory of the repository. Every agent must read it before loading deeper context.
+این فایل حافظه کوتاه‌مدت و نقطه شروع مخزن است. هر انسان یا Agent باید پیش از بارگذاری اسناد عمیق‌تر، این فایل را بخواند.
 
-    Project Name: Farakhorasan Sales OS
-    Repository Mode: Documentation-first enterprise/open-source workflow
-    Current Phase: Core Business Documentation
-    Current Sprint: Sprint 1
-    Current Branch: agent/pricing-constitution-master-spec
-    Current Checkpoint: 1.1
-    Last Approved Document: Business Constitution v1.0 baseline
-    Current Review: Pricing Constitution amendments, ADR-006 to ADR-008, Master Specification v2.0, and Roadmap draft
-    Last Completed Commit: docs(project): add Master Specification v2.0
-    Next Gate: Review and approve Master Specification v2.0
-    Next Document after Gate: PRD
-    Next Milestone: Sprint 1 Core Business Documents
-    Status: IN REVIEW
+## Current State
 
-## Current Objective
+- **Project:** Farakhorasan Sales OS / فروشیار
+- **Market Position:** Sales & Distribution Operating Platform
+- **Internal Vision:** Domain-Driven Business Operating Platform
+- **Architecture:** Modular Monolith با Bounded Contextهای روشن
+- **Current Official Checkpoint:** **1.6 — MVP Delivery Ready (Approved & Frozen)**
+- **Next Checkpoint:** **1.7 — Engineering Foundation Ready (Candidate, Not Frozen)**
+- **Current Workstream:** Sprint 0 target-environment verification
+- **MVP Scope:** Frozen
+- **MVP Backlog:** 11 Epic و 32 Feature متعهد
+- **New Features Added in v2.4:** صفر
+- **Status:** ENGINEERING FOUNDATION RELEASE CANDIDATE
 
-Review the commercial constitution amendments and use Master Specification v2.0 as the canonical navigation and traceability hub before expanding product requirements.
+## What Is Frozen
 
-## Current Decisions
+- Business و Product Foundation
+- Product Constitution و تصمیم‌های تجاری/معماری پذیرفته‌شده
+- Domain، API، Database و UX baselines
+- MVP 30-Day Scope
+- Feature Admission Audit
+- MVP Backlog و Cut Line
+- Checkpoint 1.6
 
-- ADR-006 — Pricing & Revenue Architecture — Accepted
-- ADR-007 — Partner Commercial Model — Accepted
-- ADR-008 — Event-Informed and Ledger-Based Billing — Accepted
-- Overall Business Constitution status remains Draft for Sprint 1 review.
-- Billing Engine, Subscription Management, Partner Portal, automated invoicing, and automated payouts remain outside the 30-day MVP.
+## Sprint 0 Evidence
 
-## Sprint Sequence
+- Repository و Branch/PR policy
+- Modular Monolith package boundaries
+- Migration baseline
+- Authentication foundation
+- Audit minimum
+- API/Error conventions
+- Structured logging و Request ID
+- Health/Readiness endpoints
+- Seed data
+- CI definition
+- Backup/Restore scripts
+- Sprint 1 Board
 
-1. Sprint 0 — repository bootstrap and governance files.
-2. Sprint 1 — core business documents.
-3. Sprint 2 — UX, screen, wireframe, interaction, and design system documents.
-4. Sprint 3 — Figma, prompt library, AI agents, and architecture documents.
-5. Sprint 4 — development, API, database, frontend, backend, and deployment documents.
+Backend validation ثبت‌شده:
 
-## Immediate Next Step
+```text
+Alembic: PASS
+Seed: PASS
+Compile: PASS
+Tests: 7/7 PASS
+```
 
-Review the draft PR for consistency. After merge, explicitly approve or revise Master Specification v2.0 before PRD work starts.
+## Remaining Gate Before Checkpoint 1.7 Freeze
+
+این موارد باید روی Windows + Docker Desktop اجرا و ثبت شوند:
+
+1. Frontend production build
+2. Docker Compose build/up
+3. Backend tests داخل Container
+4. Health و Readiness از Host
+5. PostgreSQL backup
+6. PostgreSQL restore test
+7. Seed Admin login
+8. Admin password rotation
+
+تا عبور از این Gate، Checkpoint رسمی پروژه **1.6** باقی می‌ماند.
+
+## Explicitly Outside MVP
+
+- Billing Engine و Automated Rating/Invoice/Reconciliation
+- Message Broker و Transactional Outbox
+- Partner Portal و Delegated Tenant Access UI
+- Automated Partner Commission/Payout
+- Marketplace
+- Microservices decomposition
+- Autonomous AI Agents
+
+## Current Execution Sequence
+
+```text
+Checkpoint 1.6
+→ Sprint 0 Target Verification
+→ Checkpoint 1.7 Freeze
+→ Sprint 1: AUTH + Settings + Products + Customers
+→ Sales Core
+→ Performance & Cash
+→ Decision Layer
+→ Stabilization
+```
+
+## Mandatory Next Action
+
+روی محیط هدف اجرا شود:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\scripts\Initialize-Farakhorasan.ps1
+.\scripts\Backup-Database.ps1
+$LatestBackup = Get-ChildItem .\backups\*.dump | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+.\scripts\Restore-Database.ps1 -BackupFile $LatestBackup.FullName
+.\scripts\Verify-Sprint0.ps1
+```
 
 ## Agent Loading Strategy
 
-1. Read this file.
-2. Read AGENTS.md.
-3. Read docs/02_Business/Business-Constitution-v1.0.md.
-4. Read docs/00_Project/Master-Specification-v2.0.md.
-5. Read only the canonical detail documents relevant to the task.
-6. Read implementation code only when documentation does not answer the question.
+1. `PROJECT_STATE.md`
+2. `AGENTS.md`
+3. `README.md`
+4. `docs/00_Project/governance-v2.4/README.md`
+5. Checkpoint 1.6
+6. MVP Backlog
+7. Sprint 0 Baseline
+8. فقط اسناد دامنه مرتبط با کار جاری
 
-## Stage Gate Rule
+## Anti-Perfectionism Rule
 
-Before starting the next document, verify that the previous step exists, references its dependencies, and meets its acceptance criteria. If verification fails, repair or document the gap first.
-
-## Previous Step Verification
-
-- Last verified step: Business Constitution v1.0 baseline
-- Verification status: Complete enough to draft Master Specification v2.0
-- Current required verification: Confirm Master Specification v2.0 accurately references the constitution and ADR-006 to ADR-008
-- PRD status: Blocked until Checkpoint 1.1 approval
+- فقط یک Workstream اجرایی فعال باشد.
+- Feature جدید پیش‌فرض Post-MVP است.
+- Scope Review برای حذف و کوچک‌سازی است، نه افزودن.
+- Design فقط برای Sprint جاری تولید می‌شود.
+- پیشرفت با Working Software و Demo سنجیده می‌شود، نه تعداد سند.
