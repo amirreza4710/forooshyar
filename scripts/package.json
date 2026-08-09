@@ -13,6 +13,7 @@
     "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
+    "@types/bcryptjs": "3.0.0",
     "@types/node": "catalog:",
     "tsx": "catalog:"
   }
