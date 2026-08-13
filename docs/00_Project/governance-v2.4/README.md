@@ -11,13 +11,14 @@
 
 ## Start Here
 
-1. `PROJECT_STATE_AND_CONTINUITY.md`
-2. `CHECKPOINT_1.6_MVP_DELIVERY_READY.md`
-3. `MVP_FEATURE_ADMISSION_AND_BACKLOG.md`
-4. `SPRINT_0_EXECUTION_AND_REPOSITORY_BASELINE.md`
-5. `CHECKPOINT_1.7_ENGINEERING_FOUNDATION_CANDIDATE.md`
-6. `SPRINT_0_VALIDATION_REPORT.txt`
-7. `CHANGELOG_v2.4.md`
+1. `PROJECT_STATE.md`
+2. `AGENTS.md`
+3. `README.md`
+4. `docs/00_Project/governance-v2.4/README.md`
+5. `docs/00_Project/Roadmap.md`
+6. `docs/README.md`
+
+*(پیوست‌های این پوشه پس از مطالعه منابع بالا قابل مراجعه هستند)*
 
 ## Current Truth
 
@@ -36,7 +37,7 @@ Billing Engine، Message Broker، Partner Portal، Automated Payout، Marketplac
 
 ## Stack Divergence Warning
 
-مخزن اصلی در حال حاضر Express/Vite/Drizzle است. Artifact مستقل Sprint 0 با FastAPI/Next.js/SQLAlchemy ساخته شده است. این Artifact فقط Engineering Foundation Candidate است و جایگزینی Stack مخزن بدون ADR و برنامه مهاجرت تصویب‌شده مجاز نیست.
+The implemented repository stack is **React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI**. Historical or external references to FastAPI / Next.js are non-authoritative unless approved by a future Decision Record. No migration, merge, replacement, or stack substitution is approved at this time. Agents must treat the current repository implementation and current governance docs as authoritative. Any future stack change must go through a Decision Record and update `README.md`, `PROJECT_STATE.md`, `AGENTS.md`, `docs/README.md`, `Roadmap.md`, and relevant development docs together.
 
 ## Anti-Perfectionism
 

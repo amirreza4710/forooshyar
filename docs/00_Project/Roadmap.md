@@ -11,6 +11,10 @@ Delivery Readiness کامل و Frozen است. MVP شامل 11 Epic و 32 Feature
 
 Sprint 0 به وضعیت Release Candidate رسیده و فقط Target Environment Verification باقی مانده است.
 
+## Stack Divergence Warning
+
+The implemented repository stack is **React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI**. Historical or external references to FastAPI / Next.js are non-authoritative unless approved by a future Decision Record. No migration, merge, replacement, or stack substitution is approved at this time. Agents must treat the current repository implementation and current governance docs as authoritative. Any future stack change must go through a Decision Record and update `README.md`, `PROJECT_STATE.md`, `AGENTS.md`, `docs/README.md`, `Roadmap.md`, and relevant development docs together.
+
 ## Phase A0 — Sprint 0 Engineering Foundation
 
 Mandatory outputs:
