@@ -8,7 +8,7 @@
 | Naming / Rename drift | B/C | لینک‌ها و نام‌ها احتمالاً ناهماهنگ‌اند | انجام Naming Drift Discovery با Graphify؛ سپس جدول Rename با اثرات و rollback | Tech Lead / Repo Owner | P1 |
 | ADR creation policy (ADR-009) | C | ADR جدید ممکن است قبل از استخراج تصمیم ثبت شود | ADRها فقط پس از استخراج تصمیم و شواهد ثبت شوند | Architect / Product | P1 |
 | Branch Codex → main merge | A (Risk) | نباید بدون استخراج Diff Knowledge مرج شود | Diff extraction → Conflict matrix → Implementation Plan → Write branch → Validate → PR → Merge با تایید صریح | Repo Owner / Product Manager | P0 |
-| Stack migration (FastAPI/Next vs existing) | A (Contradiction) | پشته فعلی React+Vite + Express است؛ Candidate FastAPI/Next ثبت شده | ممنوعیت جایگزینی بدون ADR و POC؛ Impact assessment لازم | System Architect + Backend Lead | P0 |
+| Stack migration (FastAPI/Next vs existing) | C (Resolved) | پشته فعلی React+Vite + Express است؛ Candidate FastAPI/Next ثبت شده بود | حل شده توسط ADR-0001 (پشته فعلی Express مرجع است) | System Architect + Backend Lead | P0 |
 | DB migration verification (PR #13) | C (Urgent) | اجرای pnpm --filter @workspace/db push روی dev تأیید نشده | فوری تأیید اجرا یا برنامه اجرای controlled migration با rollback | DB Owner / DevOps | P0 |
 | Graphify / Knowledge artifacts | B | لینک‌های شکسته و artifacts ناقص | بازتولید graphify و تعمیر لینک‌ها؛ commit تنها گزارش‌ها | Repo Maintainer | P1 |
 | Agent coordination (PROJECT_STATUS.md) | D (Consistent) | روند وجود دارد اما باید اجرا شود | هر ایجنت قبل/بعد از کار PROJECT_STATUS.md را بخواند و بعد آپدیت کند | Repo Owner / Project Manager | P1 |

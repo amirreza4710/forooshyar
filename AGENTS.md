@@ -6,10 +6,16 @@ These instructions apply to the entire repository.
 ## Source of Truth
 All agents must use `docs/` as the primary source of product, business, UX, architecture, AI, and development truth.
 
-Before starting work, read:
+Before starting work, follow this canonical reading order:
 1. `PROJECT_STATE.md`
-2. Relevant files under `docs/`
+2. `AGENTS.md`
 3. `README.md`
+4. `docs/00_Project/governance-v2.4/README.md`
+5. `docs/00_Project/Roadmap.md`
+6. `docs/README.md`
+
+## Stack Divergence Warning
+The currently implemented repository stack is **React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI**. Any historical or external references to FastAPI or Next.js are non-authoritative and must be ignored unless approved by a future Decision Record. No migration, merge, replacement, or stack substitution is approved at this time. All agents must treat the current repository implementation and current governance docs as authoritative. Any future stack change must go through a Decision Record and update `README.md`, `PROJECT_STATE.md`, `AGENTS.md`, `docs/README.md`, `Roadmap.md`, and relevant development docs together.
 
 ## Agent Roles
 
