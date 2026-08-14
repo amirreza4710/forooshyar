@@ -11,13 +11,14 @@
 
 ## Start Here
 
-1. `PROJECT_STATE_AND_CONTINUITY.md`
-2. `CHECKPOINT_1.6_MVP_DELIVERY_READY.md`
-3. `MVP_FEATURE_ADMISSION_AND_BACKLOG.md`
-4. `SPRINT_0_EXECUTION_AND_REPOSITORY_BASELINE.md`
-5. `CHECKPOINT_1.7_ENGINEERING_FOUNDATION_CANDIDATE.md`
-6. `SPRINT_0_VALIDATION_REPORT.txt`
-7. `CHANGELOG_v2.4.md`
+1. `PROJECT_STATE.md`
+2. `AGENTS.md`
+3. `README.md`
+4. `docs/00_Project/governance-v2.4/README.md`
+5. `docs/00_Project/Roadmap.md`
+6. `docs/README.md`
+
+*(پیوست‌های این پوشه پس از مطالعه منابع بالا قابل مراجعه هستند)*
 
 ## Current Truth
 

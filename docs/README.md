@@ -9,7 +9,10 @@
 3. `README.md`
 4. `docs/00_Project/governance-v2.4/README.md`
 5. `docs/00_Project/Roadmap.md`
-6. سند canonical یا Decision Record مرتبط
+6. `docs/README.md`
+
+## Stack Divergence Warning
+The implemented repository stack is **React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI**. Historical or external references to FastAPI / Next.js are non-authoritative unless approved by a future Decision Record. No migration, merge, replacement, or stack substitution is approved at this time. Agents must treat the current repository implementation and current governance docs as authoritative. Any future stack change must go through a Decision Record and update `README.md`, `PROJECT_STATE.md`, `AGENTS.md`, `docs/README.md`, `Roadmap.md`, and relevant development docs together.
 
 ## Current Baseline
 

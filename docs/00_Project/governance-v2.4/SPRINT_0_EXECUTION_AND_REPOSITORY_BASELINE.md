@@ -8,11 +8,13 @@
 
 ایجاد حداقل بنیاد مهندسی برای شروع MVP بدون Message Broker، Microservices، Billing Engine، Partner Portal یا Builder عمومی.
 
-## Candidate Technical Baseline
+## Candidate Technical Baseline (Historical Record)
 
-- FastAPI + SQLAlchemy 2 + Alembic
+> **هشدار (Stack Divergence Warning):** موارد زیر مربوط به طراحی اولیه (Candidate Technical Baseline) بوده و اکنون صرفاً ارزش تاریخی دارند. مطابق ADR-0001، پشته فنیِ اجرایی و قطعی پروژه **React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, و OpenAPI** است و هرگونه ارجاع به FastAPI یا Next.js نامعتبر است.
+
+- FastAPI + SQLAlchemy 2 + Alembic (Historical)
 - PostgreSQL in Docker؛ SQLite فقط برای تست محلی
-- Next.js + TypeScript + RTL foundation
+- Next.js + TypeScript + RTL foundation (Historical)
 - Modular Monolith
 - In-process Domain Event Dispatcher
 - PBKDF2 password hashing + JWT

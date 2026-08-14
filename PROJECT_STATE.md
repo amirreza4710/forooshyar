@@ -101,6 +101,10 @@ $LatestBackup = Get-ChildItem .\backups\*.dump | Sort-Object LastWriteTime -Desc
 .\scripts\Verify-Sprint0.ps1
 ```
 
+## Stack Divergence Warning
+
+The implemented and authoritative repository stack is **React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI**. Historical or external references to FastAPI or Next.js are non-authoritative and must be ignored unless explicitly approved by a future Decision Record. No migration, merge, replacement, or stack substitution is approved at this time. Agents must treat the current repository implementation and current governance docs as authoritative. Any future stack change must go through a Decision Record and update all governance documents together.
+
 ## Agent Loading Strategy
 
 1. `PROJECT_STATE.md`
