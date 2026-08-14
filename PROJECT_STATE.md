@@ -113,10 +113,6 @@ The implemented and authoritative repository stack is **React 19, Vite, Express 
 4. `docs/00_Project/governance-v2.4/README.md`
 5. `docs/00_Project/Roadmap.md`
 6. `docs/README.md`
-7. Checkpoint 1.6
-8. MVP Backlog
-9. Sprint 0 Baseline
-10. فقط اسناد دامنه مرتبط با کار جاری
 
 ## Anti-Perfectionism Rule
 

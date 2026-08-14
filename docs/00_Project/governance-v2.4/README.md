@@ -37,7 +37,11 @@ Billing Engine، Message Broker، Partner Portal، Automated Payout، Marketplac
 
 ## Stack Divergence Warning
 
-The implemented repository stack is **React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI**. Historical or external references to FastAPI / Next.js are non-authoritative unless approved by a future Decision Record. No migration, merge, replacement, or stack substitution is approved at this time. Agents must treat the current repository implementation and current governance docs as authoritative. Any future stack change must go through a Decision Record and update `README.md`, `PROJECT_STATE.md`, `AGENTS.md`, `docs/README.md`, `Roadmap.md`, and relevant development docs together.
+The implemented and authoritative stack is React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI.
+Any historical or external reference to FastAPI or Next.js is non-authoritative unless a future Decision Record approves it.
+No migration, merge, replacement, or stack substitution is approved at this time.
+Agents must treat the current repository implementation and current governance docs as authoritative.
+Any future stack change requires a Decision Record and must update README, PROJECT_STATE, AGENTS, docs/00_Project/Roadmap, docs/README, and the governance folder together.
 
 ## Anti-Perfectionism
 
