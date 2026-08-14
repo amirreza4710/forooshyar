@@ -1,0 +1,45 @@
+name: AI PR Safety & Test Check
+
+on:
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate-and-test:
+    name: Build, Lint, Tests & Doc Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint Code Architecture
+        run: npm run lint --if-present
+
+      - name: Type Checking
+        run: npm run type-check --if-present
+
+      - name: Run Automated Tests
+        run: npm test --if-present
+
+      - name: Check Mandatory Status & Architecture Docs
+        run: |
+          echo "Verifying that documentation files exist..."
+          if [ ! -f PROJECT_STATUS.md ]; then
+            echo "❌ Error: PROJECT_STATUS.md is missing in this PR!"
+            exit 1
+          fi
+          if [ ! -f ARCHITECTURE_GRAPH.md ]; then
+            echo "❌ Error: ARCHITECTURE_GRAPH.md is missing in this PR!"
+            exit 1
+          fi
+          echo "✅ All required documentation and architecture graphs are present."
