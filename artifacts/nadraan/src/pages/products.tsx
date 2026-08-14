@@ -226,7 +226,7 @@ export default function ProductsPage() {
                 <tr key={p.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors group">
                   <td className="px-3 sm:px-4 py-3">
                     <div className="flex items-center gap-2.5">
-                      <ProductThumb image={p.image} name={p.name} />
+                      <ProductThumb image={p.image ?? undefined} name={p.name} />
                       <span className="font-medium text-sm leading-snug line-clamp-2 max-w-[140px]">{p.name}</span>
                     </div>
                   </td>

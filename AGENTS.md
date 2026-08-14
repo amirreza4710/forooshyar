@@ -8,8 +8,11 @@ All agents must use `docs/` as the primary source of product, business, UX, arch
 
 Before starting work, read:
 1. `PROJECT_STATE.md`
-2. Relevant files under `docs/`
+2. `AGENTS.md`
 3. `README.md`
+4. `docs/00_Project/governance-v2.4/README.md`
+5. `docs/00_Project/Roadmap.md`
+6. `docs/README.md`
 
 ## Agent Roles
 

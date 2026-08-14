@@ -47,7 +47,7 @@ Thumbs.db
 # Replit
 .cache/
 .local/
--e 
+
 # فایل‌های کش/متادیتای داخلی Graphify — فقط خروجی نهایی commit میشه
 graphify-out/cache/
 graphify-out/*.json

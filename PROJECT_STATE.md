@@ -107,10 +107,8 @@ $LatestBackup = Get-ChildItem .\backups\*.dump | Sort-Object LastWriteTime -Desc
 2. `AGENTS.md`
 3. `README.md`
 4. `docs/00_Project/governance-v2.4/README.md`
-5. Checkpoint 1.6
-6. MVP Backlog
-7. Sprint 0 Baseline
-8. فقط اسناد دامنه مرتبط با کار جاری
+5. `docs/00_Project/Roadmap.md`
+6. `docs/README.md`
 
 ## Anti-Perfectionism Rule
 

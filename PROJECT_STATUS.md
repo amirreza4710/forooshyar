@@ -37,9 +37,9 @@ pnpm --filter @workspace/db push
 
 - [ ] تأیید اجرای `pnpm --filter @workspace/db push` روی dev واقعی بعد از PR #13 (بالا توضیح داده شد)
 - [ ] باطل کردن و ساخت مجدد توکن موقت گیت‌هاب امیررضا (بعد از تموم شدن کارهای فعلی)
-- [ ] رفع باگ کوچیک TS در `artifacts/nadraan/src/pages/orders.tsx` (خط ۱۱۸ و ۲۸۷) — `e.target.value` بدون cast به `OrderUpdateStatus`
-- [ ] rate limiting روی `/auth/login` (اولویت پایین، فقط ۳ کاربر داخلی)
-- [ ] بازبینی سطح لاگ‌های production (pino از قبل هست، فقط محتوا کامل بشه)
+- [x] رفع باگ کوچیک TS در `artifacts/nadraan/src/pages/orders.tsx` (خط ۱۱۸ و ۲۸۷) — `e.target.value` بدون cast به `OrderUpdateStatus`
+- [x] rate limiting روی `/auth/login` (اولویت پایین، فقط ۳ کاربر داخلی)
+- [x] بازبینی سطح لاگ‌های production (pino از قبل هست، فقط محتوا کامل بشه)
 - [ ] تعریف Roadmap فاز بعدی (فیچر محصولی — چون Roadmap hardening فعلی تقریباً تمومه)
 
 ## تصمیمات معلق — نیاز به تایید صریح امیررضا قبل از اجرا

@@ -115,7 +115,7 @@ export default function OrdersPage() {
 
   const applyBulkStatus = useCallback(async () => {
     const ids = Array.from(selected);
-    await Promise.all(ids.map(id => updateOrder.mutateAsync({ id, data: { status: bulkStatus } })));
+    await Promise.all(ids.map(id => updateOrder.mutateAsync({ id, data: { status: bulkStatus as any } })));
     toast({ title: `✅ وضعیت ${n(ids.length)} سفارش تغییر کرد` });
     setSelected(new Set());
   }, [selected, bulkStatus, updateOrder, toast]);
@@ -284,7 +284,7 @@ export default function OrdersPage() {
                   <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
                     <select
                       value={o.status ?? "در انتظار"}
-                      onChange={e => updateOrder.mutate({ id: o.id, data: { status: e.target.value } })}
+                      onChange={e => updateOrder.mutate({ id: o.id, data: { status: e.target.value as any } })}
                       className={`text-xs px-2.5 py-1.5 rounded-full border font-medium focus:outline-none cursor-pointer transition-colors min-h-[32px] ${STATUS_STYLE[o.status ?? "در انتظار"] ?? "bg-muted text-muted-foreground border-border"}`}
                       aria-label={`وضعیت سفارش ${o.code}`}
                     >
