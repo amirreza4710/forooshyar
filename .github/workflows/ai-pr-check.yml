@@ -1,0 +1,50 @@
+name: AI PR Safety & Test Check
+
+on:
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate-and-test:
+    name: Build, Lint, Tests & Doc Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+
+      - name: Set up Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint Code Architecture
+        run: if pnpm run | grep -q "lint"; then pnpm run lint; else echo "No lint script found"; fi
+
+      - name: Type Checking
+        run: pnpm run typecheck
+
+      - name: Run Automated Tests
+        run: if pnpm run | grep -q "test"; then pnpm run test; else echo "No test script found"; fi
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Check Mandatory Status & Architecture Docs
+        run: |
+          echo "Verifying documentation files exist..."
+          test -f PROJECT_STATE.md || (echo "❌ Error: PROJECT_STATE.md is missing!" && false)
+          test -f ARCHITECTURE_GRAPH.md || (echo "❌ Error: ARCHITECTURE_GRAPH.md is missing!" && false)
+          test -f docs/README.md || (echo "❌ Error: docs/README.md is missing!" && false)
+          test -f AGENTS.md || (echo "❌ Error: AGENTS.md is missing!" && false)
+          echo "✅ All required documentation and architecture graphs are present."

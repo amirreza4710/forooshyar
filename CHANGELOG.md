@@ -3,6 +3,7 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
+- feat(ci): add PR validation and verified baseline architecture documentation
 - Added Master Specification v2.0 as the canonical navigation and traceability hub.
 - Added a validation-first roadmap centered on the 30-day Paid Design Partner Pilot.
 - Added accepted ADR-006 for Pricing & Revenue Architecture.

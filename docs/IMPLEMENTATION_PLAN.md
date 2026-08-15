@@ -93,5 +93,3 @@
 2. Update files as per per-file plan in the branch chore/bazardan-documentation-canonicalization.
 3. Run cross-reference validation and contract tests.
 4. Create PR with description linking to CONFLICT-MATRIX.md and IMPLEMENTATION_PLAN.md.
-
-

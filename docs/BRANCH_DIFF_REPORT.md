@@ -21,4 +21,3 @@ git diff origin/main...HEAD > branch-patch.diff
 ## Placeholder: branch-diff.txt
 
 (گزارش واقعی در این فایل قرار خواهد گرفت پس از اجرای دستورهای بالا و آپلود نتیحه)
-

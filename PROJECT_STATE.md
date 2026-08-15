@@ -121,3 +121,6 @@ The implemented and authoritative repository stack is **React 19, Vite, Express 
 - Scope Review برای حذف و کوچک‌سازی است، نه افزودن.
 - Design فقط برای Sprint جاری تولید می‌شود.
 - پیشرفت با Working Software و Demo سنجیده می‌شود، نه تعداد سند.
+
+## Operations Note
+Added GitHub Actions PR validation (`.github/workflows/ai-pr-check.yml`) and verified baseline architecture documentation (`ARCHITECTURE_GRAPH.md`).

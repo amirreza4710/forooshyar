@@ -34,4 +34,3 @@ Body:
 - [ ] Approval from Product Manager and System Architect
 - [ ] All CI checks green
 - [ ] DB migration verification (if any) completed and recorded in PROJECT_STATUS.md
-
