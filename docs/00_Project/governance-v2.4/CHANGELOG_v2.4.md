@@ -29,6 +29,6 @@
 - Feature Admission Gate
 - Human-in-the-loop for sensitive decisions
 
-## Important Open Decision
+## Important Open Decision / Stack Divergence Warning
 
-Sprint 0 Candidate Stack (FastAPI/Next.js/SQLAlchemy) differs from the current repository Stack (Express/Vite/Drizzle). No code migration or replacement is approved without a dedicated ADR.
+> **Update 2026-08-13:** As resolved in **ADR-0001**, the implemented repository stack is **React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI**. Historical or external references to FastAPI / Next.js are non-authoritative unless approved by a future Decision Record. No migration, merge, replacement, or stack substitution is approved at this time. Agents must treat the current repository implementation and current governance docs as authoritative. Any future stack change must go through a Decision Record and update all governance documents together.

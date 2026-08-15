@@ -20,13 +20,23 @@
 
 Sprint 0 Foundation ساخته شده، اما Checkpoint 1.7 تا اجرای موفق Frontend build، Docker Compose، Backup/Restore و Admin login/password rotation روی محیط هدف قفل نمی‌شود.
 
-## از کجا شروع کنیم؟
+## مرجعیت اسناد (Source of Truth) و از کجا شروع کنیم؟
+
+این فایل (root `README.md`) صرفاً یک نقطه ورود و سند راهبری است و جایگزین مستندات اصلی در پوشه `docs/` نمی‌شود. هرگونه تغییر در دامنه محصول (Scope) یا پشته فناوری (Stack) نیازمند ثبت یک Decision Record و به‌روزرسانی اسناد حاکمیتی است.
+
+مرجعیت اسناد به شرح زیر است:
+- فایل **`PROJECT_STATE.md`**: نمایانگر وضعیت عملیاتی و جاری پروژه.
+- فایل **`AGENTS.md`**: تعریف‌کننده قوانین و دستورالعمل‌های اجرایی برای Agentها.
+- پوشه **`docs/`**: مرجع اصلی (Canonical) برای مستندات محصول، کسب‌وکار، معماری، تجربه کاربری و توسعه.
+
+لطفاً همیشه کار را با خواندن اسناد به ترتیب زیر آغاز کنید:
 
 1. [PROJECT_STATE.md](./PROJECT_STATE.md)
 2. [AGENTS.md](./AGENTS.md)
-3. [Governance v2.4](./docs/00_Project/governance-v2.4/README.md)
-4. [Roadmap v2.4](./docs/00_Project/Roadmap.md)
-5. [Documentation Index](./docs/README.md)
+3. [README.md](./README.md)
+4. [Governance v2.4](./docs/00_Project/governance-v2.4/README.md)
+5. [Roadmap v2.4](./docs/00_Project/Roadmap.md)
+6. [Documentation Index](./docs/README.md)
 
 ترتیب حاکمیت:
 
@@ -66,17 +76,17 @@ Epicهای متعهد:
 - Microservices
 - Autonomous AI Agents
 
-## پشته فنی فعلی مخزن
+## پشته فنی فعلی مخزن (Stack Divergence Warning)
 
+پشته (Stack) پیاده‌سازی شده و قطعی در این مخزن به شرح زیر است:
 | لایه | تکنولوژی |
 |---|---|
-| Frontend موجود | React 19 + Vite 7 + TypeScript + Tailwind CSS 4 + shadcn/ui |
-| Backend موجود | Express 5 + JWT + Pino |
-| Database موجود | PostgreSQL + Drizzle ORM |
+| Frontend | React 19 + Vite + TypeScript + Tailwind CSS 4 + shadcn/ui |
+| Backend | Express 5 + JWT + Pino |
+| Database | PostgreSQL + Drizzle ORM |
 | API Contract | OpenAPI → Orval → React Query + Zod |
-| Monorepo | pnpm workspaces |
 
-> سند Sprint 0 مستقل، یک Foundation Candidate مبتنی بر FastAPI/Next.js را ثبت می‌کند. ادغام یا جایگزینی Stack موجود در این مخزن هنوز تصویب نشده و نیازمند تصمیم معماری جداگانه است. این اختلاف عمداً پنهان نشده است.
+> **هشدار مهم:** هرگونه ارجاع تاریخی یا خارجی به `FastAPI` یا `Next.js` در مستندات، غیررسمی و منسوخ تلقی می‌شود، مگر آنکه با یک Decision Record جدید در آینده تصویب گردد. در حال حاضر، هیچ‌گونه مهاجرت، ادغام، جایگزینی یا تغییر در این پشته (Stack) تایید نشده است. تمام Agentها موظفند اجرای فعلی مخزن و مستندات حاکمیتی کنونی را به‌عنوان تنها مرجع معتبر بشناسند. هر تغییر آینده در پشته باید از طریق ثبت یک Decision Record انجام شده و به‌طور همزمان در اسناد `README`، `PROJECT_STATE`، `AGENTS`، `Roadmap` و `docs/README` به‌روزرسانی شود.
 
 ## راه‌اندازی مخزن موجود
 
@@ -105,6 +115,14 @@ pnpm run build
 - PostgreSQL backup/restore
 - Seed Admin login
 - Admin password rotation
+
+اسکریپت‌های عملیاتی Sprint 0 در مخزن در دسترس هستند (تأیید شده):
+- `./scripts/Initialize-Farakhorasan.ps1`
+- `./scripts/Backup-Database.ps1`
+- `./scripts/Restore-Database.ps1`
+- `./scripts/Verify-Sprint0.ps1`
+
+جهت تایید Sprint 0 باید این اسکریپت‌ها مطابق راهنمای موجود در `PROJECT_STATE.md` با موفقیت روی محیط هدف اجرا شوند.
 
 ## قواعد ضد کمال‌گرایی
 

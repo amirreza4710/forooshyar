@@ -6,10 +6,13 @@ These instructions apply to the entire repository.
 ## Source of Truth
 All agents must use `docs/` as the primary source of product, business, UX, architecture, AI, and development truth.
 
-Before starting work, read:
+Before starting work, follow this canonical reading order:
 1. `PROJECT_STATE.md`
-2. Relevant files under `docs/`
+2. `AGENTS.md`
 3. `README.md`
+4. `docs/00_Project/governance-v2.4/README.md`
+5. `docs/00_Project/Roadmap.md`
+6. `docs/README.md`
 
 ## Agent Roles
 

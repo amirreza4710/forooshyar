@@ -101,16 +101,18 @@ $LatestBackup = Get-ChildItem .\backups\*.dump | Sort-Object LastWriteTime -Desc
 .\scripts\Verify-Sprint0.ps1
 ```
 
+## Stack Divergence Warning
+
+The implemented and authoritative repository stack is **React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI**. Historical or external references to FastAPI or Next.js are non-authoritative and must be ignored unless explicitly approved by a future Decision Record. No migration, merge, replacement, or stack substitution is approved at this time. Agents must treat the current repository implementation and current governance docs as authoritative. Any future stack change must go through a Decision Record and update all governance documents together.
+
 ## Agent Loading Strategy
 
 1. `PROJECT_STATE.md`
 2. `AGENTS.md`
 3. `README.md`
 4. `docs/00_Project/governance-v2.4/README.md`
-5. Checkpoint 1.6
-6. MVP Backlog
-7. Sprint 0 Baseline
-8. فقط اسناد دامنه مرتبط با کار جاری
+5. `docs/00_Project/Roadmap.md`
+6. `docs/README.md`
 
 ## Anti-Perfectionism Rule
 
@@ -119,3 +121,6 @@ $LatestBackup = Get-ChildItem .\backups\*.dump | Sort-Object LastWriteTime -Desc
 - Scope Review برای حذف و کوچک‌سازی است، نه افزودن.
 - Design فقط برای Sprint جاری تولید می‌شود.
 - پیشرفت با Working Software و Demo سنجیده می‌شود، نه تعداد سند.
+
+## Operations Note
+Added GitHub Actions PR validation (`.github/workflows/ai-pr-check.yml`) and verified baseline architecture documentation (`ARCHITECTURE_GRAPH.md`).
