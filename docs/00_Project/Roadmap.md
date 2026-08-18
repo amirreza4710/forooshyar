@@ -1,7 +1,7 @@
 # Farakhorasan Product Roadmap v2.4
 
 **Status:** Approved  
-**Date:** 2026-08-04  
+**Date:** 2026-08-18 (execution tracking update)  
 **Current Official Checkpoint:** 1.6 — MVP Delivery Ready  
 **Next Checkpoint:** 1.7 — Engineering Foundation Ready
 
@@ -9,51 +9,60 @@
 
 Delivery Readiness کامل و Frozen است. MVP شامل 11 Epic و 32 Feature متعهد است و در v2.4 هیچ Feature جدیدی اضافه نشده است.
 
-Sprint 0 به وضعیت Release Candidate رسیده و فقط Target Environment Verification باقی مانده است.
+Sprint 0 از نظر Repository به وضعیت Release Candidate رسیده، اما Target Environment Verification هنوز کامل و Evidence-based تأیید نشده است.
+
+**Current active workstream: S0 Target Environment Verification.** تا Freeze شدن 1.7، توسعه Featureهای A1 مجاز نیست.
+
+## Execution State Model
+
+هر Phase یکی از این وضعیت‌ها را دارد:
+
+- `FROZEN` — Gate تأیید و قفل شده
+- `ACTIVE` — تنها Workstream فعال
+- `BLOCKED` — منتظر Gate قبلی
+- `NOT STARTED` — هنوز فعال نشده
+- `DONE` — خروجی‌های Phase تکمیل و Exit Gate پاس شده
+
+هیچ Agent مجاز نیست بدون Evidence وضعیت `PENDING/UNVERIFIED` را `PASS/DONE` اعلام کند.
 
 ## Stack Divergence Warning
 
 The implemented repository stack is **React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI**. Historical or external references to FastAPI / Next.js are non-authoritative unless approved by a future Decision Record. No migration, merge, replacement, or stack substitution is approved at this time. Agents must treat the current repository implementation and current governance docs as authoritative. Any future stack change must go through a Decision Record and update `README.md`, `PROJECT_STATE.md`, `AGENTS.md`, `docs/README.md`, `Roadmap.md`, and relevant development docs together.
 
-## Phase A0 — Sprint 0 Engineering Foundation
+## Phase S0 — Target Environment Verification
 
-Mandatory outputs:
+**Status: ACTIVE**
 
-1. Repository و Branch/PR rules
-2. Modular Monolith skeleton
-3. Bounded Context package boundaries
-4. PostgreSQL و Migration baseline
-5. Environment و secrets convention
-6. Authentication foundation
-7. API و error conventions
-8. Audit minimum
-9. Backup/Restore runbook و scripts
-10. Structured logging و health/readiness
-11. Seed data
-12. CI minimum
-13. Sprint 1 board با Feature ID
+هدف: اثبات Engineering Foundation روی Windows + Docker Desktop با Evidence واقعی.
 
-### Current validation evidence
+### Required Gates
 
-```text
-Alembic: PASS
-Seed: PASS
-Compile: PASS
-Backend tests: 7/7 PASS
-```
+1. Frontend production build
+2. Docker Compose build/up
+3. Backend tests inside container
+4. Host health/readiness
+5. PostgreSQL backup
+6. PostgreSQL restore test
+7. Seed Admin login
+8. Admin password rotation
 
-### Remaining exit gate
+### Additional integrity verification
 
-- Frontend production build
-- Docker Compose runtime verification
-- Backend tests inside container
-- Host health/readiness checks
-- PostgreSQL backup/restore test
-- Seed Admin login و password rotation
+- Soft-delete `deleted_at` در DB واقعی Target Environment با query read-only
+- ثبت artifactهای backup/restore و test output
+- ثبت دقیق محیط، نسخه ابزارها و زمان اجرا
 
-پس از عبور از این Gate، Checkpoint 1.7 Frozen می‌شود.
+**Exit Gate:** هر ۸ Gate PASS + Evidence ثبت‌شده + Checkpoint 1.7 Frozen.
+
+## Checkpoint 1.7 — Engineering Foundation Ready
+
+**Status: BLOCKED BY S0**
+
+این Checkpoint فقط پس از عبور کامل S0 Frozen می‌شود. وجود Script یا Dockerfile به‌تنهایی Evidence محسوب نمی‌شود.
 
 ## Phase A1 — Days 4–10: Operational Foundation
+
+**Status: NOT STARTED**
 
 فقط:
 
@@ -66,12 +75,16 @@ Exit Gate: کاربر مجاز بتواند وارد شود، تنظیمات پ�
 
 ## Phase A2 — Days 11–18: Sales Core
 
+**Status: NOT STARTED**
+
 - ORD-F01 تا ORD-F03
 - TAR-F01 تا TAR-F02
 
 Exit Gate: مسیر Customer → Order → Target Achievement به‌صورت End-to-End کار کند.
 
 ## Phase A3 — Days 19–24: Performance and Cash
+
+**Status: NOT STARTED**
 
 - KPI-F01 تا KPI-F03
 - COM-F01 تا COM-F03
@@ -81,12 +94,16 @@ Exit Gate: KPI و Commission از داده ردیابی‌پذیر محاسبه 
 
 ## Phase A4 — Days 25–27: Decision Layer
 
+**Status: NOT STARTED**
+
 - DASH-F01 تا DASH-F03
 - REP-F01 تا REP-F03
 
 Exit Gate: Dashboard و گزارش‌های محدود عملیاتی از Source Domainها داده بخوانند و RBAC را رعایت کنند.
 
 ## Phase A5 — Days 28–30: Stabilization
+
+**Status: NOT STARTED**
 
 - رفع خطاهای Critical و High
 - Permission review
@@ -95,6 +112,62 @@ Exit Gate: Dashboard و گزارش‌های محدود عملیاتی از Sourc
 - Mobile/Desktop smoke test
 - Release notes و Runbook
 - Demo با داده کنترل‌شده
+
+## Phase DP — Design Partner Pilot
+
+**Status: NOT STARTED**
+
+پس از MVP Release:
+
+- یک سازمان
+- حداکثر ۶ کاربر میدانی
+- راه‌اندازی فرآیند
+- مهاجرت داده اولیه
+- آموزش
+- Dashboard
+- KPI قبل/بعد
+- گزارش ROI نهایی
+
+هدف: اثبات ارزش مشتری اندازه‌گیری‌شده، نه صرفاً تحویل نرم‌افزار.
+
+## Phase Status Board
+
+| Phase | Status | Blocking condition | Owner focus |
+|---|---|---|---|
+| 1.6 | FROZEN | — | PM / Architecture |
+| S0 | ACTIVE | Target Environment | DevOps / QA |
+| 1.7 | BLOCKED | S0 | PM / QA / DevOps |
+| A1 | NOT STARTED | 1.7 | Backend / Frontend / QA |
+| A2 | NOT STARTED | A1 | Backend / Frontend / QA |
+| A3 | NOT STARTED | A2 | Backend / QA / BA |
+| A4 | NOT STARTED | A3 | Frontend / Backend / UX / QA |
+| A5 | NOT STARTED | A4 | QA / DevOps / PM |
+| DP | NOT STARTED | MVP Release | PM / BA / Customer-facing team |
+
+## Agent Coordination Protocol
+
+تمام Agentها باید قبل از شروع کار:
+
+1. `PROJECT_STATE.md`
+2. `AGENTS.md`
+3. `README.md`
+4. `docs/00_Project/governance-v2.4/README.md`
+5. `docs/00_Project/Roadmap.md`
+6. `docs/README.md`
+
+را بخوانند.
+
+هر Agent بعد از اقدام مهم باید وضعیت را در `PROJECT_STATE.md` و در صورت نیاز `PROJECT_STATUS.md` ثبت کند و این قالب را پر کند:
+
+```text
+What changed:
+Evidence:
+Remaining blockers:
+Next action:
+```
+
+اگر Agent به محیط واقعی دسترسی ندارد، باید صریحاً `UNVERIFIED` ثبت کند.
+اگر Gate قبلی کامل نیست، Agent باید Forward Progress را متوقف کند.
 
 ## MVP Cut Policy
 
