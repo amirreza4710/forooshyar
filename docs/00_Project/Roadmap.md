@@ -1,7 +1,7 @@
 # Farakhorasan Product Roadmap v2.4
 
-**Status:** Approved  
-**Date:** 2026-08-18 (execution tracking update)  
+**Status:** Approved — Governance clarification pending review  
+**Date:** 2026-08-20  
 **Current Official Checkpoint:** 1.6 — MVP Delivery Ready  
 **Next Checkpoint:** 1.7 — Engineering Foundation Ready
 
@@ -12,6 +12,49 @@ Delivery Readiness کامل و Frozen است. MVP شامل 11 Epic و 32 Feature
 Sprint 0 از نظر Repository به وضعیت Release Candidate رسیده، اما Target Environment Verification هنوز کامل و Evidence-based تأیید نشده است.
 
 **Current active workstream: S0 Target Environment Verification.** تا Freeze شدن 1.7، توسعه Featureهای A1 مجاز نیست.
+
+## Governance Pre-Implementation Gate
+
+### Platform / Module Boundary
+
+```text
+Farakhorasan Platform
+└── Forooshyar Sales module
+```
+
+- Farakhorasan Platform مرز سطح پلتفرم است.
+- Forooshyar Sales ماژول/محصول فروش درون این پلتفرم است.
+- MVP فعلی، Scope فروشیار است و کل پلتفرم Farakhorasan را پیاده‌سازی نمی‌کند.
+
+### Mandatory Multi-tenancy Infrastructure
+
+**Multi-tenancy زیرساخت اجباری معماری است.** این موضوع نباید به‌عنوان یک Feature اختیاری Post-MVP یا یک refactor آینده تلقی شود.
+
+با این حال، implementation جزئیات schema/API/access-control فقط پس از ADR و Scope Review مجاز است. این Roadmap به‌تنهایی مجوز تغییر schema یا API نیست.
+
+### بازاردان
+
+«بازاردان» در وضعیت فعلی یک مفهوم/پوسته آینده پلتفرم است و **Feature اجرایی MVP محسوب نمی‌شود**.
+
+هیچ Agent مجاز نیست shell، UI، API، schema، dependency یا deployment مربوط به بازاردان را قبل از ADR و Scope Review پیاده‌سازی کند.
+
+### Implementation Rule
+
+شروع کدنویسی برای:
+
+- multi-tenancy implementation؛
+- platform shell؛
+- بازاردان؛
+- یا هر تغییر architecture-impacting؛
+
+فقط زمانی مجاز است که:
+
+1. ADR مرتبط Accepted شده باشد؛
+2. Scope Review آن را در Workstream/Phase فعال Admit کرده باشد؛
+3. Acceptance Criteria و Architecture Impact ثبت شده باشد؛
+4. تغییر از Cut Line مصوب خارج نباشد.
+
+این PR فقط governance/documentation است و هیچ schema، API، UI، dependency یا deployment را تغییر نمی‌دهد.
 
 ## Execution State Model
 
@@ -188,6 +231,7 @@ Next action:
 - Orders
 - Data integrity
 - Audit minimum
+- Multi-tenancy architectural boundary
 
 ## Explicitly Deferred
 
@@ -197,6 +241,7 @@ Next action:
 - Marketplace
 - Microservices
 - Autonomous AI Agents
+- بازاردان executable shell
 
 ## Post-MVP Sequence
 
