@@ -4,7 +4,7 @@
 
 ## Current State
 
-- **Project:** Farakhorasan Sales OS / فروشیار
+- **Project:** Farakhorasan Platform / Forooshyar Sales
 - **Market Position:** Sales & Distribution Operating Platform
 - **Internal Vision:** Domain-Driven Business Operating Platform
 - **Architecture:** Modular Monolith با Bounded Contextهای روشن
@@ -22,6 +22,16 @@
 تا زمانی که Checkpoint 1.7 با Evidence واقعی روی Target Environment تأیید و Frozen نشده است، توسعه Featureهای Sprint 1 مجاز نیست.
 
 فقط **یک Workstream اجرایی** در هر لحظه فعال است. هر Agent قبل از شروع کار باید این فایل را بخواند و پس از پایان هر اقدام مهم، وضعیت، Evidence، Blocker و Next Action را در همین فایل و در صورت لزوم `PROJECT_STATUS.md` ثبت کند.
+
+## Governance Gate — Platform / Module / Multi-tenancy
+
+- **Platform boundary:** `Farakhorasan Platform`
+- **Sales module:** `Forooshyar Sales`
+- **Relationship:** `Farakhorasan Platform → Forooshyar Sales module`
+- **Multi-tenancy:** اجباری به‌عنوان زیرساخت معماری؛ یک قابلیت اختیاری Post-MVP محسوب نمی‌شود.
+- **بازاردان:** در وضعیت فعلی یک مفهوم/پوسته آینده پلتفرم است و **Feature اجرایی MVP نیست**.
+- **Implementation gate:** شروع کدنویسی مربوط به multi-tenancy، platform shell، بازاردان یا هر تغییر architecture-impacting فقط پس از ADR پذیرفته‌شده + Scope Review + Acceptance Criteria مجاز است.
+- این تغییرات در این PR فقط مستندسازی شده‌اند و **هیچ تغییر schema/API/UI/dependency/deployment** را مجاز نمی‌کنند.
 
 ## Completed / Frozen Phases
 
@@ -110,7 +120,7 @@ A3 — Performance & Cash
      KPI-F01..F03 / COM-F01..F03 / COL-F01..F03
   ↓
 A4 — Decision Layer
-     DASH-F01..F03 / REP-F01..F03
+     DASH-F01..F03 / REP-F01..REP-F03
   ↓
 A5 — Stabilization
   ↓
@@ -147,6 +157,7 @@ Design Partner Pilot
 8. اگر چیزی اجرا نشده، آن را `PENDING` یا `UNVERIFIED` بنویسد، نه `PASS`.
 9. اگر Blocker کشف شد، Forward Progress را متوقف و Blocker را ثبت کند.
 10. تغییر معماری را بدون ADR انجام ندهد.
+11. برای multi-tenancy، platform shell یا بازاردان، قبل از کدنویسی وجود ADR پذیرفته‌شده و Scope Review را بررسی کند.
 
 ## Agent Ownership
 
@@ -196,6 +207,7 @@ $LatestBackup = Get-ChildItem .\backups\*.dump | Sort-Object LastWriteTime -Desc
 - Marketplace
 - Microservices decomposition
 - Autonomous AI Agents
+- بازاردان executable shell
 
 ## Stack Divergence Warning
 
