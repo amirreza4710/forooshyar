@@ -48,7 +48,7 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
     }
 
     const productIds = Array.from(aggregatedItems.keys());
-    if (productIds.length === 0) return await tx.select().from(ordersTable).limit(0); // Guard for empty items
+    // Guard for empty items handled by the bulk update condition
 
     // Sort product IDs to always lock rows in a consistent order, avoiding deadlocks
     productIds.sort((a, b) => a - b);
