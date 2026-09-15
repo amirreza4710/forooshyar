@@ -41,6 +41,9 @@ jobs:
 
       - name: Build
         run: pnpm run build
+        env:
+          PORT: 3000
+          BASE_PATH: /
 
       - name: Check Mandatory Status & Architecture Docs
         run: |
