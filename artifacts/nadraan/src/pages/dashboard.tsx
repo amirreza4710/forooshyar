@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { useLocation } from "wouter";
 import { useGetDashboardSummary, useGetSalesChart } from "@workspace/api-client-react";
+import type { Order } from "@workspace/api-client-react";
 import { ShoppingCart, Users, Package, TrendingUp, Plus, UserPlus, ClipboardList, ArrowLeft } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
@@ -23,8 +24,8 @@ export default function DashboardPage() {
   const [, navigate] = useLocation();
 
   const chartData = Array.isArray(chartRaw) ? chartRaw : [];
-  const recentOrders = Array.isArray((summary as any)?.recentOrders)
-    ? (summary as any).recentOrders : [];
+  const recentOrders: Order[] = Array.isArray(summary?.recentOrders)
+    ? summary!.recentOrders : [];
 
   const goto = useCallback((path: string) => navigate(path), [navigate]);
 
@@ -80,10 +81,10 @@ export default function DashboardPage() {
             Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24" />)
           ) : (
             <>
-              <KpiCard title="فروش کل" value={n((summary as any)?.totalSales)} sub="ریال" icon={<TrendingUp size={16} />} color="text-primary" bg="bg-primary/10" />
-              <KpiCard title="سفارشات" value={n((summary as any)?.orderCount)} sub="سفارش" icon={<ShoppingCart size={16} />} color="text-emerald-400" bg="bg-emerald-400/10" />
-              <KpiCard title="مشتریان" value={n((summary as any)?.customerCount)} sub="مشتری" icon={<Users size={16} />} color="text-purple-400" bg="bg-purple-400/10" />
-              <KpiCard title="محصولات" value={n((summary as any)?.productCount)} sub="قلم" icon={<Package size={16} />} color="text-orange-400" bg="bg-orange-400/10" />
+              <KpiCard title="فروش کل" value={n(summary?.totalSales)} sub="ریال" icon={<TrendingUp size={16} />} color="text-primary" bg="bg-primary/10" />
+              <KpiCard title="سفارشات" value={n(summary?.orderCount)} sub="سفارش" icon={<ShoppingCart size={16} />} color="text-emerald-400" bg="bg-emerald-400/10" />
+              <KpiCard title="مشتریان" value={n(summary?.customerCount)} sub="مشتری" icon={<Users size={16} />} color="text-purple-400" bg="bg-purple-400/10" />
+              <KpiCard title="محصولات" value={n(summary?.productCount)} sub="قلم" icon={<Package size={16} />} color="text-orange-400" bg="bg-orange-400/10" />
             </>
           )}
         </div>
@@ -150,7 +151,7 @@ export default function DashboardPage() {
               </div>
             ) : (
               <ul className="space-y-1">
-                {recentOrders.slice(0, 8).map((o: any) => {
+                {recentOrders.slice(0, 8).map((o: Order) => {
                   const s = STATUS_STYLE[o.status] ?? { text: "text-muted-foreground", dot: "bg-muted-foreground" };
                   return (
                     <li key={o.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 transition-colors cursor-default">
