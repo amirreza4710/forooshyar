@@ -9,7 +9,7 @@
 | مورد | وضعیت |
 |---|---|
 | Checkpoint رسمی | **1.6 — MVP Delivery Ready (Frozen)** |
-| Checkpoint بعدی | **1.7 — Engineering Foundation Ready (CANDIDATE / BLOCKED)** |
+| Checkpoint بعدی | **1.7 — Engineering Foundation Ready (Candidate)** |
 | MVP Scope | Frozen |
 | MVP Backlog | 11 Epic و 32 Feature |
 | Feature جدید در v2.4 | صفر |
@@ -76,7 +76,7 @@ Epicهای متعهد:
 - Microservices
 - Autonomous AI Agents
 
-## پشته فنی فعلی مخزن (Architecture / Technical Context)
+## پشته فنی فعلی مخزن (Stack Divergence Warning)
 
 پشته (Stack) پیاده‌سازی شده و قطعی در این مخزن به شرح زیر است:
 | لایه | تکنولوژی |

@@ -118,7 +118,7 @@ Assert-Command -Gate "GATE-1.7-08" -Desc "Admin password rotation" -Command {
     } | ConvertTo-Json
 
     $headersNew = @{
-        Authorization = "Bearer $ (($loginResNew.Content | ConvertFrom-Json).token)"
+        Authorization = "Bearer $(($loginResNew.Content | ConvertFrom-Json).token)"
     }
 
     Invoke-WebRequest -Uri "http://localhost:3000/api/users/$($script:AdminUserId)" -Method Patch -Body $patchBodyRevert -Headers $headersNew -ContentType "application/json" -ErrorAction Stop | Out-Null

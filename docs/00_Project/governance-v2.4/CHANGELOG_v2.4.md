@@ -29,6 +29,6 @@
 - Feature Admission Gate
 - Human-in-the-loop for sensitive decisions
 
-## Architecture / Technical Context
+## Important Open Decision / Stack Divergence Warning
 
-> **Update 2026-08-13:** As resolved in **ADR-0001**, the implemented repository stack is **React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI**. No migration, merge, replacement, or stack substitution is approved at this time. Agents must treat the current repository implementation and current governance docs as authoritative. Any future stack change must go through a Decision Record and update all governance documents together.
+> **Update 2026-08-13:** As resolved in **ADR-0001**, the implemented repository stack is **React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI**. Historical or external references to FastAPI / Next.js are non-authoritative unless approved by a future Decision Record. No migration, merge, replacement, or stack substitution is approved at this time. Agents must treat the current repository implementation and current governance docs as authoritative. Any future stack change must go through a Decision Record and update all governance documents together.

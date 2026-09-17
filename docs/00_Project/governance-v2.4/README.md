@@ -29,15 +29,15 @@
 - Feature جدید در v2.4: صفر
 - Current Work: Sprint 0 target-environment verification
 - Official Checkpoint: 1.6
-- Checkpoint 1.7: CANDIDATE (BLOCKED)، نه Frozen
+- Checkpoint 1.7: Candidate، نه Frozen
 
 ## Explicit Exclusions
 
 Billing Engine، Message Broker، Partner Portal، Automated Payout، Marketplace، Microservices و Autonomous AI Agents خارج از MVP هستند.
 
-## Architecture / Technical Context
+## Stack Divergence Warning
 
-Per ADR-0001, the implemented and authoritative stack is React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI.
+The implemented and authoritative stack is React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI.
 Any historical or external reference to FastAPI or Next.js is non-authoritative unless a future Decision Record approves it.
 No migration, merge, replacement, or stack substitution is approved at this time.
 Agents must treat the current repository implementation and current governance docs as authoritative.
