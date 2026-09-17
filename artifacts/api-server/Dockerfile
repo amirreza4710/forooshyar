@@ -1,25 +1,39 @@
-FROM node:22-alpine AS builder
+# syntax=docker/dockerfile:1
 
+# ---- Dependencies Stage ----
+# Installs the full pnpm workspace (all packages) with a frozen lockfile so
+# the build is reproducible on any host (Docker Desktop or a Linux VPS),
+# independent of whatever happens to be in the host's node_modules.
+FROM node:22-slim AS deps
+RUN npm install -g pnpm@11.21.0
 WORKDIR /app
-COPY . .
-RUN npm install -g pnpm
-RUN pnpm install --frozen-lockfile=false
-RUN pnpm run build
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
+COPY artifacts/api-server/package.json ./artifacts/api-server/package.json
+COPY lib/db/package.json ./lib/db/package.json
+COPY lib/api-zod/package.json ./lib/api-zod/package.json
+RUN pnpm install --frozen-lockfile --prod=false --filter "@workspace/api-server..."
 
+# ---- Build Stage ----
+FROM deps AS builder
+COPY tsconfig.base.json tsconfig.json ./
+COPY --from=deps /app/node_modules ./node_modules
+COPY lib/db ./lib/db
+COPY lib/api-zod ./lib/api-zod
+COPY artifacts/api-server ./artifacts/api-server
+COPY --from=deps /app/lib/db/node_modules ./lib/db/node_modules
+COPY --from=deps /app/lib/api-zod/node_modules ./lib/api-zod/node_modules
+COPY --from=deps /app/artifacts/api-server/node_modules ./artifacts/api-server/node_modules
+RUN pnpm --filter @workspace/api-server run build
+
+# ---- Tester Stage (for GATE-1.7-03 — runs the real vitest suite) ----
 FROM builder AS tester
-WORKDIR /app
-# Intentionally running tests in a separate stage that has full dependencies,
-# fulfilling "Backend tests inside container" gate without bloating production image.
-RUN pnpm test
+WORKDIR /app/artifacts/api-server
+CMD ["pnpm", "test"]
 
-FROM node:22-alpine AS runner
+# ---- Runner Stage (Production Runtime) ----
+FROM node:22-slim AS runner
 WORKDIR /app
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/pnpm-workspace.yaml ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/artifacts/api-server/dist ./artifacts/api-server/dist
-COPY --from=builder /app/artifacts/api-server/package.json ./artifacts/api-server/package.json
-COPY --from=builder /app/lib ./lib
-
+ENV NODE_ENV=production
+COPY --from=builder /app/artifacts/api-server/dist ./dist
 EXPOSE 3000
-CMD ["node", "--enable-source-maps", "./artifacts/api-server/dist/index.mjs"]
+CMD ["node", "--enable-source-maps", "./dist/index.mjs"]
