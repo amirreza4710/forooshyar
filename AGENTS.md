@@ -1,9 +1,12 @@
 # AGENTS.md
 
-## Scope
-These instructions apply to the entire repository.
+## Purpose / Overview
+These instructions apply to the entire repository and define the operational protocol for all AI Agents working on the Farakhorasan project.
 
-## Source of Truth
+## Architecture / Technical Context
+The implemented repository stack is **React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI**. (Per ADR-0001, any references to FastAPI or Next.js are obsolete).
+
+## References / Source of Truth
 All agents must use `docs/` as the primary source of product, business, UX, architecture, AI, and development truth.
 
 Before starting work, follow this canonical reading order:
@@ -14,39 +17,21 @@ Before starting work, follow this canonical reading order:
 5. `docs/00_Project/Roadmap.md`
 6. `docs/README.md`
 
-## Agent Roles
+## Roles / Scope
+- **Product Manager Agent:** Owns product scope, milestones, acceptance criteria, and prioritization.
+- **Business Analyst Agent:** Owns business rules, process definitions, constraints, and stakeholder requirements.
+- **UX Designer Agent:** Owns user journeys, screen flows, interaction design, and usability requirements.
+- **System Architect Agent:** Owns architecture decisions, boundaries, integration strategy, and ADR consistency.
+- **Backend Agent:** Owns server-side implementation, APIs, domain services, validation, and persistence behavior.
+- **Frontend Agent:** Owns client-side implementation, UI composition, state management, and frontend integration.
+- **QA Agent:** Owns test strategy, regression checks, acceptance verification, and quality gates.
+- **DevOps Agent:** Owns CI/CD, deployment, environment configuration, observability, and operational readiness.
+- **AI Architect Agent:** Owns AI-assisted workflows, prompt architecture, agent boundaries, and AI governance.
 
-### Product Manager Agent
-Owns product scope, milestones, acceptance criteria, and prioritization.
-
-### Business Analyst Agent
-Owns business rules, process definitions, constraints, and stakeholder requirements.
-
-### UX Designer Agent
-Owns user journeys, screen flows, interaction design, and usability requirements.
-
-### System Architect Agent
-Owns architecture decisions, boundaries, integration strategy, and ADR consistency.
-
-### Backend Agent
-Owns server-side implementation, APIs, domain services, validation, and persistence behavior.
-
-### Frontend Agent
-Owns client-side implementation, UI composition, state management, and frontend integration.
-
-### QA Agent
-Owns test strategy, regression checks, acceptance verification, and quality gates.
-
-### DevOps Agent
-Owns CI/CD, deployment, environment configuration, observability, and operational readiness.
-
-### AI Architect Agent
-Owns AI-assisted workflows, prompt architecture, agent boundaries, and AI governance.
-
-## Working Rules
+## Requirements / Working Rules
 - Keep commits small, reversible, and documented.
 - Before starting any new phase, sprint, checkpoint, or document, verify that the previous step is complete and consistent with its acceptance criteria.
-- If the previous step is incomplete, conflicting, or unverified, stop forward progress and fix or document the gap first.
+- If the previous step is incomplete, conflicting, or unverified (e.g., Sprint 0 is currently BLOCKED), stop forward progress and fix or document the gap first.
 - Record significant architecture decisions in `docs/ADR/`.
 - Update `PROJECT_STATE.md` when project phase, sprint, checkpoint, status, or next milestone changes.
 - Do not introduce large batches of unrelated documents or code in a single commit.
