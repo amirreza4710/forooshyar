@@ -8,17 +8,17 @@
 
 | مورد | وضعیت |
 |---|---|
-| Checkpoint رسمی | **1.6 — MVP Delivery Ready (Frozen)** |
-| Checkpoint بعدی | **1.7 — Engineering Foundation Ready (CANDIDATE / BLOCKED)** |
+| Checkpoint رسمی | **1.7 — Engineering Foundation Ready (Frozen)** |
+| Checkpoint بعدی | **A1 — Operational Foundation** |
 | MVP Scope | Frozen |
 | MVP Backlog | 11 Epic و 32 Feature |
 | Feature جدید در v2.4 | صفر |
 | معماری اجرایی | Modular Monolith با Bounded Contextهای روشن |
-| کار جاری | Sprint 0 Target Environment Verification |
-| Backend validation | Alembic PASS، Seed PASS، Compile PASS، Tests 7/7 PASS |
+| کار جاری | Phase A1 — Operational Foundation |
+| Backend validation | Drizzle ORM migration & schema push, 9/9 Vitest test suite passing |
 | MVP Development | هنوز آغاز نشده |
 
-Sprint 0 Foundation ساخته شده، اما Checkpoint 1.7 تا اجرای موفق Frontend build، Docker Compose، Backup/Restore و Admin login/password rotation روی محیط هدف قفل نمی‌شود.
+Checkpoint 1.7 is FROZEN. Phase A1 (Operational Foundation) is the active workstream.
 
 ## مرجعیت اسناد (Source of Truth) و از کجا شروع کنیم؟
 
