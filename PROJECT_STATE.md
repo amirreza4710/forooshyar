@@ -10,7 +10,7 @@
 - **Architecture:** Modular Monolith با Bounded Contextهای روشن
 - **Authoritative Stack:** React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, OpenAPI
 - **Current Official Checkpoint:** **1.6 — MVP Delivery Ready (Approved & Frozen)**
-- **Next Checkpoint:** **1.7 — Engineering Foundation Ready (Candidate, Not Frozen)**
+- **Next Checkpoint:** **1.7 — Engineering Foundation Ready (CANDIDATE / BLOCKED, Not Frozen)**
 - **Current Workstream:** Sprint 0 — Target Environment Verification
 - **MVP Scope:** Frozen
 - **MVP Backlog:** 11 Epic و 32 Feature متعهد
@@ -56,8 +56,8 @@
 - Backup/Restore scripts
 - Sprint 1 board / Feature IDs
 
-### Sprint 0 — Release Candidate
-**Status: IMPLEMENTED, TARGET VERIFICATION PENDING**
+### Sprint 0 — Target Environment Verification
+**Status: ACTIVE / BLOCKED (Target Verification Pending)**
 
 Artifacts موجود در Repository شامل Docker Compose، Dockerfileهای API/Web و اسکریپت‌های PowerShell مربوط به Initialize، Backup، Restore و Verify هستند. این وجود به‌تنهایی Evidence اجرای واقعی محسوب نمی‌شود.
 
@@ -209,9 +209,9 @@ $LatestBackup = Get-ChildItem .\backups\*.dump | Sort-Object LastWriteTime -Desc
 - Autonomous AI Agents
 - بازاردان executable shell
 
-## Stack Divergence Warning
+## Architecture / Technical Context
 
-The implemented and authoritative repository stack is **React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI**. Historical or external references to FastAPI or Next.js are non-authoritative and must be ignored unless explicitly approved by a future Decision Record. No migration, merge, replacement, or stack substitution is approved at this time. Agents must treat the current repository implementation and current governance docs as authoritative. Any future stack change must go through a Decision Record and update all governance documents together.
+Per ADR-0001, the implemented and authoritative repository stack is **React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI**. No migration, merge, replacement, or stack substitution is approved at this time. Agents must treat the current repository implementation and current governance docs as authoritative. Any future stack change must go through a Decision Record and update all governance documents together.
 
 ## Agent Loading Strategy
 
