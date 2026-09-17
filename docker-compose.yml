@@ -22,6 +22,7 @@ services:
     ports:
       - "3000:3000"
     environment:
+      - PORT=3000
       - DATABASE_URL=postgresql://farakhorasan:farakhorasan_password@db:5432/farakhorasan_db
       - NODE_ENV=production
       - SESSION_SECRET=this_is_a_very_secret_key_12345

@@ -6,6 +6,12 @@ RUN npm install -g pnpm
 RUN pnpm install --frozen-lockfile=false
 RUN pnpm run build
 
+FROM builder AS tester
+WORKDIR /app
+# Intentionally running tests in a separate stage that has full dependencies,
+# fulfilling "Backend tests inside container" gate without bloating production image.
+RUN pnpm test
+
 FROM node:22-alpine AS runner
 WORKDIR /app
 COPY --from=builder /app/package.json ./
