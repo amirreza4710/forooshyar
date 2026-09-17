@@ -11,7 +11,7 @@ The audit remains valid as a repository baseline. The implementation recommendat
 
 ## 2. Current Stack & Monorepo Structure
 The repository is structured as a `pnpm` monorepo using Workspaces.
-The implemented repository stack is **React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI**. Historical references to FastAPI or Next.js are non-authoritative (per ADR-0001).
+The current technological stack diverges from early markdown documentation (which referenced FastAPI/Python) but is robust and validated for Sprint 0. As formalized in **ADR-0001**, the codebase stack is the implementation authority.
 
 **Operational Stack:**
 * **Package Manager:** `pnpm` (strictly enforced via `.npmrc` and `preinstall` scripts)

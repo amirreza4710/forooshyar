@@ -12,7 +12,7 @@
 | بازاردان shell | C (Deferred) | مفهوم آینده پلتفرم است و Feature اجرایی MVP نیست | هیچ shell/UI/API/schema/dependency/deployment بدون ADR + Scope Review ساخته نشود | Product / Architecture | P0 |
 | Implementation before governance | A (Risk) | Agentها ممکن است قبل از تصمیم رسمی وارد کدنویسی شوند | شروع کدنویسی برای architecture-impacting work فقط بعد از ADR Accepted + Scope Review + Acceptance Criteria | PM / System Architect | P0 |
 | Branch Codex → main merge | A (Risk) | نباید بدون استخراج Diff Knowledge مرج شود | Diff extraction → Conflict matrix → Implementation Plan → Write branch → Validate → PR → Merge با تایید صریح | Repo Owner / Product Manager | P0 |
-| Stack divergence (FastAPI/Next vs existing) | C (Resolved) | پشته فعلی React+Vite + Express است | حل شده توسط ADR-0001. مراجع قدیمی منسوخند | System Architect + Backend Lead | P0 |
+| Stack migration (FastAPI/Next vs existing) | C (Resolved) | پشته فعلی React+Vite + Express است؛ Candidate FastAPI/Next ثبت شده بود | حل شده توسط ADR-0001 (پشته فعلی Express مرجع است) | System Architect + Backend Lead | P0 |
 | DB migration verification (PR #13) | C (Urgent) | اجرای pnpm --filter @workspace/db push روی dev تأیید نشده | فوری تأیید اجرا یا برنامه اجرای controlled migration با rollback | DB Owner / DevOps | P0 |
 | Graphify / Knowledge artifacts | B | لینک‌های شکسته و artifacts ناقص | بازتولید graphify و تعمیر لینک‌ها؛ commit تنها گزارش‌ها | Repo Maintainer | P1 |
 | Agent coordination (PROJECT_STATUS.md) | D (Consistent) | روند وجود دارد اما باید اجرا شود | هر ایجنت قبل/بعد از کار PROJECT_STATE.md را بخواند و بعد آپدیت کند | Repo Owner / Project Manager | P1 |
