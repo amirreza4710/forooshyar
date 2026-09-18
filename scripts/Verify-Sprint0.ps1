@@ -74,7 +74,7 @@ Write-Host "Sprint 0 Verification (Gates 4-6) complete!" -ForegroundColor Green
 Assert-Command -Gate "GATE-1.7-07" -Desc "Seed Admin login" -Command {
     $body = @{
         username = "امیررضا"
-        password = "1234"
+        password = "Admin123!"
     } | ConvertTo-Json
 
     $response = Invoke-WebRequest -Uri "http://localhost:3000/api/auth/login" -Method Post -Body $body -ContentType "application/json" -ErrorAction Stop
@@ -93,7 +93,7 @@ Assert-Command -Gate "GATE-1.7-08" -Desc "Admin password rotation" -Command {
 
     # Change password
     $patchBody = @{
-        password = "4321"
+        password = "Admin4321!"
     } | ConvertTo-Json
 
     $headers = @{
@@ -106,7 +106,7 @@ Assert-Command -Gate "GATE-1.7-08" -Desc "Admin password rotation" -Command {
     # Verify new password
     $loginBodyNew = @{
         username = "امیررضا"
-        password = "4321"
+        password = "Admin4321!"
     } | ConvertTo-Json
 
     $loginResNew = Invoke-WebRequest -Uri "http://localhost:3000/api/auth/login" -Method Post -Body $loginBodyNew -ContentType "application/json" -ErrorAction Stop
@@ -114,7 +114,7 @@ Assert-Command -Gate "GATE-1.7-08" -Desc "Admin password rotation" -Command {
 
     # Revert password
     $patchBodyRevert = @{
-        password = "1234"
+        password = "Admin123!"
     } | ConvertTo-Json
 
     $headersNew = @{
