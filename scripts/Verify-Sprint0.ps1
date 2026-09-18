@@ -70,11 +70,28 @@ Assert-Command -Gate "GATE-1.7-06" -Desc "PostgreSQL restore" -Command {
 
 Write-Host "Sprint 0 Verification (Gates 4-6) complete!" -ForegroundColor Green
 
+# 6.5 GATE-1.7-06.5 Schema Sync & Admin Seed
+Assert-Command -Gate "GATE-1.7-06.5" -Desc "Schema sync & seed admin" -Command {
+    # 1. Run schema sync
+    pnpm -C lib/db run push
+
+    # 2. Seed admin via dev endpoint
+    $seedBody = @{} | ConvertTo-Json
+    $seedHeaders = @{
+        "x-seed-token" = "sprint0-dev-seed-token"
+    }
+
+    $seedResponse = Invoke-WebRequest -Uri "http://localhost:3000/api/dev/seed-admin" -Method Post -Body $seedBody -Headers $seedHeaders -ContentType "application/json" -ErrorAction Stop
+    if ($seedResponse.StatusCode -ne 200 -and $seedResponse.StatusCode -ne 201) {
+        throw "Failed to seed admin user. Status: $($seedResponse.StatusCode)"
+    }
+}
+
 # 7. GATE-1.7-07 Seed Admin login
 Assert-Command -Gate "GATE-1.7-07" -Desc "Seed Admin login" -Command {
     $body = @{
         username = "امیررضا"
-        password = "Admin123!"
+        password = "GAPGPTMASKTOKENphjtrb0kkmhX0X"
     } | ConvertTo-Json
 
     $response = Invoke-WebRequest -Uri "http://localhost:3000/api/auth/login" -Method Post -Body $body -ContentType "application/json" -ErrorAction Stop
@@ -114,7 +131,7 @@ Assert-Command -Gate "GATE-1.7-08" -Desc "Admin password rotation" -Command {
 
     # Revert password
     $patchBodyRevert = @{
-        password = "Admin123!"
+        password = "GAPGPTMASKTOKENphjtrb0kkmhX0X"
     } | ConvertTo-Json
 
     $headersNew = @{
