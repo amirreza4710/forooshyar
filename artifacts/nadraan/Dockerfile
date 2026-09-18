@@ -4,6 +4,7 @@ WORKDIR /app
 COPY . .
 RUN npm install -g pnpm
 RUN pnpm install --frozen-lockfile=false
+RUN pnpm --filter @workspace/nadraan add -D @rollup/rollup-linux-x64-musl || pnpm add -w -D @rollup/rollup-linux-x64-musl
 RUN pnpm --filter @workspace/nadraan run build
 
 FROM nginx:alpine AS runner

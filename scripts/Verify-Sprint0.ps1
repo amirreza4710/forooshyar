@@ -23,8 +23,10 @@ Assert-Command -Gate "GATE-1.7-01" -Desc "Frontend production build" -Command {
 
 # 2. GATE-1.7-02 Docker Compose build/up
 Assert-Command -Gate "GATE-1.7-02" -Desc "Docker Compose build/up" -Command {
-    docker compose build
-    docker compose up -d
+    docker compose build web
+    if ($LASTEXITCODE -ne 0) { throw "Docker build failed for 'web'." }
+    docker compose up -d web
+    if ($LASTEXITCODE -ne 0) { throw "Container launch failed for 'web'." }
 }
 
 # 3. GATE-1.7-03 Backend tests inside container
@@ -74,7 +76,7 @@ Write-Host "Sprint 0 Verification (Gates 4-6) complete!" -ForegroundColor Green
 Assert-Command -Gate "GATE-1.7-07" -Desc "Seed Admin login" -Command {
     $body = @{
         username = "امیررضا"
-        password = "1234"
+        password = "Admin123!"
     } | ConvertTo-Json
 
     $response = Invoke-WebRequest -Uri "http://localhost:3000/api/auth/login" -Method Post -Body $body -ContentType "application/json" -ErrorAction Stop
@@ -93,7 +95,7 @@ Assert-Command -Gate "GATE-1.7-08" -Desc "Admin password rotation" -Command {
 
     # Change password
     $patchBody = @{
-        password = "4321"
+        password = "Admin4321!"
     } | ConvertTo-Json
 
     $headers = @{
@@ -106,7 +108,7 @@ Assert-Command -Gate "GATE-1.7-08" -Desc "Admin password rotation" -Command {
     # Verify new password
     $loginBodyNew = @{
         username = "امیررضا"
-        password = "4321"
+        password = "Admin4321!"
     } | ConvertTo-Json
 
     $loginResNew = Invoke-WebRequest -Uri "http://localhost:3000/api/auth/login" -Method Post -Body $loginBodyNew -ContentType "application/json" -ErrorAction Stop
@@ -114,7 +116,7 @@ Assert-Command -Gate "GATE-1.7-08" -Desc "Admin password rotation" -Command {
 
     # Revert password
     $patchBodyRevert = @{
-        password = "1234"
+        password = "Admin123!"
     } | ConvertTo-Json
 
     $headersNew = @{

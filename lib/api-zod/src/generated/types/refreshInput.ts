@@ -5,10 +5,7 @@
  * نادران‌گستر - پلتفرم مدیریت پخش و فروش
  * OpenAPI spec version: 0.1.0
  */
-import type { User } from './user';
 
-export interface AuthResponse {
-  token: string;
+export interface RefreshInput {
   refreshToken: string;
-  user: User;
 }
