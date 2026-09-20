@@ -38,12 +38,16 @@ app.use("/api", (_req, res) => {
 
 // Global error handler — must be last, must have 4 args for Express to recognize it
 const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
-  req.log?.error({ err }, "Unhandled error");
-
   const status =
     typeof (err as { status?: unknown })?.status === "number"
       ? (err as { status: number }).status
       : 500;
+
+  if (status < 500) {
+    req.log?.warn({ err: { message: (err as Error)?.message || "Client error", status } }, "Client error");
+  } else {
+    req.log?.error({ err }, "Unhandled error");
+  }
 
   res.status(status).json({
     error: status === 500 ? "Internal server error" : (err as Error)?.message || "Error",

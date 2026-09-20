@@ -55,6 +55,43 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+
+  /auth/refresh:
+    post:
+      operationId: refresh
+      tags: [auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshInput"
+      responses:
+        "200":
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefreshResponse"
+        "401":
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+        "401":
+          description: Unauthorized
+
   /auth/me:
     get:
       operationId: getMe
@@ -405,6 +442,25 @@ components:
       required: [error]
 
     # ── Auth ──
+
+    RefreshInput:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+
+    RefreshResponse:
+      type: object
+      required: [token, refreshToken, user]
+      properties:
+        token:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
     LoginInput:
       type: object
       required: [username, password]
@@ -416,9 +472,11 @@ components:
 
     AuthResponse:
       type: object
-      required: [token, user]
+      required: [token, refreshToken, user]
       properties:
         token:
+          type: string
+        refreshToken:
           type: string
         user:
           $ref: "#/components/schemas/User"

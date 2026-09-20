@@ -3,7 +3,7 @@
 **Status:** Approved — Governance clarification pending review  
 **Date:** 2026-08-20  
 **Current Official Checkpoint:** 1.6 — MVP Delivery Ready  
-**Next Checkpoint:** 1.7 — Engineering Foundation Ready
+**Next Checkpoint:** 1.7 — Engineering Foundation Ready (CANDIDATE / BLOCKED)
 
 ## Current Position
 
@@ -68,9 +68,9 @@ Farakhorasan Platform
 
 هیچ Agent مجاز نیست بدون Evidence وضعیت `PENDING/UNVERIFIED` را `PASS/DONE` اعلام کند.
 
-## Stack Divergence Warning
+## Architecture / Technical Context
 
-The implemented repository stack is **React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI**. Historical or external references to FastAPI / Next.js are non-authoritative unless approved by a future Decision Record. No migration, merge, replacement, or stack substitution is approved at this time. Agents must treat the current repository implementation and current governance docs as authoritative. Any future stack change must go through a Decision Record and update `README.md`, `PROJECT_STATE.md`, `AGENTS.md`, `docs/README.md`, `Roadmap.md`, and relevant development docs together.
+Per ADR-0001, the implemented repository stack is **React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI**. No migration, merge, replacement, or stack substitution is approved at this time. Agents must treat the current repository implementation and current governance docs as authoritative. Any future stack change must go through a Decision Record and update `README.md`, `PROJECT_STATE.md`, `AGENTS.md`, `docs/README.md`, `Roadmap.md`, and relevant development docs together.
 
 ## Phase S0 — Target Environment Verification
 
@@ -97,7 +97,7 @@ The implemented repository stack is **React 19, Vite, Express 5, PostgreSQL, Dri
 
 **Exit Gate:** هر ۸ Gate PASS + Evidence ثبت‌شده + Checkpoint 1.7 Frozen.
 
-## Checkpoint 1.7 — Engineering Foundation Ready
+## Checkpoint 1.7 — Engineering Foundation Ready (CANDIDATE / BLOCKED)
 
 **Status: BLOCKED BY S0**
 
@@ -178,8 +178,8 @@ Exit Gate: Dashboard و گزارش‌های محدود عملیاتی از Sourc
 | Phase | Status | Blocking condition | Owner focus |
 |---|---|---|---|
 | 1.6 | FROZEN | — | PM / Architecture |
-| S0 | ACTIVE | Target Environment | DevOps / QA |
-| 1.7 | BLOCKED | S0 | PM / QA / DevOps |
+| S0 | ACTIVE (BLOCKED) | Target Environment | DevOps / QA |
+| 1.7 | CANDIDATE (BLOCKED) | S0 | PM / QA / DevOps |
 | A1 | NOT STARTED | 1.7 | Backend / Frontend / QA |
 | A2 | NOT STARTED | A1 | Backend / Frontend / QA |
 | A3 | NOT STARTED | A2 | Backend / QA / BA |
