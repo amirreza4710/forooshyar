@@ -38,6 +38,12 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
     // and easily check against the single locked rows.
     const aggregatedItems = new Map<number, { qty: number, originalItem: any }>();
     for (const item of items) {
+      if (item.qty <= 0) {
+        throw Object.assign(new Error(`تعداد نامعتبر برای محصول ${item.productId}`), { status: 400 });
+      }
+      if (item.price < 0) {
+        throw Object.assign(new Error(`قیمت نامعتبر برای محصول ${item.productId}`), { status: 400 });
+      }
       total += item.price * item.qty;
       const existing = aggregatedItems.get(item.productId);
       if (existing) {
