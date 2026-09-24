@@ -1,5 +1,11 @@
-const TOKEN_KEY = "nadraan_token";
-const USER_KEY = "nadraan_user";
+const TOKEN_KEY =
+  import.meta.env.VITE_DEMO_MODE === "true"
+    ? "forooshyar_demo_token"
+    : "nadraan_token";
+const USER_KEY =
+  import.meta.env.VITE_DEMO_MODE === "true"
+    ? "forooshyar_demo_user"
+    : "nadraan_user";
 
 export interface AuthUser {
   id: number;
@@ -15,7 +21,11 @@ export function getToken(): string | null {
 export function getUser(): AuthUser | null {
   const raw = localStorage.getItem(USER_KEY);
   if (!raw) return null;
-  try { return JSON.parse(raw); } catch { return null; }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
 }
 
 export function saveAuth(token: string, user: AuthUser): void {

@@ -15,13 +15,20 @@ export default function LoginPage() {
   const loginMut = useLogin({
     mutation: {
       onSuccess(data) {
-        const d = data as { token: string; user: { id: number; username: string; name: string; role: string } };
+        const d = data as {
+          token: string;
+          user: { id: number; username: string; name: string; role: string };
+        };
         saveAuth(d.token, d.user);
         setAuth(d.user, d.token);
         navigate("/");
       },
       onError() {
-        toast({ title: "خطای ورود", description: "نام کاربری یا رمز عبور اشتباه است.", variant: "destructive" });
+        toast({
+          title: "خطای ورود",
+          description: "نام کاربری یا رمز عبور اشتباه است.",
+          variant: "destructive",
+        });
       },
     },
   });
@@ -41,18 +48,30 @@ export default function LoginPage() {
             <span className="text-white text-2xl font-bold">ن</span>
           </div>
           <h1 className="text-2xl font-bold text-foreground">نادران‌گستر</h1>
-          <p className="text-sm text-muted-foreground mt-1">پلتفرم مدیریت پخش</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            پلتفرم مدیریت پخش
+          </p>
         </div>
 
-        <div className="bg-card border border-card-border rounded-xl p-6 shadow-lg">
-          <h2 className="text-base font-semibold mb-5 text-center">ورود به سیستم</h2>
+        <div className="bg-card border border-card-border rounded-xl p-6 shadow-lg relative">
+          {import.meta.env.VITE_DEMO_MODE === "true" && (
+            <div className="absolute top-4 right-4 bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded-md shadow">
+              نسخه نمایشی
+            </div>
+          )}
+          <h2 className="text-base font-semibold mb-5 text-center">
+            ورود به سیستم
+          </h2>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1.5">نام کاربری</label>
+              <label className="block text-sm font-medium mb-1.5">
+                نام کاربری
+              </label>
               <input
                 type="text"
                 value={username}
-                onChange={e => setUsername(e.target.value)}
+                onChange={(e) => setUsername(e.target.value)}
                 placeholder="نام کاربری را وارد کنید"
                 className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
                 dir="ltr"
@@ -60,11 +79,13 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1.5">رمز عبور</label>
+              <label className="block text-sm font-medium mb-1.5">
+                رمز عبور
+              </label>
               <input
                 type="password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="رمز عبور را وارد کنید"
                 className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
                 dir="ltr"
@@ -81,20 +102,27 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-5 pt-4 border-t border-border">
-            <p className="text-xs text-muted-foreground text-center mb-2">کاربران نمایشی:</p>
+            <p className="text-xs text-muted-foreground text-center mb-2">
+              کاربران نمایشی:
+            </p>
             <div className="grid grid-cols-3 gap-1.5">
-              {["امیررضا", "امیرمحمد", "حسام"].map(u => (
+              {["امیررضا", "امیرمحمد", "حسام"].map((u) => (
                 <button
                   key={u}
                   type="button"
-                  onClick={() => { setUsername(u); setPassword("1234"); }}
+                  onClick={() => {
+                    setUsername(u);
+                    setPassword("1234");
+                  }}
                   className="text-xs py-1.5 px-2 rounded-lg border border-border text-muted-foreground hover:border-primary hover:text-primary transition"
                 >
                   {u}
                 </button>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground text-center mt-2">رمز عبور همه: ۱۲۳۴</p>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              رمز عبور همه: ۱۲۳۴
+            </p>
           </div>
         </div>
       </div>
