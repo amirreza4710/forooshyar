@@ -41,7 +41,12 @@ jobs:
           PORT: 4173
           BASE_PATH: /forooshyar/
           NODE_ENV: production
+          VITE_DEMO_MODE: true
         run: pnpm build
+
+      - name: Create SPA fallback
+        working-directory: artifacts/nadraan/dist/public
+        run: cp index.html 404.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

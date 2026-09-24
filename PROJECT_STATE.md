@@ -23,6 +23,13 @@ Checkpoint 1.7 is Frozen. Development for Phase A1 can proceed.
 
 فقط **یک Workstream اجرایی** در هر لحظه فعال است. هر Agent قبل از شروع کار باید این فایل را بخواند و پس از پایان هر اقدام مهم، وضعیت، Evidence، Blocker و Next Action را در همین فایل و در صورت لزوم `PROJECT_STATUS.md` ثبت کند.
 
+### GitHub Pages Demo Mode
+
+- A frontend-only demo is accessible via GitHub Pages.
+- Demo mode is activated strictly when `VITE_DEMO_MODE=true` is provided during the build.
+- This creates an isolated session (`forooshyar_demo_token`) and overrides `custom-fetch` to use mock, deterministic data instead of hitting the Express backend.
+- **Limitation:** Data is static; modifications in the UI will not persist across browser refresh. PostgreSQL and Express are NOT run for the GitHub Pages deployment.
+
 ## Governance Gate — Platform / Module / Multi-tenancy
 
 - **Platform boundary:** `Farakhorasan Platform`
@@ -36,6 +43,7 @@ Checkpoint 1.7 is Frozen. Development for Phase A1 can proceed.
 ## Completed / Frozen Phases
 
 ### Checkpoint 1.6 — MVP Delivery Ready
+
 **Status: APPROVED & FROZEN**
 
 - Business و Product Foundation
@@ -57,6 +65,7 @@ Checkpoint 1.7 is Frozen. Development for Phase A1 can proceed.
 - Sprint 1 board / Feature IDs
 
 ### Sprint 0 — Target Environment Verification
+
 **Status: APPROVED & FROZEN**
 
 Artifacts موجود در Repository شامل Docker Compose، Dockerfileهای API/Web و اسکریپت‌های PowerShell مربوط به Initialize، Backup، Restore و Verify هستند. این وجود به‌تنهایی Evidence اجرای واقعی محسوب نمی‌شود.
@@ -64,34 +73,42 @@ Artifacts موجود در Repository شامل Docker Compose، Dockerfileهای 
 ## Current Gaps / Blockers
 
 ### GATE-1.7-01 — Frontend production build
+
 - **Status:** PENDING TARGET VERIFICATION
 - **Evidence required:** موفقیت build تولیدی روی محیط هدف
 
 ### GATE-1.7-02 — Docker Compose build/up
+
 - **Status:** PENDING TARGET VERIFICATION
 - **Evidence required:** اجرای واقعی `docker compose build` و `docker compose up` روی Windows + Docker Desktop
 
 ### GATE-1.7-03 — Backend tests inside container
+
 - **Status:** PENDING TARGET VERIFICATION
 - **Evidence required:** تست موفق داخل container، نه فقط host/CI
 
 ### GATE-1.7-04 — Host Health/Readiness
+
 - **Status:** PENDING TARGET VERIFICATION
 - **Evidence required:** پاسخ موفق Health و Readiness از Host
 
 ### GATE-1.7-05 — PostgreSQL backup
+
 - **Status:** PENDING TARGET VERIFICATION
 - **Evidence required:** dump واقعی PostgreSQL با artifact قابل شناسایی
 
 ### GATE-1.7-06 — PostgreSQL restore
+
 - **Status:** PENDING TARGET VERIFICATION
 - **Evidence required:** restore واقعی از backup و صحت‌سنجی داده/Schema
 
 ### GATE-1.7-07 — Seed Admin login
+
 - **Status:** PENDING TARGET VERIFICATION
 - **Evidence required:** login واقعی با Admin seed شده و پاسخ موفق احراز هویت
 
 ### GATE-1.7-08 — Admin password rotation
+
 - **Status:** PENDING TARGET VERIFICATION
 - **Evidence required:** تغییر رمز، ورود با رمز جدید و رد شدن رمز قبلی
 
@@ -131,17 +148,17 @@ Design Partner Pilot
 
 ## Phase Gates
 
-| Phase | Gate | وضعیت فعلی | شرط عبور |
-|---|---|---|---|
-| 1.6 | MVP Delivery Ready | FROZEN | قبلاً تأیید شده |
-| S0 | Target Environment Verification | FROZEN | هر ۸ Gate با Evidence |
-| 1.7 | Engineering Foundation Ready | FROZEN | Gateهای S0 پاس شوند |
-| A1 | Operational Foundation | ACTIVE | 12 Feature + Exit Gate |
-| A2 | Sales Core | NOT STARTED | 5 Feature + E2E |
-| A3 | Performance & Cash | NOT STARTED | 9 Feature + traceability |
-| A4 | Decision Layer | NOT STARTED | Dashboard/Report operational |
-| A5 | Stabilization | NOT STARTED | Critical/High صفر یا accepted |
-| DP | Design Partner | NOT STARTED | MVP release + controlled pilot |
+| Phase | Gate                            | وضعیت فعلی  | شرط عبور                       |
+| ----- | ------------------------------- | ----------- | ------------------------------ |
+| 1.6   | MVP Delivery Ready              | FROZEN      | قبلاً تأیید شده                |
+| S0    | Target Environment Verification | FROZEN      | هر ۸ Gate با Evidence          |
+| 1.7   | Engineering Foundation Ready    | FROZEN      | Gateهای S0 پاس شوند            |
+| A1    | Operational Foundation          | ACTIVE      | 12 Feature + Exit Gate         |
+| A2    | Sales Core                      | NOT STARTED | 5 Feature + E2E                |
+| A3    | Performance & Cash              | NOT STARTED | 9 Feature + traceability       |
+| A4    | Decision Layer                  | NOT STARTED | Dashboard/Report operational   |
+| A5    | Stabilization                   | NOT STARTED | Critical/High صفر یا accepted  |
+| DP    | Design Partner                  | NOT STARTED | MVP release + controlled pilot |
 
 ## Agent Execution Protocol
 
@@ -236,7 +253,12 @@ Per ADR-0001, the implemented and authoritative repository stack is **React 19, 
 GitHub Actions PR validation (`.github/workflows/ai-pr-check.yml`) و baseline معماری (`ARCHITECTURE_GRAPH.md`) در Repository ثبت شده‌اند.
 
 ## Checkpoint 1.7 Status Update
+
 What changed: Frontend Vite build zero-config fallback applied. Pino unhandled exception test logs filtered for <500 status codes. Checkpoint 1.7 has officially passed and frozen.
 Evidence: Verified frontend production build successfully works headless without manual ENVs, typecheck passes across all workspaces.
 Remaining blockers: None.
 Next action: Proceed to Phase A1 Operational Foundation.
+
+## Recent Actions
+
+- Demo Mode implemented for GitHub Pages deployment using a frontend mock interceptor (VITE_DEMO_MODE=true) and namespaced local storage session keys.
