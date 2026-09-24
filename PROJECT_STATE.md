@@ -240,3 +240,6 @@ What changed: Frontend Vite build zero-config fallback applied. Pino unhandled e
 Evidence: Verified frontend production build successfully works headless without manual ENVs, typecheck passes across all workspaces.
 Remaining blockers: None.
 Next action: Proceed to Phase A1 Operational Foundation.
+
+## Recent Actions
+- Demo Mode implemented for GitHub Pages deployment using a frontend mock interceptor (VITE_DEMO_MODE=true) and namespaced local storage session keys.

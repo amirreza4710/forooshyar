@@ -41,6 +41,7 @@ jobs:
           PORT: 4173
           BASE_PATH: /forooshyar/
           NODE_ENV: production
+          VITE_DEMO_MODE: true
         run: pnpm build
 
       - name: Upload Pages artifact
