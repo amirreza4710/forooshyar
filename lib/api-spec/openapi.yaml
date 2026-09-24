@@ -29,6 +29,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
+  /readyz:
+    get:
+      operationId: readinessCheck
+      tags: [health]
+      summary: Readiness check (checks database connectivity)
+      responses:
+        "200":
+          description: Ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
   # ─── AUTH ───
   /auth/login:
     post:
@@ -431,8 +450,12 @@ components:
       properties:
         status:
           type: string
-          enum: ["ok"]
-      required: [status]
+          enum: ["ok", "error"]
+        timestamp:
+          type: string
+        uptime:
+          type: number
+      required: [status, timestamp, uptime]
 
     ErrorResponse:
       type: object
