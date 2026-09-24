@@ -1,4 +1,5 @@
 import type { Response } from "express";
+import crypto from "crypto";
 
 export interface AppNotification {
   id: string;
@@ -31,7 +32,7 @@ export function getHistory(): AppNotification[] {
 export function broadcast(n: Omit<AppNotification, "id" | "timestamp">): void {
   const notif: AppNotification = {
     ...n,
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    id: `${Date.now()}-${crypto.randomBytes(4).toString("hex")}`,
     timestamp: new Date().toISOString(),
   };
   history.unshift(notif);

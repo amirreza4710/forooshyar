@@ -25,7 +25,19 @@ app.use(
     },
   }),
 );
-app.use(cors());
+
+let allowedOrigins: (string | RegExp)[] = process.env["CORS_ORIGIN"]
+  ? process.env["CORS_ORIGIN"].split(',').map((o) => o.trim())
+  : [];
+
+if (process.env["NODE_ENV"] !== "production" && allowedOrigins.length === 0) {
+  allowedOrigins = [/^http:\/\/localhost:\d+$/, /^http:\/\/127\.0\.0\.1:\d+$/];
+}
+
+app.use(cors({
+  origin: process.env["NODE_ENV"] === "production" && allowedOrigins.length === 0 ? false : allowedOrigins,
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
