@@ -10,10 +10,13 @@ export type HealthStatusStatus = typeof HealthStatusStatus[keyof typeof HealthSt
 
 export const HealthStatusStatus = {
   ok: 'ok',
+  error: 'error',
 } as const;
 
 export interface HealthStatus {
   status: HealthStatusStatus;
+  timestamp: string;
+  uptime: number;
 }
 
 export interface ErrorResponse {

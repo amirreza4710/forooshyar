@@ -9,4 +9,6 @@ import type { HealthStatusStatus } from './healthStatusStatus';
 
 export interface HealthStatus {
   status: HealthStatusStatus;
+  timestamp: string;
+  uptime: number;
 }
