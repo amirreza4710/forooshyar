@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
 import { customFetch, ApiError, ResponseParseError, setAuthTokenGetter } from './custom-fetch';
 
 describe('customFetch', () => {
@@ -26,7 +26,7 @@ describe('customFetch', () => {
 
       Object.defineProperty(mockResponse, 'url', { value: 'https://api.example.com/data' });
 
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (global.fetch as Mock).mockResolvedValueOnce(mockResponse);
 
       try {
         await customFetch('https://api.example.com/data');
@@ -54,7 +54,7 @@ describe('customFetch', () => {
 
       Object.defineProperty(mockResponse, 'url', { value: 'https://api.example.com/data' });
 
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (global.fetch as Mock).mockResolvedValueOnce(mockResponse);
 
       try {
         await customFetch('https://api.example.com/data');
@@ -77,7 +77,7 @@ describe('customFetch', () => {
 
       Object.defineProperty(mockResponse, 'url', { value: 'https://api.example.com/data' });
 
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (global.fetch as Mock).mockResolvedValueOnce(mockResponse);
 
       try {
         await customFetch('https://api.example.com/data');
@@ -97,7 +97,7 @@ describe('customFetch', () => {
       });
       Object.defineProperty(mockResponse, 'url', { value: 'https://api.example.com/data' });
 
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (global.fetch as Mock).mockResolvedValueOnce(mockResponse);
 
       try {
         await customFetch('https://api.example.com/data');
@@ -118,7 +118,7 @@ describe('customFetch', () => {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
       });
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (global.fetch as Mock).mockResolvedValueOnce(mockResponse);
 
       const result = await customFetch('https://api.example.com/data');
       expect(result).toEqual(mockData);
@@ -133,7 +133,7 @@ describe('customFetch', () => {
         status: 200,
         headers: { 'Content-Type': 'text/plain' }
       });
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (global.fetch as Mock).mockResolvedValueOnce(mockResponse);
 
       const result = await customFetch('https://api.example.com/data', { responseType: 'text' });
       expect(result).toBe('Hello World');
@@ -145,7 +145,7 @@ describe('customFetch', () => {
         headers: { 'Content-Type': 'application/json' }
       });
       Object.defineProperty(mockResponse, 'url', { value: 'https://api.example.com/data' });
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (global.fetch as Mock).mockResolvedValueOnce(mockResponse);
 
       try {
         await customFetch('https://api.example.com/data');
@@ -171,7 +171,7 @@ describe('customFetch', () => {
 
     it('automatically adds application/json content-type for json-like body', async () => {
       const mockResponse = new Response('{}', { status: 200 });
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (global.fetch as Mock).mockResolvedValueOnce(mockResponse);
 
       await customFetch('https://api.example.com/data', {
         method: 'POST',
@@ -183,20 +183,20 @@ describe('customFetch', () => {
         headers: expect.any(Headers)
       }));
 
-      const callArgs = (global.fetch as any).mock.calls[0];
+      const callArgs = (global.fetch as Mock).mock.calls[0];
       const headers = callArgs[1].headers as Headers;
       expect(headers.get('content-type')).toBe('application/json');
     });
 
     it('adds authorization header if auth token getter is set', async () => {
       const mockResponse = new Response('{}', { status: 200 });
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (global.fetch as Mock).mockResolvedValueOnce(mockResponse);
 
       setAuthTokenGetter(async () => 'my-test-token');
 
       await customFetch('https://api.example.com/data');
 
-      const callArgs = (global.fetch as any).mock.calls[0];
+      const callArgs = (global.fetch as Mock).mock.calls[0];
       const headers = callArgs[1].headers as Headers;
       expect(headers.get('authorization')).toBe('Bearer my-test-token');
     });
