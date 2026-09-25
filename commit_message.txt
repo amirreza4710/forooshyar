@@ -1,5 +1,6 @@
-🔒 Restrict CORS configuration based on environment
+🧪 [Add tests and fix for asyncHandler]
 
-🎯 **What:** The previous `app.use(cors())` configuration lacked any `origin` restrictions, making the API overly permissive and vulnerable to Cross-Origin Resource Sharing attacks where unauthorized domains could make requests on behalf of authenticated users.
-⚠️ **Risk:** Without restricting allowed origins, an attacker could potentially execute actions or read sensitive data from the API through malicious scripts running in a victim's browser on another site (Cross-Site Request Forgery via CORS).
-🛡️ **Solution:** The CORS middleware is now explicitly configured. It parses allowed origins from the `CORS_ORIGIN` environment variable. In `production`, if no origins are specified, it safely disables all cross-origin requests (`origin: false`). In development environments, if the `CORS_ORIGIN` isn't set, it uses a sane default (`localhost` and `127.0.0.1` origins) to allow frontend developers to work easily. The `.env.example` file has been updated to document this new security variable.
+🎯 What: Added a test file `asyncHandler.test.ts` for the `asyncHandler` middleware to improve testing coverage and reliability. The implementation was also fixed so that it actually correctly catches synchronous errors thrown by the route handler.
+📊 Coverage: Added tests to ensure that the inner handler is called correctly, synchronous errors are caught and passed to `next`, and asynchronous errors (rejected promises) are caught and passed to `next`.
+✨ Result: `asyncHandler` is completely covered, making sure any async handler we write is safely wrapping potential errors to our global error handler.
+
