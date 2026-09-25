@@ -36,6 +36,11 @@ describe("Health routes", () => {
       expect(response.body).toHaveProperty("uptime");
       expect(typeof response.body.timestamp).toBe("string");
       expect(typeof response.body.uptime).toBe("number");
+
+      // Ensure the timestamp is valid ISO string
+      const date = new Date(response.body.timestamp);
+      expect(date.toISOString()).toBe(response.body.timestamp);
+      expect(response.body.uptime).toBeGreaterThanOrEqual(0);
     });
   });
 
@@ -51,11 +56,18 @@ describe("Health routes", () => {
       expect(response.body).toHaveProperty("status", "ok");
       expect(response.body).toHaveProperty("timestamp");
       expect(response.body).toHaveProperty("uptime");
+
+      // Ensure the timestamp is valid ISO string
+      const date = new Date(response.body.timestamp);
+      expect(date.toISOString()).toBe(response.body.timestamp);
+      expect(response.body.uptime).toBeGreaterThanOrEqual(0);
     });
 
     it("should return 503 when DB connection fails", async () => {
       // Mock db.execute to reject
-      (db.execute as any).mockRejectedValueOnce(new Error("DB connection failed"));
+      (db.execute as any).mockRejectedValueOnce(
+        new Error("DB connection failed"),
+      );
 
       const response = await request(app).get("/readyz");
 
@@ -64,6 +76,11 @@ describe("Health routes", () => {
       expect(response.body).toHaveProperty("status", "error");
       expect(response.body).toHaveProperty("timestamp");
       expect(response.body).toHaveProperty("uptime");
+
+      // Ensure the timestamp is valid ISO string
+      const date = new Date(response.body.timestamp);
+      expect(date.toISOString()).toBe(response.body.timestamp);
+      expect(response.body.uptime).toBeGreaterThanOrEqual(0);
     });
   });
 });
