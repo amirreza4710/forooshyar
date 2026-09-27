@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { ApiError } from "@workspace/api-client-react";
 
 import LoginPage from "@/pages/login";
 import DashboardPage from "@/pages/dashboard";
@@ -20,7 +21,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error) => {
-        if (error instanceof Error && "status" in error && (error as any).status === 401) return false;
+        if (error instanceof ApiError && error.status === 401) return false;
         return failureCount < 2;
       },
       staleTime: 30_000,
@@ -28,11 +29,17 @@ const queryClient = new QueryClient({
   },
 });
 
-function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+function ProtectedRoute({
+  component: Component,
+}: {
+  component: React.ComponentType;
+}) {
   const { token } = useAuth();
   const [, navigate] = useLocation();
 
-  useEffect(() => { if (!token) navigate("/login"); }, [token, navigate]);
+  useEffect(() => {
+    if (!token) navigate("/login");
+  }, [token, navigate]);
   if (!token) return null;
 
   return (
@@ -46,13 +53,34 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={LoginPage} />
-      <Route path="/"          component={() => <ProtectedRoute component={DashboardPage} />} />
-      <Route path="/new-order" component={() => <ProtectedRoute component={NewOrderPage} />} />
-      <Route path="/orders"    component={() => <ProtectedRoute component={OrdersPage} />} />
-      <Route path="/products"  component={() => <ProtectedRoute component={ProductsPage} />} />
-      <Route path="/customers" component={() => <ProtectedRoute component={CustomersPage} />} />
-      <Route path="/users"     component={() => <ProtectedRoute component={UsersPage} />} />
-      <Route path="/profile"   component={() => <ProtectedRoute component={ProfilePage} />} />
+      <Route
+        path="/"
+        component={() => <ProtectedRoute component={DashboardPage} />}
+      />
+      <Route
+        path="/new-order"
+        component={() => <ProtectedRoute component={NewOrderPage} />}
+      />
+      <Route
+        path="/orders"
+        component={() => <ProtectedRoute component={OrdersPage} />}
+      />
+      <Route
+        path="/products"
+        component={() => <ProtectedRoute component={ProductsPage} />}
+      />
+      <Route
+        path="/customers"
+        component={() => <ProtectedRoute component={CustomersPage} />}
+      />
+      <Route
+        path="/users"
+        component={() => <ProtectedRoute component={UsersPage} />}
+      />
+      <Route
+        path="/profile"
+        component={() => <ProtectedRoute component={ProfilePage} />}
+      />
       <Route component={NotFound} />
     </Switch>
   );
