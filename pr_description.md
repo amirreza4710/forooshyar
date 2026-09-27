@@ -1,59 +1,16 @@
-## Summary
-Complete Sprint 0 target environment verification.
+## 🧹 [Code Health] Remove any cast for bulkStatus in orders.tsx
 
-## Scope
-- Docker Compose API PORT
-- Frontend Nginx proxy
-- API Server tester Docker stage
-- Operational script hardening
-- Assertive verify script coverage
+### 🎯 What:
+Removed the `as any` casts used when updating the `status` field for orders in `artifacts/nadraan/src/pages/orders.tsx`. The API client exposes an `OrderStatus` type which has been imported and used for type casting to provide better safety and adherence to the schema.
 
-## Changes
-1. Added Nginx configuration for the frontend to proxy API traffic.
-2. Updated the backend Dockerfile with an isolated tester stage.
-3. Rewrote verification scripts to dynamically query Docker containers.
-4. Generated an `UNVERIFIED` validation report for Checkpoint 1.7.
+### 💡 Why:
+The `status` field has a specific set of allowed values defined by the API schema (e.g. "در انتظار", "تایید شده", "تکمیل شده", "لغو شده"). Casting to `any` weakened type safety, bypassed TypeScript compiler checks, and made the codebase less maintainable. Explicit typing prevents accidental assignments of incorrect strings that might result in API errors or UI bugs down the line.
 
-## Verification
+### ✅ Verification:
+- Read `orders.tsx` and identified both locations where `as any` was used for `status` mutations.
+- Checked the `@workspace/api-client-react` schemas and found the exact `OrderStatus` enum/type.
+- Imported `OrderStatus` and replaced `as any` in `applyBulkStatus` and the inline table row update handler.
+- Run `pnpm install`, `pnpm run typecheck:libs`, and then specifically verified `pnpm --filter @workspace/nadraan run typecheck` which completed successfully with no errors.
 
-### GATE-1.7-01
-PASS (Verified locally via pnpm build)
-
-### GATE-1.7-02
-UNVERIFIED (Requires Docker daemon)
-
-### GATE-1.7-03
-UNVERIFIED (Requires Docker daemon)
-
-### GATE-1.7-04
-UNVERIFIED (Requires Compose stack)
-
-### GATE-1.7-05
-UNVERIFIED (Requires DB container)
-
-### GATE-1.7-06
-UNVERIFIED (Requires DB container)
-
-### GATE-1.7-07
-UNVERIFIED (Requires running API)
-
-### GATE-1.7-08
-UNVERIFIED (Requires running API)
-
-## Database Verification
-UNVERIFIED (Requires DB)
-
-## Security
-No credentials exposed.
-
-## Remaining Blockers
-Sandbox lacks overlayfs permissions required by Docker daemon. Cannot verify Compose-dependent gates.
-
-## Architecture Impact
-None. Minimal scope changes.
-
-## Rollback
-git revert <commit-hash>
-
-## Next Action
-An engineer must run `.\scripts\Verify-Sprint0.ps1` on a Windows + Docker Desktop environment.
+### ✨ Result:
+Improved static analysis and type-safety across the file without changing any runtime behavior. The codebase is now safer and cleaner!
