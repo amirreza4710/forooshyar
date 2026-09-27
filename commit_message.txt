@@ -1,5 +1,14 @@
-🔒 Restrict CORS configuration based on environment
+🧪 Add test coverage for auth lib functions
 
-🎯 **What:** The previous `app.use(cors())` configuration lacked any `origin` restrictions, making the API overly permissive and vulnerable to Cross-Origin Resource Sharing attacks where unauthorized domains could make requests on behalf of authenticated users.
-⚠️ **Risk:** Without restricting allowed origins, an attacker could potentially execute actions or read sensitive data from the API through malicious scripts running in a victim's browser on another site (Cross-Site Request Forgery via CORS).
-🛡️ **Solution:** The CORS middleware is now explicitly configured. It parses allowed origins from the `CORS_ORIGIN` environment variable. In `production`, if no origins are specified, it safely disables all cross-origin requests (`origin: false`). In development environments, if the `CORS_ORIGIN` isn't set, it uses a sane default (`localhost` and `127.0.0.1` origins) to allow frontend developers to work easily. The `.env.example` file has been updated to document this new security variable.
+🎯 **What:**
+- Added test coverage for `signToken` and `verifyToken` functions in `artifacts/api-server/src/lib/auth.ts`.
+- Previously, these core JWT utility functions were missing tests, reducing confidence in the authentication layer.
+
+📊 **Coverage:**
+- Added `signToken should return a string token`: Verifies that signed tokens have the correct structure (3 parts).
+- Added `verifyToken should decode and return the payload for a valid token`: Verifies that a valid token is decoded into the correct payload.
+- Added `verifyToken should throw an error for an invalid token`: Verifies that invalid tokens correctly throw errors.
+- Added `verifyToken should throw an error for an expired token`: Verifies that expired tokens correctly throw `jwt expired` errors.
+
+✨ **Result:**
+- Increased test coverage for the authentication library, ensuring token signing and verification work as expected and handle errors properly.
