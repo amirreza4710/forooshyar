@@ -84,4 +84,39 @@ describe("auth middleware", () => {
       expect(mockNext).toHaveBeenCalled();
     });
   });
+
+  describe("JWT Functions", () => {
+    const payload: JwtPayload = {
+      id: 1,
+      username: "testuser",
+      name: "Test User",
+      role: "admin",
+    };
+
+    it("signToken should return a string token", () => {
+      const token = signToken(payload);
+      expect(typeof token).toBe("string");
+      expect(token.split(".")).toHaveLength(3); // A valid JWT has 3 parts
+    });
+
+    it("verifyToken should decode and return the payload for a valid token", () => {
+      const token = signToken(payload);
+      const decoded = verifyToken(token);
+
+      expect(decoded.id).toBe(payload.id);
+      expect(decoded.username).toBe(payload.username);
+      expect(decoded.name).toBe(payload.name);
+      expect(decoded.role).toBe(payload.role);
+    });
+
+    it("verifyToken should throw an error for an invalid token", () => {
+      expect(() => verifyToken("invalid.token.here")).toThrow();
+    });
+
+    it("verifyToken should throw an error for an expired token", () => {
+      // Create an expired token manually using jsonwebtoken
+      const expiredToken = jwt.sign(payload, process.env.SESSION_SECRET as string, { expiresIn: "-1h" });
+      expect(() => verifyToken(expiredToken)).toThrow("jwt expired");
+    });
+  });
 });
