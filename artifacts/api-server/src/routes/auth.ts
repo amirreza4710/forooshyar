@@ -20,6 +20,9 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { db, usersTable, refreshTokensTable } from "@workspace/db";
 import crypto from "crypto";
+import { promisify } from "util";
+
+const randomBytesAsync = promisify(crypto.randomBytes);
 import { eq, and, isNull } from "drizzle-orm";
 import { signToken, requireAuth } from "../lib/auth";
 import { LoginBody, RefreshBody } from "@workspace/api-zod";
@@ -50,7 +53,8 @@ router.post("/auth/login", loginLimiter, async (req, res): Promise<void> => {
   }
   const token = signToken({ id: user.id, username: user.username, name: user.name, role: user.role });
 
-  const rawRefreshToken = crypto.randomBytes(40).toString('hex');
+  const buf = await randomBytesAsync(40);
+  const rawRefreshToken = buf.toString('hex');
   const tokenHash = crypto.createHash('sha256').update(rawRefreshToken).digest('hex');
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 7);
@@ -110,7 +114,8 @@ router.post("/auth/refresh", async (req, res): Promise<void> => {
 
   // Issue new tokens
   const token = signToken({ id: user.id, username: user.username, name: user.name, role: user.role });
-  const newRawRefreshToken = crypto.randomBytes(40).toString('hex');
+  const buf2 = await randomBytesAsync(40);
+  const newRawRefreshToken = buf2.toString('hex');
   const newTokenHash = crypto.createHash('sha256').update(newRawRefreshToken).digest('hex');
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 7);
