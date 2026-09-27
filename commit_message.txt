@@ -1,3 +1,9 @@
+🧪 [Add tests and fix for asyncHandler]
+
+🎯 What: Added a test file `asyncHandler.test.ts` for the `asyncHandler` middleware to improve testing coverage and reliability. The implementation was also fixed so that it actually correctly catches synchronous errors thrown by the route handler.
+📊 Coverage: Added tests to ensure that the inner handler is called correctly, synchronous errors are caught and passed to `next`, and asynchronous errors (rejected promises) are caught and passed to `next`.
+✨ Result: `asyncHandler` is completely covered, making sure any async handler we write is safely wrapping potential errors to our global error handler.
+
 🧪 Add test coverage for auth lib functions
 
 🎯 **What:**
