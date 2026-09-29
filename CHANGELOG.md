@@ -3,6 +3,8 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
+- Renamed the approved product to Forooshyar Plus / فروشیار پلاس; Bazarak is now the source label for integrated Field Operations and Automation capabilities.
+- Added ADR-011 and renamed the canonical integration PRD without changing technical identifiers or the Git remote.
 - feat(ci): add PR validation and verified baseline architecture documentation
 - Added Master Specification v2.0 as the canonical navigation and traceability hub.
 - Added a validation-first roadmap centered on the 30-day Paid Design Partner Pilot.

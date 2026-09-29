@@ -1,6 +1,6 @@
 # MVP Feature Admission & Backlog v1.0
 
-**Status:** Approved & Frozen  
+**Status:** Superseded as active backlog by ADR-010; retained as frozen v2.4 history
 **Checkpoint:** 1.6  
 **New MVP Features:** 0
 
@@ -84,3 +84,7 @@ Security، Audit، Backup و Observability فقط با مسیر استثنای �
 ## Change Rule
 
 هر Feature جدید به‌صورت پیش‌فرض `POST_MVP_CANDIDATE` است و فقط با Decision Record و بازنگری رسمی Scope می‌تواند وارد MVP شود.
+
+## ADR-010 Rebase
+
+ADR-010 completed the required Decision Record and Scope Review for `VIS-F01..F03`, `ALT-F01..F03`, and `AUT-F01..F03`. The active backlog is **14 Epics / 41 Features**; its canonical scope is `docs/01_PRD/FOROOSHYAR_PLUS_INTEGRATION.md`. This v2.4 file remains the immutable 32-feature baseline.

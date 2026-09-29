@@ -1,6 +1,6 @@
 # Documentation Index
 
-`docs/` منبع حقیقت مستندات فراخراسان است. هر تصمیم محصول، کسب‌وکار، UX، معماری و توسعه باید به مالک canonical خود قابل ردیابی باشد.
+`docs/` منبع حقیقت مستندات فروشیار پلاس است. هر تصمیم محصول، کسب‌وکار، UX، معماری و توسعه باید به مالک canonical خود قابل ردیابی باشد.
 
 ## Start Here
 
@@ -16,11 +16,11 @@ Per ADR-0001, the implemented repository stack is **React 19, Vite, Express 5, P
 
 ## Current Baseline
 
-- **Checkpoint رسمی:** 1.6 — MVP Delivery Ready
-- **Checkpoint بعدی:** 1.7 — Engineering Foundation Ready (CANDIDATE / BLOCKED)
-- **MVP Backlog:** 11 Epic و 32 Feature، Frozen
-- **Current Work:** Sprint 0 Target Environment Verification
-- **New MVP Features in v2.4:** صفر
+- **Checkpoint رسمی:** 1.7 — Engineering Foundation Ready (Frozen)
+- **Checkpoint بعدی:** A1 — Operational Foundation
+- **MVP Backlog فعال:** 14 Epic و 41 Feature (ADR-010)
+- **Current Work:** A1 Operational Foundation
+- **Frozen baseline:** v2.4 با 11 Epic و 32 Feature
 
 ## Folder Map
 
@@ -60,6 +60,12 @@ Per ADR-0001, the implemented repository stack is **React 19, Vite, Express 5, P
 - ADR-006 — Pricing & Revenue Architecture
 - ADR-007 — Partner Commercial Model
 - ADR-008 — Event-Informed and Ledger-Based Billing
+- ADR-010 — Forooshyar Plus Capability Integration
+- ADR-011 — Forooshyar Plus Product Naming
+
+## Active integration scope
+
+`docs/01_PRD/FOROOSHYAR_PLUS_INTEGRATION.md` مالک canonical قابلیت‌های ادغام‌شدهٔ بازارک در فروشیار پلاس است. سند ورودی بازارک به‌عنوان baseline بیرونی نگهداری شده و ADR-010/ADR-011 تصمیم‌های لازم برای پذیرش و نام‌گذاری آن را ثبت می‌کنند.
 
 ## Change Rule
 

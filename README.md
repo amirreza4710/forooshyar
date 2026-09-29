@@ -1,6 +1,6 @@
-# فراخراسان / فروشیار — پلتفرم عملیات فروش و توزیع
+# فروشیار پلاس — پلتفرم عملیات فروش و توزیع
 
-فراخراسان یک **Sales & Distribution Operating Platform** برای مدیریت مشتریان، محصولات، سفارش‌ها، عملکرد، وصول و کنترل مدیریتی شرکت‌های پخش است. چشم‌انداز داخلی محصول، تبدیل تدریجی به **Domain-Driven Business Operating Platform** است؛ این چشم‌انداز مجوز افزودن قابلیت‌های خارج از MVP نیست.
+فروشیار پلاس یک **Sales & Distribution Operating Platform** برای مدیریت عملیات میدانی، مشتریان، محصولات، سفارش‌ها، وصول و کنترل مدیریتی شرکت‌های پخش است. قابلیت‌های بازارک در لایه‌های Field Operations و Automation این محصول ادغام شده‌اند. چشم‌انداز داخلی محصول، تبدیل تدریجی به **Domain-Driven Business Operating Platform** است؛ این چشم‌انداز مجوز افزودن قابلیت‌های خارج از MVP نیست.
 
 > ⚠️ مخزن خصوصی و داخلی است. عمومی‌سازی فقط با مجوز صریح.
 
@@ -11,12 +11,12 @@
 | Checkpoint رسمی | **1.7 — Engineering Foundation Ready (Frozen)** |
 | Checkpoint بعدی | **A1 — Operational Foundation** |
 | MVP Scope | Frozen |
-| MVP Backlog | 11 Epic و 32 Feature |
-| Feature جدید در v2.4 | صفر |
+| MVP Backlog فعال | 14 Epic و 41 Feature |
+| Frozen baseline | v2.4: 11 Epic و 32 Feature |
 | معماری اجرایی | Modular Monolith با Bounded Contextهای روشن |
 | کار جاری | Phase A1 — Operational Foundation |
 | Backend validation | Drizzle ORM migration & schema push, 9/9 Vitest test suite passing |
-| MVP Development | هنوز آغاز نشده |
+| MVP Development | A1 در حال اجرا؛ Field Operations از A2 آغاز می‌شود |
 
 Checkpoint 1.7 is FROZEN. Phase A1 (Operational Foundation) is the active workstream.
 
@@ -66,6 +66,9 @@ Epicهای متعهد:
 9. Collections
 10. Reports
 11. Basic Settings
+12. Field Operations
+13. Operational Alerts
+14. Automation
 
 موارد خارج از MVP:
 

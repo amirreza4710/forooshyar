@@ -1,24 +1,16 @@
-# وضعیت پروژه — فروشیار
+# وضعیت پروژه — فروشیار پلاس
 
 > این فایل Operational Status (وضعیت اجرایی) پروژه است. هر Agent باید قبل از شروع کار آن را بخواند و بعد از هر اقدام مهم، وضعیت خود را با **What changed / Evidence / Remaining blockers / Next action** به‌روزرسانی کند. اگر چیزی واقعاً اجرا نشده، مقدار آن `PENDING` یا `UNVERIFIED` است، نه `PASS`.
 
-**آخرین آپدیت:** ۱۸ اوت ۲۰۲۶ — وضعیت بازتنظیم‌شده بر اساس Repository `main`
+**آخرین آپدیت:** ۲۹ سپتامبر ۲۰۲۶ — نام‌گذاری فروشیار پلاس و ادغام قابلیت‌های بازارک
 
 ---
 
 ## 1. خلاصه اجرایی
 
-فروشیار در وضعیت **Checkpoint 1.6 — MVP Delivery Ready (Approved & Frozen)** قرار دارد.
+پروژه در وضعیت **Checkpoint 1.7 — Engineering Foundation Ready (Frozen)** و Workstream فعال **A1 — Operational Foundation** قرار دارد.
 
-Sprint 0 از نظر Repository و Artifactهای Foundation به وضعیت **Release Candidate** رسیده، اما Target Environment Verification هنوز به‌صورت کامل اثبات نشده است.
-
-بنابراین:
-
-> **Checkpoint 1.7 هنوز Frozen نیست و توسعه Featureهای Sprint 1 فعلاً متوقف است.**
-
-Workstream فعال فقط:
-
-`S0 — Target Environment Verification`
+ADR-010 قابلیت‌های بازارک را در محصول فروشیار پلاس ادغام کرده و ADR-011 نام رسمی محصول را تثبیت کرده است. Backlog فعال 14 Epic و 41 Feature است؛ baseline v2.4 با 32 Feature به‌صورت تاریخی frozen باقی می‌ماند.
 
 ---
 
@@ -99,7 +91,7 @@ Stack رسمی Drizzle است. عبارت Alembic در بعضی گزارش‌ه�
 ## 5. Roadmap اجرایی ۳۰ روزه
 
 ### Phase S0 — Target Environment Verification
-**Current / Active**
+**Frozen / Historical baseline**
 
 هدف: تبدیل Foundation Release Candidate به Engineering Foundation Verified.
 
@@ -114,20 +106,23 @@ Stack رسمی Drizzle است. عبارت Alembic در بعضی گزارش‌ه�
 
 Exit Gate: login، settings، product، customer و audit minimum به‌صورت عملیاتی.
 
-### Phase A2 — Sales Core | Days 11–18
+### Phase A2 — Sales & Field Core | Days 11–18
 
 - ORD-F01..F03
 - TAR-F01..F02
+- VIS-F01..F03
 
-Exit Gate: Customer → Order → Target Achievement End-to-End.
+Exit Gate: Sales Rep Check-in → Customer → Order → Visit/Order Link → Target Achievement End-to-End.
 
-### Phase A3 — Performance & Cash | Days 19–24
+### Phase A3 — Performance, Cash & Automation | Days 19–24
 
 - KPI-F01..F03
 - COM-F01..F03
 - COL-F01..F03
+- ALT-F01..ALT-F03
+- AUT-F01..AUT-F03
 
-Exit Gate: KPI/Commission traceable و Collections تا ثبت پرداخت.
+Exit Gate: KPI/Commission traceable، Collections تا ثبت پرداخت، و Alert/Automation logged باشد.
 
 ### Phase A4 — Decision Layer | Days 25–27
 
@@ -169,9 +164,9 @@ Exit Gate: Dashboard/Reports عملیاتی با RBAC.
 | Phase | Status | Next Transition |
 |---|---|---|
 | 1.6 MVP Delivery Ready | FROZEN | — |
-| S0 Target Verification | ACTIVE | پاس شدن ۸ Gate |
-| 1.7 Engineering Foundation Ready | BLOCKED | Freeze بعد از S0 |
-| A1 Operational Foundation | NOT STARTED | بعد از 1.7 |
+| S0 Target Verification | FROZEN | — |
+| 1.7 Engineering Foundation Ready | FROZEN | — |
+| A1 Operational Foundation | ACTIVE | تکمیل 12 Feature + Exit Gate |
 | A2 Sales Core | NOT STARTED | بعد از A1 |
 | A3 Performance & Cash | NOT STARTED | بعد از A2 |
 | A4 Decision Layer | NOT STARTED | بعد از A3 |
@@ -226,7 +221,7 @@ Next action:
 
 ## 9. Next Action — تنها اقدام فعال
 
-**S0 Target Environment Verification**
+**A1 — Operational Foundation**
 
 ترتیب پیشنهادی:
 
@@ -247,4 +242,10 @@ Next action:
 14. Freeze Checkpoint 1.7 only if all gates PASS
 ```
 
-هیچ اقدام محصولی موازی با این Workstream مجاز نیست.
+What changed: ADR-010 و ADR-011، قابلیت‌های بازارک و نام فروشیار پلاس را ثبت کردند؛ Roadmap و وضعیت‌ها با A1 و backlog 41-feature هم‌راستا شدند.
+
+Evidence: `docs/ADR/ADR-010.md`، `docs/ADR/ADR-011.md` و `docs/01_PRD/FOROOSHYAR_PLUS_INTEGRATION.md`.
+
+Remaining blockers: Implementation acceptance criteria برای هر Vertical Slice هنوز به schema/API/UI/test taskهای جداگانه نیاز دارد؛ هیچ‌کدام در این تغییر اجرا نشده‌اند.
+
+Next action: فقط Featureهای A1؛ سپس A2 با Vertical Slice «Check-in → Customer → Order → Visit/Order Link».

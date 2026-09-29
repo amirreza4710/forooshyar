@@ -4,7 +4,7 @@
 
 | Field | Value |
 |---|---|
-| Product | Farakhorasan Sales OS / فروشیار |
+| Product | Forooshyar Plus / فروشیار پلاس |
 | Domain | Field sales, order capture, customer/product operations, distribution management |
 | Version | 1.0 |
 | Status | Draft for Sprint 1 review |
@@ -20,7 +20,7 @@ It is intentionally written before the Master Specification and PRD so later doc
 
 ## 3. Product Identity
 
-Farakhorasan Sales OS is a documentation-first sales and distribution operating system for managing:
+Forooshyar Plus is a documentation-first sales and distribution operating system for managing:
 
 - Field sales representatives / ویزیتورها
 - Customers such as stores, supermarkets, and distribution accounts
@@ -28,7 +28,7 @@ Farakhorasan Sales OS is a documentation-first sales and distribution operating 
 - Sales orders and order status tracking
 - Management dashboards for sales, customers, products, users, and operational health
 
-The current codebase already implements the practical foundation of this operating model under the فروشیار / نادران‌گستر application identity. Future documents should treat this constitution as the stable business layer while implementation names can be normalized through later product and branding decisions.
+The current codebase already implements the practical foundation of this operating model under the فروشیار / نادران‌گستر application identity. Forooshyar Plus is the approved product name; existing technical identifiers remain unchanged until a separate migration decision.
 
 ## 4. Business Mission
 
@@ -252,7 +252,6 @@ Required next documents:
 
 ## 19. Open Questions
 
-- Should the final public product identity be `Farakhorasan Sales OS`, `فروشیار`, or another approved brand name?
 - Should the repository license remain MIT or should the private business deployment use a proprietary license notice?
 - Which exact roles beyond `نماینده فروش`, `مدیر فروش / نماینده`, and `سرپرست` are required for the factory/distribution environment?
 - Which order statuses are final for the first PRD version?

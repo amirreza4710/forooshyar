@@ -1,17 +1,15 @@
-# Farakhorasan Product Roadmap v2.4
+# Forooshyar Plus Product Roadmap v2.5
 
-**Status:** Approved — Governance clarification pending review  
-**Date:** 2026-08-20  
-**Current Official Checkpoint:** 1.6 — MVP Delivery Ready  
-**Next Checkpoint:** 1.7 — Engineering Foundation Ready (CANDIDATE / BLOCKED)
+**Status:** Active — rebased by ADR-010
+**Date:** 2026-09-29
+**Current Official Checkpoint:** 1.7 — Engineering Foundation Ready (FROZEN)
+**Next Checkpoint:** A1 — Operational Foundation
 
 ## Current Position
 
-Delivery Readiness کامل و Frozen است. MVP شامل 11 Epic و 32 Feature متعهد است و در v2.4 هیچ Feature جدیدی اضافه نشده است.
+Checkpoint 1.7 frozen است و A1 تنها Workstream فعال است. بستهٔ v2.4 با 11 Epic و 32 Feature به‌عنوان baseline تاریخی حفظ می‌شود. ADR-010 نه Feature عملیاتی بازارک را در فروشیار پلاس پذیرفته و backlog فعال را به 14 Epic و 41 Feature رسانده است.
 
-Sprint 0 از نظر Repository به وضعیت Release Candidate رسیده، اما Target Environment Verification هنوز کامل و Evidence-based تأیید نشده است.
-
-**Current active workstream: S0 Target Environment Verification.** تا Freeze شدن 1.7، توسعه Featureهای A1 مجاز نیست.
+**Current active workstream: A1 Operational Foundation.**
 
 ## Governance Pre-Implementation Gate
 
@@ -19,12 +17,12 @@ Sprint 0 از نظر Repository به وضعیت Release Candidate رسیده، �
 
 ```text
 Farakhorasan Platform
-└── Forooshyar Sales module
+└── Forooshyar Plus module
 ```
 
 - Farakhorasan Platform مرز سطح پلتفرم است.
-- Forooshyar Sales ماژول/محصول فروش درون این پلتفرم است.
-- MVP فعلی، Scope فروشیار است و کل پلتفرم Farakhorasan را پیاده‌سازی نمی‌کند.
+- Forooshyar Plus ماژول/محصول فروش درون این پلتفرم است.
+- MVP فعلی، Scope فروشیار پلاس است و کل پلتفرم Farakhorasan را پیاده‌سازی نمی‌کند.
 
 ### Mandatory Multi-tenancy Infrastructure
 
@@ -74,7 +72,7 @@ Per ADR-0001, the implemented repository stack is **React 19, Vite, Express 5, P
 
 ## Phase S0 — Target Environment Verification
 
-**Status: ACTIVE**
+**Status: FROZEN**
 
 هدف: اثبات Engineering Foundation روی Windows + Docker Desktop با Evidence واقعی.
 
@@ -95,17 +93,15 @@ Per ADR-0001, the implemented repository stack is **React 19, Vite, Express 5, P
 - ثبت artifactهای backup/restore و test output
 - ثبت دقیق محیط، نسخه ابزارها و زمان اجرا
 
-**Exit Gate:** هر ۸ Gate PASS + Evidence ثبت‌شده + Checkpoint 1.7 Frozen.
+**Exit Gate:** هر ۸ Gate PASS + Evidence ثبت‌شده + Checkpoint 1.7 Frozen. Evidence is recorded in `PROJECT_STATE.md`; historical v2.4 files remain unchanged.
 
-## Checkpoint 1.7 — Engineering Foundation Ready (CANDIDATE / BLOCKED)
+## Checkpoint 1.7 — Engineering Foundation Ready (FROZEN)
 
-**Status: BLOCKED BY S0**
-
-این Checkpoint فقط پس از عبور کامل S0 Frozen می‌شود. وجود Script یا Dockerfile به‌تنهایی Evidence محسوب نمی‌شود.
+**Status: FROZEN**
 
 ## Phase A1 — Days 4–10: Operational Foundation
 
-**Status: NOT STARTED**
+**Status: ACTIVE**
 
 فقط:
 
@@ -116,14 +112,15 @@ Per ADR-0001, the implemented repository stack is **React 19, Vite, Express 5, P
 
 Exit Gate: کاربر مجاز بتواند وارد شود، تنظیمات پایه، محصول و مشتری معتبر ایجاد کند و عملیات حساس Audit شوند.
 
-## Phase A2 — Days 11–18: Sales Core
+## Phase A2 — Days 11–18: Sales & Field Core
 
 **Status: NOT STARTED**
 
 - ORD-F01 تا ORD-F03
 - TAR-F01 تا TAR-F02
+- VIS-F01 تا VIS-F03
 
-Exit Gate: مسیر Customer → Order → Target Achievement به‌صورت End-to-End کار کند.
+Exit Gate: مسیر Sales Rep Check-in → Customer → Order → Visit/Order Link → Target Achievement به‌صورت End-to-End کار کند.
 
 ## Phase A3 — Days 19–24: Performance and Cash
 
@@ -132,6 +129,8 @@ Exit Gate: مسیر Customer → Order → Target Achievement به‌صورت En
 - KPI-F01 تا KPI-F03
 - COM-F01 تا COM-F03
 - COL-F01 تا COL-F03
+- ALT-F01 تا ALT-F03
+- AUT-F01 تا AUT-F03
 
 Exit Gate: KPI و Commission از داده ردیابی‌پذیر محاسبه شوند و پرونده وصول تا ثبت پرداخت اجرا شود.
 
@@ -178,9 +177,9 @@ Exit Gate: Dashboard و گزارش‌های محدود عملیاتی از Sourc
 | Phase | Status | Blocking condition | Owner focus |
 |---|---|---|---|
 | 1.6 | FROZEN | — | PM / Architecture |
-| S0 | ACTIVE (BLOCKED) | Target Environment | DevOps / QA |
-| 1.7 | CANDIDATE (BLOCKED) | S0 | PM / QA / DevOps |
-| A1 | NOT STARTED | 1.7 | Backend / Frontend / QA |
+| S0 | FROZEN | — | DevOps / QA |
+| 1.7 | FROZEN | — | PM / QA / DevOps |
+| A1 | ACTIVE | — | Backend / Frontend / QA |
 | A2 | NOT STARTED | A1 | Backend / Frontend / QA |
 | A3 | NOT STARTED | A2 | Backend / QA / BA |
 | A4 | NOT STARTED | A3 | Frontend / Backend / UX / QA |

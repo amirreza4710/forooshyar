@@ -1,10 +1,10 @@
-# Farakhorasan Master Specification v2.0
+# Forooshyar Plus Master Specification v2.0
 
 ## 1. Document Control
 
 | Field | Value |
 |---|---|
-| Product | Farakhorasan Sales OS / فروشیار |
+| Product | Forooshyar Plus / فروشیار پلاس |
 | Version | 2.0 |
 | Status | Draft for Sprint 1 review |
 | Owner | Product Manager Agent |

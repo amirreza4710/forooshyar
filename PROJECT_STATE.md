@@ -4,8 +4,8 @@
 
 ## Current State
 
-- **Project:** Farakhorasan Platform / Forooshyar Sales
-- **Market Position:** Sales & Distribution Operating Platform
+- **Project:** Forooshyar Plus
+- **Market Position:** Sales & Distribution Operating Platform with Field Operations and Automation
 - **Internal Vision:** Domain-Driven Business Operating Platform
 - **Architecture:** Modular Monolith با Bounded Contextهای روشن
 - **Authoritative Stack:** React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, OpenAPI
@@ -13,8 +13,8 @@
 - **Next Checkpoint:** **A1 — Operational Foundation**
 - **Current Workstream:** Phase A1 — Operational Foundation
 - **MVP Scope:** Frozen
-- **MVP Backlog:** 11 Epic و 32 Feature متعهد
-- **New Features Added in v2.4:** صفر
+- **MVP Backlog:** 14 Epic و 41 Feature متعهد (ADR-010)
+- **Frozen v2.4 baseline:** 11 Epic و 32 Feature
 - **Status:** PHASE A1 ACTIVE
 
 ## Execution Rule
@@ -26,10 +26,11 @@ Checkpoint 1.7 is Frozen. Development for Phase A1 can proceed.
 ## Governance Gate — Platform / Module / Multi-tenancy
 
 - **Platform boundary:** `Farakhorasan Platform`
-- **Sales module:** `Forooshyar Sales`
-- **Relationship:** `Farakhorasan Platform → Forooshyar Sales module`
+- **Sales module:** `Forooshyar Plus`
+- **Relationship:** `Farakhorasan Platform → Forooshyar Plus module`
 - **Multi-tenancy:** اجباری به‌عنوان زیرساخت معماری؛ یک قابلیت اختیاری Post-MVP محسوب نمی‌شود.
 - **بازاردان:** در وضعیت فعلی یک مفهوم/پوسته آینده پلتفرم است و **Feature اجرایی MVP نیست**.
+- **بازارک:** نام سابق/منبع قابلیت‌های عملیات میدانی و اتوماسیون در فروشیار پلاس است، نه محصول مستقل.
 - **Implementation gate:** شروع کدنویسی مربوط به multi-tenancy، platform shell، بازاردان یا هر تغییر architecture-impacting فقط پس از ADR پذیرفته‌شده + Scope Review + Acceptance Criteria مجاز است.
 - این تغییرات در این PR فقط مستندسازی شده‌اند و **هیچ تغییر schema/API/UI/dependency/deployment** را مجاز نمی‌کنند.
 
@@ -113,11 +114,11 @@ S0 — Target Environment Verification
 A1 — Operational Foundation
      AUTH-F01..F03 / SET-F01..F03 / PRD-F01..F03 / CUS-F01..F03
   ↓
-A2 — Sales Core
-     ORD-F01..F03 / TAR-F01..F02
+A2 — Sales & Field Core
+     ORD-F01..F03 / TAR-F01..F02 / VIS-F01..F03
   ↓
-A3 — Performance & Cash
-     KPI-F01..F03 / COM-F01..F03 / COL-F01..F03
+A3 — Performance, Cash & Automation
+     KPI-F01..F03 / COM-F01..F03 / COL-F01..F03 / ALT-F01..F03 / AUT-F01..F03
   ↓
 A4 — Decision Layer
      DASH-F01..F03 / REP-F01..REP-F03
@@ -137,8 +138,8 @@ Design Partner Pilot
 | S0 | Target Environment Verification | FROZEN | هر ۸ Gate با Evidence |
 | 1.7 | Engineering Foundation Ready | FROZEN | Gateهای S0 پاس شوند |
 | A1 | Operational Foundation | ACTIVE | 12 Feature + Exit Gate |
-| A2 | Sales Core | NOT STARTED | 5 Feature + E2E |
-| A3 | Performance & Cash | NOT STARTED | 9 Feature + traceability |
+| A2 | Sales & Field Core | NOT STARTED | 8 Feature + Visit → Order E2E |
+| A3 | Performance, Cash & Automation | NOT STARTED | 15 Feature + traceability |
 | A4 | Decision Layer | NOT STARTED | Dashboard/Report operational |
 | A5 | Stabilization | NOT STARTED | Critical/High صفر یا accepted |
 | DP | Design Partner | NOT STARTED | MVP release + controlled pilot |
@@ -243,3 +244,5 @@ Next action: Proceed to Phase A1 Operational Foundation.
 
 ## Recent Actions
 - Demo Mode implemented for GitHub Pages deployment using a frontend mock interceptor (VITE_DEMO_MODE=true) and namespaced local storage session keys.
+- ADR-010 پذیرفته شد: قابلیت‌های بازارک در فروشیار پلاس ادغام شدند. Field Operations، Operational Alerts و Automation به Backlog فعال افزوده شدند؛ هیچ تغییر schema/API/UI/dependency/deployment در این اقدام انجام نشده است.
+- ADR-011 پذیرفته شد: نام رسمی محصول به «فروشیار پلاس / Forooshyar Plus» تغییر یافت؛ نام‌های فنی و remote فعلی بدون تغییر باقی می‌مانند.
