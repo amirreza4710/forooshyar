@@ -11,13 +11,13 @@
 5. `docs/00_Project/Roadmap.md`
 6. `docs/README.md`
 
-## Stack Divergence Warning
-The implemented repository stack is **React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI**. Historical or external references to FastAPI / Next.js are non-authoritative unless approved by a future Decision Record. No migration, merge, replacement, or stack substitution is approved at this time. Agents must treat the current repository implementation and current governance docs as authoritative. Any future stack change must go through a Decision Record and update `README.md`, `PROJECT_STATE.md`, `AGENTS.md`, `docs/README.md`, `Roadmap.md`, and relevant development docs together.
+## Architecture / Technical Context
+Per ADR-0001, the implemented repository stack is **React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, and OpenAPI**. No migration, merge, replacement, or stack substitution is approved at this time. Agents must treat the current repository implementation and current governance docs as authoritative. Any future stack change must go through a Decision Record and update `README.md`, `PROJECT_STATE.md`, `AGENTS.md`, `docs/README.md`, `Roadmap.md`, and relevant development docs together.
 
 ## Current Baseline
 
 - **Checkpoint رسمی:** 1.6 — MVP Delivery Ready
-- **Checkpoint بعدی:** 1.7 — Engineering Foundation Ready (Candidate)
+- **Checkpoint بعدی:** 1.7 — Engineering Foundation Ready (CANDIDATE / BLOCKED)
 - **MVP Backlog:** 11 Epic و 32 Feature، Frozen
 - **Current Work:** Sprint 0 Target Environment Verification
 - **New MVP Features in v2.4:** صفر

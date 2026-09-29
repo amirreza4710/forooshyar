@@ -11,4 +11,5 @@ export type HealthStatusStatus = typeof HealthStatusStatus[keyof typeof HealthSt
 
 export const HealthStatusStatus = {
   ok: 'ok',
+  error: 'error',
 } as const;

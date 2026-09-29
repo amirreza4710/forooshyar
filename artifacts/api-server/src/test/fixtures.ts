@@ -7,14 +7,15 @@
 import { db, usersTable, customersTable, productsTable, ordersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { signToken } from "../lib/auth";
+import crypto from "crypto";
 
-const RUN_TAG = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const RUN_TAG = Date.now().toString(36) + crypto.randomBytes(2).toString("hex");
 
 export async function createTestUser(role = "نماینده فروش") {
   const [user] = await db
     .insert(usersTable)
     .values({
-      username: `test_${RUN_TAG}_${Math.random().toString(36).slice(2, 6)}`,
+      username: `test_${RUN_TAG}_${crypto.randomBytes(2).toString("hex")}`,
       password: "not-a-real-hash",
       name: "کاربر تستی",
       role,
@@ -39,7 +40,7 @@ export async function createTestProduct(stock: number, price = 1000) {
   const [product] = await db
     .insert(productsTable)
     .values({
-      code: `TEST-PROD-${RUN_TAG}-${Math.random().toString(36).slice(2, 6)}`,
+      code: `TEST-PROD-${RUN_TAG}-${crypto.randomBytes(2).toString("hex")}`,
       name: "محصول تستی",
       category: "تستی",
       price,

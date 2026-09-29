@@ -10,19 +10,21 @@ export type HealthStatusStatus = typeof HealthStatusStatus[keyof typeof HealthSt
 
 export const HealthStatusStatus = {
   ok: 'ok',
+  error: 'error',
 } as const;
 
 export interface HealthStatus {
   status: HealthStatusStatus;
+  timestamp: string;
+  uptime: number;
 }
 
 export interface ErrorResponse {
   error: string;
 }
 
-export interface LoginInput {
-  username: string;
-  password: string;
+export interface RefreshInput {
+  refreshToken: string;
 }
 
 export interface User {
@@ -33,8 +35,20 @@ export interface User {
   createdAt?: string;
 }
 
+export interface RefreshResponse {
+  token: string;
+  refreshToken: string;
+  user: User;
+}
+
+export interface LoginInput {
+  username: string;
+  password: string;
+}
+
 export interface AuthResponse {
   token: string;
+  refreshToken: string;
   user: User;
 }
 

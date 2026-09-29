@@ -7,6 +7,7 @@ import productsRouter from "./products";
 import ordersRouter from "./orders";
 import dashboardRouter from "./dashboard";
 import notificationsRouter from "./notifications";
+import devRouter from "./dev";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,9 @@ router.use(productsRouter);
 router.use(ordersRouter);
 router.use(dashboardRouter);
 router.use(notificationsRouter);
+
+if (process.env.NODE_ENV !== "production") {
+  router.use(devRouter);
+}
 
 export default router;

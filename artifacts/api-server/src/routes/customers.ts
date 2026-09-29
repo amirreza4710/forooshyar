@@ -1,4 +1,5 @@
 import { Router } from "express";
+import crypto from "crypto";
 import { db, customersTable } from "@workspace/db";
 import { eq, and, isNull } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
@@ -19,7 +20,7 @@ router.get("/customers", requireAuth, async (req, res): Promise<void> => {
 router.post("/customers", requireAuth, async (req, res): Promise<void> => {
   const parsed = CreateCustomerBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-  const code = "C-" + String(Math.floor(Math.random() * 900 + 100));
+  const code = "C-" + String(crypto.randomInt(100, 1000));
   const [cust] = await db.insert(customersTable).values({ ...parsed.data, code }).returning();
 
   const user = (req as Request & { user: JwtPayload }).user;

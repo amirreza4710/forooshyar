@@ -1,0 +1,20 @@
+🧪 [Add tests and fix for asyncHandler]
+
+🎯 What: Added a test file `asyncHandler.test.ts` for the `asyncHandler` middleware to improve testing coverage and reliability. The implementation was also fixed so that it actually correctly catches synchronous errors thrown by the route handler.
+📊 Coverage: Added tests to ensure that the inner handler is called correctly, synchronous errors are caught and passed to `next`, and asynchronous errors (rejected promises) are caught and passed to `next`.
+✨ Result: `asyncHandler` is completely covered, making sure any async handler we write is safely wrapping potential errors to our global error handler.
+
+🧪 Add test coverage for auth lib functions
+
+🎯 **What:**
+- Added test coverage for `signToken` and `verifyToken` functions in `artifacts/api-server/src/lib/auth.ts`.
+- Previously, these core JWT utility functions were missing tests, reducing confidence in the authentication layer.
+
+📊 **Coverage:**
+- Added `signToken should return a string token`: Verifies that signed tokens have the correct structure (3 parts).
+- Added `verifyToken should decode and return the payload for a valid token`: Verifies that a valid token is decoded into the correct payload.
+- Added `verifyToken should throw an error for an invalid token`: Verifies that invalid tokens correctly throw errors.
+- Added `verifyToken should throw an error for an expired token`: Verifies that expired tokens correctly throw `jwt expired` errors.
+
+✨ **Result:**
+- Increased test coverage for the authentication library, ensuring token signing and verification work as expected and handle errors properly.

@@ -12,7 +12,19 @@ import * as zod from 'zod';
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
-  "status": zod.enum(['ok'])
+  "status": zod.enum(['ok', 'error']),
+  "timestamp": zod.string(),
+  "uptime": zod.number()
+})
+
+
+/**
+ * @summary Readiness check (checks database connectivity)
+ */
+export const ReadinessCheckResponse = zod.object({
+  "status": zod.enum(['ok', 'error']),
+  "timestamp": zod.string(),
+  "uptime": zod.number()
 })
 
 
@@ -26,6 +38,7 @@ export const LoginBody = zod.object({
 
 export const LoginResponse = zod.object({
   "token": zod.string(),
+  "refreshToken": zod.string(),
   "user": zod.object({
   "id": zod.number(),
   "username": zod.string(),
@@ -34,6 +47,32 @@ export const LoginResponse = zod.object({
   "createdAt": zod.string().optional()
 })
 })
+
+
+/**
+ * @summary Refresh access token
+ */
+export const RefreshBody = zod.object({
+  "refreshToken": zod.string()
+})
+
+export const RefreshResponse = zod.object({
+  "token": zod.string(),
+  "refreshToken": zod.string(),
+  "user": zod.object({
+  "id": zod.number(),
+  "username": zod.string(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "createdAt": zod.string().optional()
+})
+})
+
+
+/**
+ * @summary Logout
+ */
+export const LogoutResponse = zod.unknown()
 
 
 /**

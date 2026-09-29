@@ -81,6 +81,46 @@ describe("POST /api/orders", () => {
     expect(res.status).toBe(400);
   });
 
+  it("تعداد نامعتبر (صفر یا منفی) رو رد می‌کنه (400)", async () => {
+    const product = await createTestProduct(10, 5000);
+    createdProductIds.push(product.id);
+
+    const resZero = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: customer.id,
+        items: [{ productId: product.id, productName: product.name, qty: 0, price: 5000 }],
+      });
+
+    expect(resZero.status).toBe(400);
+
+    const resNegative = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: customer.id,
+        items: [{ productId: product.id, productName: product.name, qty: -2, price: 5000 }],
+      });
+
+    expect(resNegative.status).toBe(400);
+  });
+
+  it("قیمت نامعتبر (منفی) رو رد می‌کنه (400)", async () => {
+    const product = await createTestProduct(10, 5000);
+    createdProductIds.push(product.id);
+
+    const resNegative = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: customer.id,
+        items: [{ productId: product.id, productName: product.name, qty: 1, price: -100 }],
+      });
+
+    expect(resNegative.status).toBe(400);
+  });
+
   it("بدون توکن معتبر، درخواست رد میشه (401)", async () => {
     const res = await request(app)
       .post("/api/orders")

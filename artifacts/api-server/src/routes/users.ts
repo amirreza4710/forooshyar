@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { db, usersTable } from "@workspace/db";
 import { eq, and, isNull } from "drizzle-orm";
 import { requireAuth, requireRole } from "../lib/auth";
-import { CreateUserBody, UpdateUserBody, UpdateUserParams, DeleteUserParams } from "@workspace/api-zod";
+import { CreateUserBody, UpdateUserBody, UpdateUserParams, DeleteUserParams, PasswordSchema } from "@workspace/api-zod";
 
 const router = Router();
 
@@ -17,6 +17,13 @@ router.get("/users", requireAuth, async (req, res): Promise<void> => {
 
 router.post("/users", requireAuth, requireRole(...ADMIN_ROLES), async (req, res): Promise<void> => {
   const parsed = CreateUserBody.safeParse(req.body);
+  if (parsed.success) {
+    const pwParsed = PasswordSchema.safeParse(parsed.data.password);
+    if (!pwParsed.success) {
+      res.status(400).json({ error: pwParsed.error.errors[0]?.message || "Invalid password" });
+      return;
+    }
+  }
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
@@ -36,6 +43,13 @@ router.patch("/users/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req,
   const params = UpdateUserParams.safeParse({ id: req.params.id });
   if (!params.success) { res.status(400).json({ error: "Invalid id" }); return; }
   const body = UpdateUserBody.safeParse(req.body);
+  if (body.success && body.data.password) {
+    const pwParsed = PasswordSchema.safeParse(body.data.password);
+    if (!pwParsed.success) {
+      res.status(400).json({ error: pwParsed.error.errors[0]?.message || "Invalid password" });
+      return;
+    }
+  }
   if (!body.success) { res.status(400).json({ error: body.error.message }); return; }
   const updates: Record<string, unknown> = {};
   if (body.data.name) updates.name = body.data.name;
