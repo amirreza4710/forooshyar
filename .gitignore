@@ -44,6 +44,11 @@ Thumbs.db
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
+# Secrets — never commit. docker compose and the Sprint 0 scripts read this file.
+.env
+.env.*
+!.env.example
+
 # Replit
 .cache/
 .local/
