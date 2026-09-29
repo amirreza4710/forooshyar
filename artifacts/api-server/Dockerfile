@@ -32,7 +32,10 @@ CMD ["pnpm", "test"]
 
 # ---- Runner Stage (Production Runtime) ----
 FROM node:22-slim AS runner
-WORKDIR /app
+# esbuild-plugin-pino bakes absolute paths for its worker files (pino-pretty,
+# thread-stream) at build time, so the runtime path must be identical to the build
+# path. Copying dist/ to /app instead makes the logger crash on startup.
+WORKDIR /app/artifacts/api-server
 ENV NODE_ENV=production
 COPY --from=builder /app/artifacts/api-server/dist ./dist
 EXPOSE 3000

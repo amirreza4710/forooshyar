@@ -1,4 +1,4 @@
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -7,7 +7,9 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
   skipSuccessfulRequests: true,
   keyGenerator: (req) => {
-    return req.ip + '_' + (req.body.username || '');
+    // ipKeyGenerator normalises an IPv6 address to its /64 subnet. Raw req.ip would
+    // let one IPv6 client bypass the limit by rotating through its own subnet.
+    return ipKeyGenerator(req.ip ?? "unknown") + '_' + (req.body.username || '');
   },
   handler: (req, res, _next, options) => {
     req.log?.warn({ ip: req.ip, username: req.body.username }, "Rate limit exceeded for login");
