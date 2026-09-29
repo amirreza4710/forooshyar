@@ -62,45 +62,40 @@ Checkpoint 1.7 is Frozen. Development for Phase A1 can proceed.
 
 Artifacts موجود در Repository شامل Docker Compose، Dockerfileهای API/Web و اسکریپت‌های PowerShell مربوط به Initialize، Backup، Restore و Verify هستند. این وجود به‌تنهایی Evidence اجرای واقعی محسوب نمی‌شود.
 
-## Current Gaps / Blockers
+## Sprint 0 Verification Evidence
 
-### GATE-1.7-01 — Frontend production build
-- **Status:** PENDING TARGET VERIFICATION
-- **Evidence required:** موفقیت build تولیدی روی محیط هدف
+**Status: ALL GATES PASS — verified on the target environment**
 
-### GATE-1.7-02 — Docker Compose build/up
-- **Status:** PENDING TARGET VERIFICATION
-- **Evidence required:** اجرای واقعی `docker compose build` و `docker compose up` روی Windows + Docker Desktop
+- **Environment:** Windows 10.0.26100 + Docker Desktop (Docker 29.8.0، Compose v5.5.1)، Node v24.12.0 روی Host و node 22.23.3 داخل container، pnpm 11.21.0
+- **Date:** 2026-09-29
+- **Sequence:** `Initialize-Farakhorasan.ps1` → `Backup-Database.ps1` → `Restore-Database.ps1` → `Verify-Sprint0.ps1`
+- **Result:** هر ۸ گیت + `GATE-1.7-06.5` + `GATE-1.7-06.6` + `DB-CHECK` با PASS و خروج با کد 0
 
-### GATE-1.7-03 — Backend tests inside container
-- **Status:** PENDING TARGET VERIFICATION
-- **Evidence required:** تست موفق داخل container، نه فقط host/CI
+| Gate | Status | Evidence |
+|---|---|---|
+| GATE-1.7-01 Frontend production build | PASS | `pnpm --filter @workspace/nadraan run build` → build موفق و تولید `dist/public/assets/index-*.js` و `.css`؛ همان build داخل ایمیج `web` نیز اجرا شد |
+| GATE-1.7-02 Docker Compose build/up | PASS | `docker compose build` → ایمیج‌های `forooshyar-api` و `forooshyar-web` ساخته شدند؛ `docker compose up` → `db` healthy، `api` healthy، `web` Up |
+| GATE-1.7-03 Backend tests inside container | PASS | اجرای واقعی stage `tester` با `DATABASE_URL` کانتینر → `Test Files 8 passed (8)`، `Tests 41 passed (41)` |
+| GATE-1.7-04 Host Health/Readiness | PASS | `GET /api/healthz` → 200 و `GET /api/readyz` → 200 (شامل اتصال واقعی به PostgreSQL) |
+| GATE-1.7-05 PostgreSQL backup | PASS | تولید artifact قابل شناسایی `backups/farakhorasan_20260929-*.dump` با `pg_dump -F c` |
+| GATE-1.7-06 PostgreSQL restore | PASS | `DROP DATABASE` → `CREATE DATABASE` → `pg_restore` بدون خطا؛ جداول `users`، `customers`، `products`، `orders`، `refresh_tokens` و ستون `deleted_at` موجودند |
+| GATE-1.7-07 Seed Admin login | PASS | `POST /api/dev/seed-admin` → 200/201 و `POST /api/auth/login` با Admin seed شده توکن معتبر برگرداند |
+| GATE-1.7-08 Admin password rotation | PASS | تغییر رمز، ورود موفق با رمز جدید، و **رد شدن رمز قبلی با 401** |
+| GATE-1.7-06.5 Drizzle schema sync | PASS | `pnpm --filter @workspace/db run push` بعد از restore → `No changes detected` |
+| DB-CHECK soft-delete columns | PASS | `information_schema.columns` برای `users/customers/products/orders` ستون `deleted_at` را تأیید کرد |
 
-### GATE-1.7-04 — Host Health/Readiness
-- **Status:** PENDING TARGET VERIFICATION
-- **Evidence required:** پاسخ موفق Health و Readiness از Host
+### Residual limitations
 
-### GATE-1.7-05 — PostgreSQL backup
-- **Status:** PENDING TARGET VERIFICATION
-- **Evidence required:** dump واقعی PostgreSQL با artifact قابل شناسایی
-
-### GATE-1.7-06 — PostgreSQL restore
-- **Status:** PENDING TARGET VERIFICATION
-- **Evidence required:** restore واقعی از backup و صحت‌سنجی داده/Schema
-
-### GATE-1.7-07 — Seed Admin login
-- **Status:** PENDING TARGET VERIFICATION
-- **Evidence required:** login واقعی با Admin seed شده و پاسخ موفق احراز هویت
-
-### GATE-1.7-08 — Admin password rotation
-- **Status:** PENDING TARGET VERIFICATION
-- **Evidence required:** تغییر رمز، ورود با رمز جدید و رد شدن رمز قبلی
+- Backup/Restore روی دیتابیسی تقریباً خالی (schema-only، حجم dump حدود ۸۵۷ بایت) اجرا شد. صحت **Schema** تأیید شده است، اما صحت‌سنجی محتوا و حجم داده تجاری انجام نشده و باید پس از ورود دادهٔ واقعی تکرار شود.
+- عبور گیت‌ها پیش از این ممکن نبود؛ در همین اجرا هفت نقص واقعی کشف و رفع شد. جزئیات در کامیت‌های `e49b70d`، `2b7073e`، `4850588`، `27e6576`، `7ee0fcd`.
+- اسکریپت‌های Sprint 0 پیش از این اجرا نیز «توخالی» بودند: `GATE-1.7-03` فقط ایمیج می‌ساخت و تست‌ها را اجرا نمی‌کرد، و گیت رمز عبور با رمزی کار می‌کرد که خود اسکریپت محلی می‌ساخت، نه رمز واقعی container. هر دو اصلاح شده‌اند.
 
 ## Known Repository / Documentation Inconsistencies
 
 - برخی گزارش‌های قدیمی مانند `ISSUES_AND_IMPROVEMENTS.md` وضعیت Docker/Compose و اسکریپت‌های Sprint 0 را ناقص گزارش می‌کنند؛ وضعیت فعلی Repository وجود این artifacts را نشان می‌دهد. این گزارش‌ها باید هنگام استفاده به‌عنوان historical evidence در نظر گرفته شوند، نه Current State.
 - در برخی اسناد قدیمی عبارت `Alembic: PASS` وجود دارد، در حالی که Stack رسمی و authoritative پروژه PostgreSQL + Drizzle ORM است. این عبارت نباید به‌عنوان Evidence فعلی Checkpoint 1.7 استفاده شود.
-- وضعیت Soft Delete در Code/Schema تعریف شده است، اما اثبات وضعیت DB واقعی Target Environment بخشی از Verification محیط هدف است و نباید از روی Code به‌تنهایی فرض شود.
+- وضعیت Soft Delete در Code/Schema تعریف شده است، اما اثبات وضعیت DB واقعی Target Environment بخشی از Verification محیط هدف است و نباید از روی Code به‌تنهایی فرض شود. (اکنون در `DB-CHECK` تأیید شده است.)
+- بستهٔ `docs/00_Project/governance-v2.4/` یک snapshot تاریخی تاریخ‌دار (2026-08-04) است و هنوز «Checkpoint 1.6 / 1.7 CANDIDATE (BLOCKED)» را نشان می‌دهد. مرجع وضعیت فعلی فقط `PROJECT_STATE.md` است؛ این بسته نباید به‌عنوان وضعیت جاری خوانده شود.
 
 ## Execution Roadmap
 
