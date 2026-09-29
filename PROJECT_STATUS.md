@@ -8,7 +8,7 @@
 
 ## 1. خلاصه اجرایی
 
-پروژه در وضعیت **Checkpoint 1.7 — Engineering Foundation Ready (Frozen)** و Workstream فعال **A1 — Operational Foundation** قرار دارد.
+پروژه در وضعیت **Checkpoint 1.7 — Engineering Foundation Ready (Frozen)** و Workstream فعال **Sprint 1 — A1 Operational Foundation (ACTIVE)** قرار دارد.
 
 ADR-010 قابلیت‌های بازارک را در محصول فروشیار پلاس ادغام کرده و ADR-011 نام رسمی محصول را تثبیت کرده است. Backlog فعال 14 Epic و 41 Feature است؛ baseline v2.4 با 32 Feature به‌صورت تاریخی frozen باقی می‌ماند.
 

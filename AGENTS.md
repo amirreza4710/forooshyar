@@ -23,6 +23,10 @@
 | `docs/` | مستندات canonical و ADRها |
 | `scripts/` | seed، backup/restore و verification |
 
+## وضعیت فعلی (Checkpoint 1.7 - FROZEN)
+
+پایه فنی پروژه، زیرساخت‌ها، ابزارها و تست‌های هسته (Checkpoint 1.7) به طور کامل تأیید و فریز (FROZEN) شده‌اند. **هیچ تغییری در چارچوب‌های پایه (Foundation Churn) مجاز نیست.** تمرکز فقط باید روی توسعه عملیاتی Sprint 1 قرار گیرد.
+
 ## Build و Test
 
 فقط از `pnpm` استفاده کنید؛ `npm`، `yarn` و lockfileهای آن‌ها مجاز نیستند. `minimumReleaseAge` در `pnpm-workspace.yaml` را تضعیف نکنید.

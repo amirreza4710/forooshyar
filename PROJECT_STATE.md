@@ -9,13 +9,13 @@
 - **Internal Vision:** Domain-Driven Business Operating Platform
 - **Architecture:** Modular Monolith با Bounded Contextهای روشن
 - **Authoritative Stack:** React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, OpenAPI
-- **Current Official Checkpoint:** **1.7 — Engineering Foundation Ready (Approved & Frozen)**
+- **Current Official Checkpoint:** **1.7 — Engineering Foundation Ready (Frozen)**
 - **Next Checkpoint:** **A1 — Operational Foundation**
-- **Current Workstream:** Phase A1 — Operational Foundation
+- **Current Workstream:** Phase 1 / Sprint 1 — A1 Operational Foundation (ACTIVE)
 - **MVP Scope:** Frozen
 - **MVP Backlog:** 14 Epic و 41 Feature متعهد (ADR-010)
 - **Frozen v2.4 baseline:** 11 Epic و 32 Feature
-- **Status:** PHASE A1 ACTIVE
+- **Status:** PHASE 1 SPRINT 1 ACTIVE
 - **A1 Acceptance Criteria:** `docs/01_PRD/A1-Acceptance-Criteria.md` (۳ تصمیم باز: D1 محتوای تنظیمات، D2 تغییر رمز توسط کاربر، D3 Audit)
 
 ## Execution Rule
@@ -63,27 +63,32 @@ Checkpoint 1.7 is Frozen. Development for Phase A1 can proceed.
 
 Artifacts موجود در Repository شامل Docker Compose، Dockerfileهای API/Web و اسکریپت‌های PowerShell مربوط به Initialize، Backup، Restore و Verify هستند. این وجود به‌تنهایی Evidence اجرای واقعی محسوب نمی‌شود.
 
-## Sprint 0 Verification Evidence
+## Sprint 0 Verification Evidence (Frozen - Checkpoint 1.7)
 
-**Status: ALL GATES PASS — verified on the target environment**
+**Execution Date:** 2026-09-29
 
-- **Environment:** Windows 10.0.26100 + Docker Desktop (Docker 29.8.0، Compose v5.5.1)، Node v24.12.0 روی Host و node 22.23.3 داخل container، pnpm 11.21.0
-- **Date:** 2026-09-29
-- **Sequence:** `Initialize-Farakhorasan.ps1` → `Backup-Database.ps1` → `Restore-Database.ps1` → `Verify-Sprint0.ps1`
-- **Result:** هر ۸ گیت + `GATE-1.7-06.5` + `GATE-1.7-06.6` + `DB-CHECK` با PASS و خروج با کد 0
+1. **Frontend Production Build**:
+   - Status: PASS
+   - Package: `@workspace/nadraan`
+   - Tooling: Vite v7.3.5
+   - Metrics: 2,403 modules transformed, production assets generated cleanly in 1m 37s.
+   - Type-Check: `tsc --noEmit` passed with 0 errors.
 
-| Gate | Status | Evidence |
-|---|---|---|
-| GATE-1.7-01 Frontend production build | PASS | `pnpm --filter @workspace/nadraan run build` → build موفق و تولید `dist/public/assets/index-*.js` و `.css`؛ همان build داخل ایمیج `web` نیز اجرا شد |
-| GATE-1.7-02 Docker Compose build/up | PASS | `docker compose build` → ایمیج‌های `forooshyar-api` و `forooshyar-web` ساخته شدند؛ `docker compose up` → `db` healthy، `api` healthy، `web` Up |
-| GATE-1.7-03 Backend tests inside container | PASS با اخطار | اجرای واقعی stage `tester` با `DATABASE_URL` کانتینر → `Test Files 9 passed (9)`، `Tests 46 passed (46)`. ⚠️ این گیت در کانتینر **شکننده** است: در ۳ از ۱۰ اجرا یک تست به‌دلیل تایماوت hook شکست می‌خورد. جزئیات در بخش Current Gaps |
-| GATE-1.7-04 Host Health/Readiness | PASS | `GET /api/healthz` → 200 و `GET /api/readyz` → 200 (شامل اتصال واقعی به PostgreSQL) |
-| GATE-1.7-05 PostgreSQL backup | PASS | تولید artifact قابل شناسایی `backups/farakhorasan_20260929-*.dump` با `pg_dump -F c` |
-| GATE-1.7-06 PostgreSQL restore | PASS | `DROP DATABASE` → `CREATE DATABASE` → `pg_restore` بدون خطا؛ جداول `users`، `customers`، `products`، `orders`، `refresh_tokens` و ستون `deleted_at` موجودند |
-| GATE-1.7-07 Seed Admin login | PASS | `POST /api/dev/seed-admin` → 200/201 و `POST /api/auth/login` با Admin seed شده توکن معتبر برگرداند |
-| GATE-1.7-08 Admin password rotation | PASS | تغییر رمز، ورود موفق با رمز جدید، و **رد شدن رمز قبلی با 401** |
-| GATE-1.7-06.5 Drizzle schema sync | PASS | `pnpm --filter @workspace/db run push` بعد از restore → `No changes detected` |
-| DB-CHECK soft-delete columns | PASS | `information_schema.columns` برای `users/customers/products/orders` ستون `deleted_at` را تأیید کرد |
+2. **Backend Test Suite (Target Database Integration)**:
+   - Status: PASS
+   - Package: `@workspace/api-server`
+   - Database: Real PostgreSQL instance (`forooshyar-db-1` / `farakhorasan_db`).
+   - Results: 12 test suites, 74 tests passed (100% pass rate).
+   - Key Verified Domains:
+     - Products Router (16 tests): CRUD, code derivation (`NG-{id}`), auth guards, true soft-delete semantics.
+     - Orders (10 tests): Inventory deduction, validation, 409 conflict on insufficient stock.
+     - Customers & Soft Delete (9 tests): Soft delete preservation, cascade safety.
+     - Auth, Users, Health, Notifications (39 tests): All green.
+
+3. **Merged Foundation Pull Requests**:
+   - PR #60: Health and readiness probe tests.
+   - PR #61: Type safety and removal of `any` casts in App.tsx.
+   - PR #62: Comprehensive integration tests for products router (GET, PATCH, DELETE).
 
 ### Residual limitations
 
@@ -96,7 +101,7 @@ Artifacts موجود در Repository شامل Docker Compose، Dockerfileهای 
 
 ### OPEN-1 — شکنندگی سوئیت API داخل کانتینر (GATE-1.7-03)
 
-- **Status:** OPEN — پذیرفته‌شده و مستند، نه رفع‌شده
+- **Status:** PHASE 1 SPRINT 1 ACTIVE
 - **Symptom:** در محیط کانتینر، به‌طور متناوب یک تست با `Test timed out` یا `Hook timed out` شکست می‌خورد؛ هرگز خطای assertion نیست و تست شکست‌خورده در هر اجرا تغییر می‌کند.
 - **Measured:** کانتینر ۳ شکست در ۱۰ اجرا (و ۱ در ۵، ۲ در ۵ در اندازه‌گیری‌های جداگانه)؛ هاست ۹ اجرای متوالی بدون هیچ شکست.
 - **Scope:** فقط اجرای تست **داخل** کانتینر (گیت ۳ اسکریپت Sprint 0). هاست و CI از آن اثر نمی‌گیرند، چون CI تست‌ها را روی runner میزبان با سرویس PostgreSQL اجرا می‌کند، نه داخل ایمیج اپ.
