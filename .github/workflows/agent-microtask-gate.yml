@@ -1,0 +1,165 @@
+name: Agent Microtask Verification Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  agent-audit:
+    name: Audit Agent Changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      # ۱. مهار شعاع تخریب: مسدودسازی تغییر فایل‌های سیستمی
+      - name: Check Diff Scope
+        id: scope_check
+        run: |
+          echo "Checking touched files for scope boundaries..."
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          echo "Files changed in this PR:"
+          echo "$CHANGED_FILES"
+          
+          FORBIDDEN_FILES=$(echo "$CHANGED_FILES" | grep -E '^(\.github\/|\.env|\.gitignore|poetry\.lock|package-lock\.json)' || true)
+          if [ -n "$FORBIDDEN_FILES" ]; then
+            echo "::error::Agent attempted to modify forbidden system files!"
+            echo "Forbidden changes detected in:"
+            echo "$FORBIDDEN_FILES"
+            exit 1
+          fi
+
+      # ۲. انجماد تست‌ها: بازگردانی سورس تست‌ها از برنچ مبنا
+      - name: Freeze Tests from Base Branch
+        run: |
+          echo "Freezing tests from base branch to prevent agent tampering..."
+          git checkout origin/${{ github.base_ref }} -- tests/
+
+      # ۳. ممیزی پکیج‌ها در برابر متوهم‌‌سازی ابزار
+      - name: Audit Dependencies against PyPI
+        id: dep_audit
+        run: |
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q 'requirements.txt'; then
+            echo "requirements.txt modified. Checking newly added packages..."
+            NEW_PACKAGES=$(git diff origin/${{ github.base_ref }}...HEAD -- requirements.txt | grep -E '^\+[a-zA-Z0-9]' | sed 's/^\+//' | cut -d'=' -f1 | cut -d'<' -f1 | cut -d'>' -f1 | tr -d ' ' || true)
+            for pkg in $NEW_PACKAGES; do
+              echo "Verifying package on PyPI: $pkg"
+              STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/pypi/${pkg}/json")
+              if [ "$STATUS_CODE" != "200" ]; then
+                echo "::error::Package '$pkg' does not exist on PyPI! Hallucination detected."
+                exit 1
+              fi
+            done
+          fi
+
+      # ۴. نصب ابزارهای تست و اعتبارسنجی
+      - name: Install Tooling & Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff mypy pytest jq
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      # ۵. بررسی انطباق تایپ‌ها و تحلیل ایستا
+      - name: Run Type Checking & Linting
+        id: static_analysis
+        continue-on-error: true
+        run: |
+          ruff check . > ruff_errors.txt || true
+          mypy --ignore-missing-imports . > mypy_errors.txt || true
+
+      # ۶. اجرای تست‌های قطعی
+      - name: Run Deterministic Unit Tests
+        id: unit_tests
+        continue-on-error: true
+        run: |
+          pytest -v --tb=short > pytest_errors.txt 2>&1
+          echo "test_exit_code=$?" >> "$GITHUB_OUTPUT"
+
+      # ۷. ساخت بازخورد ساختاریافته JSON
+      - name: Build Structured Feedback JSON
+        if: always()
+        run: |
+          TEST_EXIT="${{ steps.unit_tests.outputs.test_exit_code }}"
+          RUFF_SIZE=$(wc -c < ruff_errors.txt || echo 0)
+          MYPY_SIZE=$(wc -c < mypy_errors.txt || echo 0)
+          
+          STATUS="passed"
+          if [ "$TEST_EXIT" != "0" ] || [ "$RUFF_SIZE" -gt 5 ] || [ "$MYPY_SIZE" -gt 5 ]; then
+            STATUS="failed"
+          fi
+          
+          python - << 'EOF'
+          import json, os
+
+          status = "passed"
+          test_errors = []
+          type_errors = []
+
+          if os.path.exists("pytest_errors.txt"):
+              with open("pytest_errors.txt", "r") as f:
+                  lines = f.readlines()
+                  failures = [l.strip() for l in lines if l.startswith("FAILED ") or "Error:" in l]
+                  test_errors = failures[:5]
+
+          if os.path.exists("mypy_errors.txt"):
+              with open("mypy_errors.txt", "r") as f:
+                  type_errors = [l.strip() for l in f.readlines() if "error:" in l][:5]
+
+          if test_errors or type_errors:
+              status = "failed"
+
+          payload = {
+              "status": status,
+              "gate_summary": {
+                  "tests_passed": len(test_errors) == 0,
+                  "types_passed": len(type_errors) == 0
+              },
+              "failed_tests": test_errors,
+              "type_errors": type_errors,
+              "instruction_for_agent": "Do NOT edit files in tests/. Fix only the implementation logic."
+          }
+
+          with open("agent-feedback.json", "w", encoding="utf-8") as f:
+              json.dump(payload, f, indent=2, ensure_ascii=False)
+          EOF
+
+      # ۸. ارسال کامنت روی PR
+      - name: Post Feedback Comment to PR
+        if: always() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          COMMENT_BODY=$(cat << 'EOF'
+          ### 🤖 Agent Verification Feedback
+          ```json
+          EOF
+          cat agent-feedback.json >> temp_comment.txt
+          echo '```' >> temp_comment.txt
+          )
+          gh pr comment ${{ github.event.pull_request.number }} --body-file temp_comment.txt || true
+
+      # ۹. ارزیابی نهایی برای تعیین وضعیت ادغام
+      - name: Final Assertion Check
+        if: always()
+        run: |
+          STATUS=$(jq -r '.status' agent-feedback.json)
+          if [ "$STATUS" == "failed" ]; then
+            echo "::error::Microtask verification failed."
+            exit 1
+          fi
