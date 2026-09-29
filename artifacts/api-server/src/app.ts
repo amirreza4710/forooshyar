@@ -6,6 +6,12 @@ import { logger } from "./lib/logger";
 
 const app: Express = express();
 
+// The API runs behind the web container's nginx, which forwards X-Real-IP and
+// X-Forwarded-For. Without trusting that single hop, req.ip is nginx's container
+// address: the login limiter would share one bucket for every user and audit logs
+// would record the proxy instead of the caller.
+app.set("trust proxy", 1);
+
 app.use(
   pinoHttp({
     logger,

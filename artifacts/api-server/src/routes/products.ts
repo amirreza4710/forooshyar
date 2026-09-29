@@ -1,4 +1,5 @@
 import { Router } from "express";
+import crypto from "crypto";
 import { db, productsTable } from "@workspace/db";
 import { eq, and, isNull } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
@@ -19,9 +20,20 @@ router.get("/products", requireAuth, async (req, res): Promise<void> => {
 router.post("/products", requireAuth, async (req, res): Promise<void> => {
   const parsed = CreateProductBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-  const allProds = await db.select().from(productsTable);
-  const code = "NG-" + String(allProds.length + 1).padStart(3, "0");
-  const [prod] = await db.insert(productsTable).values({ ...parsed.data, code }).returning();
+  // The code comes from the row's own id. The previous count-based generator
+  // (`rows + 1`) produced duplicate codes as soon as a row was hard-deleted, and
+  // two concurrent creates raced onto the same count. `code` is unique in the
+  // schema now, and the placeholder below is only visible inside this transaction.
+  const prod = await db.transaction(async (tx) => {
+    const [row] = await tx.insert(productsTable)
+      .values({ ...parsed.data, code: `pending-${crypto.randomUUID()}` })
+      .returning();
+    const [final] = await tx.update(productsTable)
+      .set({ code: `NG-${String(row.id).padStart(3, "0")}` })
+      .where(eq(productsTable.id, row.id))
+      .returning();
+    return final!;
+  });
 
   const user = (req as Request & { user: JwtPayload }).user;
   broadcast({

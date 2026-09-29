@@ -1,7 +1,7 @@
-import { describe, it, expect, afterEach, afterAll } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import request from "supertest";
 import app from "../app";
-import { db, pool, customersTable, productsTable, usersTable, ordersTable } from "@workspace/db";
+import { db, customersTable, productsTable, usersTable, ordersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { createTestUser, createTestCustomer, createTestProduct, tokenFor, cleanup } from "../test/fixtures";
 
@@ -16,9 +16,11 @@ describe("soft-delete", () => {
     cleanupIds.userIds = [];
   });
 
-  afterAll(async () => {
-    await pool.end();
-  });
+  // No pool.end() here: lib/db exports one module-level pool that every test file
+  // in the same worker shares. Ending it from one file closes connections that
+  // another file may be mid-transaction on — the orders route locks rows with
+  // `SELECT ... FOR UPDATE`, and a connection torn down mid-transaction leaves the
+  // lock held, so the next test blocks until it times out.
 
   it("حذف مشتریِ سفارش‌دار دیگه کرش نمی‌کنه (مشکل اصلی قبل از این PR) و مشتری از لیست حذف میشه", async () => {
     const user = await createTestUser();

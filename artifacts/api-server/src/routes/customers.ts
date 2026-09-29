@@ -20,8 +20,21 @@ router.get("/customers", requireAuth, async (req, res): Promise<void> => {
 router.post("/customers", requireAuth, async (req, res): Promise<void> => {
   const parsed = CreateCustomerBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-  const code = "C-" + String(crypto.randomInt(100, 1000));
-  const [cust] = await db.insert(customersTable).values({ ...parsed.data, code }).returning();
+  // The code comes from the row's own id. The previous random 3-digit generator
+  // (`C-` + randomInt(100,1000)) collided by the birthday problem at a few dozen
+  // customers, and nothing stopped two different customers sharing a code. `code`
+  // is unique in the schema now; the placeholder is only visible inside this
+  // transaction.
+  const cust = await db.transaction(async (tx) => {
+    const [row] = await tx.insert(customersTable)
+      .values({ ...parsed.data, code: `pending-${crypto.randomUUID()}` })
+      .returning();
+    const [final] = await tx.update(customersTable)
+      .set({ code: `C-${String(row.id).padStart(3, "0")}` })
+      .where(eq(customersTable.id, row.id))
+      .returning();
+    return final!;
+  });
 
   const user = (req as Request & { user: JwtPayload }).user;
   broadcast({

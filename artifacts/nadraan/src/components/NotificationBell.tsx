@@ -42,7 +42,7 @@ export default function NotificationBell() {
   const [readIds, setReadIds]             = useState<Set<string>>(new Set());
   const panelRef  = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const esRef     = useRef<EventSource | null>(null);
+  const abortRef  = useRef<AbortController | null>(null);
   const { toast } = useToast();
 
   // Close on outside click
@@ -59,47 +59,77 @@ export default function NotificationBell() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const handleMessage = useCallback((raw: string) => {
+    try {
+      const data = JSON.parse(raw);
+
+      if (data.type === "__history__") {
+        const hist: AppNotification[] = data.notifications ?? [];
+        setNotifications(hist);
+        setUnread(hist.length);
+        return;
+      }
+
+      const notif = data as AppNotification;
+      setNotifications(prev => [notif, ...prev].slice(0, 100));
+      setUnread(u => u + 1);
+
+      toast({
+        title: `${TYPE_ICON[notif.type] ?? "🔔"} ${notif.message}`,
+        description: `توسط: ${notif.actor}`,
+        duration: 4000,
+      });
+    } catch { /* ignore parse errors */ }
+  }, [toast]);
+
+  // The stream carries customer names, order codes and totals, so it needs the same
+  // `Authorization: Bearer` header as every other API call. `EventSource` cannot send
+  // headers, so the SSE frames are read from a plain fetch response instead — which
+  // also keeps the access token out of the URL, where it would land in nginx logs.
   const connect = useCallback(() => {
     const token = getToken();
     if (!token) return;
 
     const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-    const url = `${base}/api/notifications/stream?token=${encodeURIComponent(token)}`;
-    const es = new EventSource(url);
-    esRef.current = es;
+    const controller = new AbortController();
+    abortRef.current = controller;
 
-    es.onmessage = (e) => {
+    void (async () => {
       try {
-        const data = JSON.parse(e.data as string);
-
-        if (data.type === "__history__") {
-          const hist: AppNotification[] = data.notifications ?? [];
-          setNotifications(hist);
-          setUnread(hist.length);
-          return;
-        }
-
-        const notif = data as AppNotification;
-        setNotifications(prev => [notif, ...prev].slice(0, 100));
-        setUnread(u => u + 1);
-
-        toast({
-          title: `${TYPE_ICON[notif.type] ?? "🔔"} ${notif.message}`,
-          description: `توسط: ${notif.actor}`,
-          duration: 4000,
+        const res = await fetch(`${base}/api/notifications/stream`, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal,
         });
-      } catch { /* ignore parse errors */ }
-    };
+        if (!res.ok || !res.body) throw new Error(`notification stream: ${res.status}`);
 
-    es.onerror = () => {
-      es.close();
-      setTimeout(connect, 5000);
-    };
-  }, [toast]);
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        for (;;) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          if (value) buffer += decoder.decode(value, { stream: true });
+
+          // SSE frames are separated by a blank line.
+          let sep = buffer.indexOf("\n\n");
+          while (sep !== -1) {
+            const frame = buffer.slice(0, sep);
+            buffer = buffer.slice(sep + 2);
+            const dataLine = frame.split("\n").find(l => l.startsWith("data:"));
+            if (dataLine) handleMessage(dataLine.slice(5).trim());
+            sep = buffer.indexOf("\n\n");
+          }
+        }
+      } catch { /* aborted, or the connection dropped — retried below */ }
+
+      if (!controller.signal.aborted) setTimeout(connect, 5000);
+    })();
+  }, [handleMessage]);
 
   useEffect(() => {
     connect();
-    return () => { esRef.current?.close(); };
+    return () => { abortRef.current?.abort(); };
   }, [connect]);
 
   function togglePanel() {

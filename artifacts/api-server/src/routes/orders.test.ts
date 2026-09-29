@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, afterAll } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import request from "supertest";
 import app from "../app";
-import { db, pool, productsTable } from "@workspace/db";
+import { db, ordersTable, productsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { createTestUser, createTestCustomer, createTestProduct, tokenFor, cleanup } from "../test/fixtures";
 
@@ -27,9 +27,10 @@ describe("POST /api/orders", () => {
     });
   });
 
-  afterAll(async () => {
-    await pool.end();
-  });
+  // No pool.end() here: lib/db exports one module-level pool shared by every test
+  // file in the same worker. Closing it here can tear down a connection that
+  // another file is using inside a transaction, leaving row locks (`SELECT ... FOR
+  // UPDATE`) held so the following test blocks until it times out.
 
   it("سفارش رو ثبت می‌کنه و موجودی محصول رو کم می‌کنه", async () => {
     const product = await createTestProduct(10, 5000);
@@ -153,5 +154,54 @@ describe("POST /api/orders", () => {
     const [b] = await db.select().from(productsTable).where(eq(productsTable.id, productB.id));
     expect(a?.stock).toBe(6);
     expect(b?.stock).toBe(3);
+  });
+
+  async function createOrder() {
+    const product = await createTestProduct(10, 1000);
+    createdProductIds.push(product.id);
+
+    const res = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: customer.id,
+        items: [{ productId: product.id, productName: product.name, qty: 1, price: 1000 }],
+      });
+
+    expect(res.status).toBe(201);
+    createdOrderIds.push(res.body.id);
+    return res.body as { id: number; code: string };
+  }
+
+  it("کد سفارش رو از id خود ردیف می‌سازه", async () => {
+    const order = await createOrder();
+
+    expect(order.code).toBe(`ORD-${9000 + order.id}`);
+  });
+
+  // Regression: the code used to be `9000 + count + 1`, so hard-deleting an order
+  // made the next one reuse a code that already existed in the table.
+  it("بعد از حذف قطعی یک سفارش، کدش دوباره استفاده نمیشه", async () => {
+    const first = await createOrder();
+    await db.delete(ordersTable).where(eq(ordersTable.id, first.id));
+    createdOrderIds.length = 0;
+
+    const second = await createOrder();
+
+    expect(second.code).not.toBe(first.code);
+    expect(second.code).toBe(`ORD-${9000 + second.id}`);
+  });
+
+  it("یکتایی کد سفارش در سطح دیتابیس اعمال میشه", async () => {
+    const order = await createOrder();
+
+    await expect(
+      db.insert(ordersTable).values({
+        code: order.code,
+        customerId: customer.id,
+        customerName: customer.name,
+        repName: "کاربر تستی",
+      }),
+    ).rejects.toThrow();
   });
 });

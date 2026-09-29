@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { readFile } from "node:fs/promises";
 import request from "supertest";
 import app from "../app";
 import { db, usersTable, refreshTokensTable } from "@workspace/db";
@@ -159,6 +160,19 @@ describe("Auth Routes", () => {
 
       expect(res.status).toBe(200);
       expect(db.update).toHaveBeenCalled();
+    });
+  });
+
+  // Regression: the login limiter keyed on raw req.ip, which express-rate-limit
+  // refuses to accept for IPv6 (limiting only the first /64 is required, otherwise
+  // one client can rotate addresses through its own subnet). That library check
+  // inspects the keyGenerator source and only logs ERR_ERL_KEY_GEN_IPV6 instead of
+  // throwing, so nothing else in this suite would notice a regression.
+  describe("login rate limiter", () => {
+    it("derives its key through ipKeyGenerator", async () => {
+      const routeSource = await readFile(new URL("./auth.ts", import.meta.url), "utf8");
+
+      expect(routeSource).toContain("ipKeyGenerator(req.ip");
     });
   });
 });

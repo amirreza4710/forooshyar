@@ -7,6 +7,7 @@
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
+    "test": "pnpm -r --filter \"./artifacts/**\" --filter \"./lib/**\" --if-present run test",
     "graph:generate": "bash scripts/generate-graph.sh"
   },
   "private": true,

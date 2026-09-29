@@ -105,7 +105,38 @@ pnpm --filter nadraan run dev
 ```bash
 pnpm run typecheck
 pnpm run build
+pnpm run test
 ```
+
+> `pnpm run test` شامل تست‌های integration است و به یک PostgreSQL در دسترس نیاز دارد؛ بدون `DATABASE_URL` عمداً شکست می‌خورد تا تست‌ها بی‌صدا رد نشوند.
+
+## اجرای محلی با Docker (محیط پذیرش)
+
+```bash
+cp .env.example .env    # سپس SESSION_SECRET و SEED_ADMIN_PASSWORD را پر کنید
+pnpm install
+docker compose up --build
+```
+
+- وب: `http://localhost` — API از مسیر داخلی `http://localhost/api/...` (پراکسی Nginx داخل سرویس `web`) و `http://localhost:3000/api/...` برای اجرای مستقیم اسکریپت‌ها.
+- `SESSION_SECRET` و `SEED_ADMIN_PASSWORD` اجباری‌اند و در مخزن هیچ مقدار پیش‌فرضی ندارند؛ `docker compose` بدون `.env` با پیام واضح متوقف می‌شود.
+- تست‌ها با دیتابیس کانتینری:
+
+```bash
+docker compose up -d
+pnpm --filter @workspace/db run push
+pnpm run test
+```
+
+### توپولوژی ثابت‌شده (عمدی)
+
+| سرویس | انتشار روی هاست | دلیل |
+|---|---|---|
+| `web` | `0.0.0.0:80` | تنها سرویس عمومی؛ Nginx هم SPA را سرو می‌کند و هم `/api` را پروکسی می‌کند |
+| `api` | `127.0.0.1:3000` | اسکریپت‌های Sprint 0 (health، login) مستقیماً از روی هاست به آن نیاز دارند |
+| `db` | `127.0.0.1:5432` | `drizzle-kit push` و تست‌های integration از روی هاست به آن نیاز دارند |
+
+`api` و `db` فقط روی loopback منتشر می‌شوند، نه روی شبکهٔ بیرونی. برای استقرار تولیدی (Coolify) یک Compose جدا ساخته می‌شود که در آن فقط `web` عمومی است.
 
 ## Sprint 0 Freeze Gate
 

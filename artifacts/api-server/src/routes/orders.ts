@@ -1,6 +1,7 @@
 import { Router } from "express";
+import crypto from "crypto";
 import { db, ordersTable, productsTable } from "@workspace/db";
-import { eq, sql, and, isNull, count } from "drizzle-orm";
+import { eq, sql, and, isNull } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
 import {
   CreateOrderBody,
@@ -127,9 +128,6 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
       );
     }
 
-    const [{ c }] = await tx.select({ c: count() }).from(ordersTable);
-    const code = "ORD-" + String(9000 + c + 1);
-
     const customers = await tx.execute(
       sql`SELECT name FROM customers WHERE id = ${customerId} AND deleted_at IS NULL`,
     );
@@ -143,7 +141,9 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
     const [inserted] = await tx
       .insert(ordersTable)
       .values({
-        code,
+        // Placeholder; replaced below with the id-derived code. It is only visible
+        // inside this transaction.
+        code: `pending-${crypto.randomUUID()}`,
         customerId,
         customerName,
         userId: user.id,
@@ -154,7 +154,16 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
       })
       .returning();
 
-    return inserted;
+    // The code comes from the row's own id, so it cannot be reused after a hard
+    // delete and two concurrent creates cannot race onto the same code. The
+    // previous `9000 + count + 1` generator did both (`code` is unique now).
+    const [final] = await tx
+      .update(ordersTable)
+      .set({ code: `ORD-${9000 + inserted.id}` })
+      .where(eq(ordersTable.id, inserted.id))
+      .returning();
+
+    return final!;
   });
 
   broadcast({

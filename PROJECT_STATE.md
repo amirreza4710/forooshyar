@@ -16,6 +16,7 @@
 - **MVP Backlog:** 14 Epic و 41 Feature متعهد (ADR-010)
 - **Frozen v2.4 baseline:** 11 Epic و 32 Feature
 - **Status:** PHASE A1 ACTIVE
+- **A1 Acceptance Criteria:** `docs/01_PRD/A1-Acceptance-Criteria.md` (۳ تصمیم باز: D1 محتوای تنظیمات، D2 تغییر رمز توسط کاربر، D3 Audit)
 
 ## Execution Rule
 
@@ -75,7 +76,7 @@ Artifacts موجود در Repository شامل Docker Compose، Dockerfileهای 
 |---|---|---|
 | GATE-1.7-01 Frontend production build | PASS | `pnpm --filter @workspace/nadraan run build` → build موفق و تولید `dist/public/assets/index-*.js` و `.css`؛ همان build داخل ایمیج `web` نیز اجرا شد |
 | GATE-1.7-02 Docker Compose build/up | PASS | `docker compose build` → ایمیج‌های `forooshyar-api` و `forooshyar-web` ساخته شدند؛ `docker compose up` → `db` healthy، `api` healthy، `web` Up |
-| GATE-1.7-03 Backend tests inside container | PASS | اجرای واقعی stage `tester` با `DATABASE_URL` کانتینر → `Test Files 8 passed (8)`، `Tests 41 passed (41)` |
+| GATE-1.7-03 Backend tests inside container | PASS با اخطار | اجرای واقعی stage `tester` با `DATABASE_URL` کانتینر → `Test Files 9 passed (9)`، `Tests 46 passed (46)`. ⚠️ این گیت در کانتینر **شکننده** است: در ۳ از ۱۰ اجرا یک تست به‌دلیل تایماوت hook شکست می‌خورد. جزئیات در بخش Current Gaps |
 | GATE-1.7-04 Host Health/Readiness | PASS | `GET /api/healthz` → 200 و `GET /api/readyz` → 200 (شامل اتصال واقعی به PostgreSQL) |
 | GATE-1.7-05 PostgreSQL backup | PASS | تولید artifact قابل شناسایی `backups/farakhorasan_20260929-*.dump` با `pg_dump -F c` |
 | GATE-1.7-06 PostgreSQL restore | PASS | `DROP DATABASE` → `CREATE DATABASE` → `pg_restore` بدون خطا؛ جداول `users`، `customers`، `products`، `orders`، `refresh_tokens` و ستون `deleted_at` موجودند |
@@ -87,8 +88,22 @@ Artifacts موجود در Repository شامل Docker Compose، Dockerfileهای 
 ### Residual limitations
 
 - Backup/Restore روی دیتابیسی تقریباً خالی (schema-only، حجم dump حدود ۸۵۷ بایت) اجرا شد. صحت **Schema** تأیید شده است، اما صحت‌سنجی محتوا و حجم داده تجاری انجام نشده و باید پس از ورود دادهٔ واقعی تکرار شود.
-- عبور گیت‌ها پیش از این ممکن نبود؛ در همین اجرا هفت نقص واقعی کشف و رفع شد. جزئیات در کامیت‌های `e49b70d`، `2b7073e`، `4850588`، `27e6576`، `7ee0fcd`.
+- عبور گیت‌ها پیش از این ممکن نبود؛ در همین اجرا هفت نقص واقعی کشف و رفع شد. جزئیات در کامیت‌های `e49b70d`، `2b7073e`، `4850588`، `27e6576`، `7ee0fcd` و در `CHANGELOG.md`.
+- **تصحیح علت crash:** توقف کانتینر API **فقط** از مسیر نادرست فایل worker در runner stage بود (`/app/dist` در برابر مسیر پخته‌شده `/app/artifacts/api-server/dist`). اعتبارسنجی `ERR_ERL_KEY_GEN_IPV6` در `express-rate-limit` فقط لاگ می‌شود و کشنده نبود؛ اصلاح `ipKeyGenerator` یک سخت‌سازی امنیتی مستقل (جلوگیری از دورزدن محدودیت ورود با IPv6) است، نه رفع crash.
 - اسکریپت‌های Sprint 0 پیش از این اجرا نیز «توخالی» بودند: `GATE-1.7-03` فقط ایمیج می‌ساخت و تست‌ها را اجرا نمی‌کرد، و گیت رمز عبور با رمزی کار می‌کرد که خود اسکریپت محلی می‌ساخت، نه رمز واقعی container. هر دو اصلاح شده‌اند.
+
+## Current Gaps / Blockers
+
+### OPEN-1 — شکنندگی سوئیت API داخل کانتینر (GATE-1.7-03)
+
+- **Status:** OPEN — پذیرفته‌شده و مستند، نه رفع‌شده
+- **Symptom:** در محیط کانتینر، به‌طور متناوب یک تست با `Test timed out` یا `Hook timed out` شکست می‌خورد؛ هرگز خطای assertion نیست و تست شکست‌خورده در هر اجرا تغییر می‌کند.
+- **Measured:** کانتینر ۳ شکست در ۱۰ اجرا (و ۱ در ۵، ۲ در ۵ در اندازه‌گیری‌های جداگانه)؛ هاست ۹ اجرای متوالی بدون هیچ شکست.
+- **Scope:** فقط اجرای تست **داخل** کانتینر (گیت ۳ اسکریپت Sprint 0). هاست و CI از آن اثر نمی‌گیرند، چون CI تست‌ها را روی runner میزبان با سرویس PostgreSQL اجرا می‌کند، نه داخل ایمیج اپ.
+- **Fixed along the way:** حذف `pool.end()` از `afterAll` دو فایل تست (pool مشترک module-level بود)، ایمن‌سازی مدیریت `process.env` در تست تازه، و بالا بردن سقف تایماوت از ۵s به ۱۵s برای سوئیت integration در کانتینر.
+- **Ruled out:** موازی‌سازی فایل‌ها — با `--no-file-parallelism` هم ۲ از ۵ اجرا شکست خورد.
+- **Unresolved:** علت قطعی مشخص نشده؛ آزمون بعدی، instrument کردن رویدادهای `pool` (connect/acquire/release) و نمونه‌برداری `pg_locks` / `pg_stat_activity` در لحظهٔ استال است.
+- **Decision:** timebox شد و به‌عنوان نقص باز ثبت شد؛ A1 با گیت‌های هاست و CI جلو می‌رود.
 
 ## Known Repository / Documentation Inconsistencies
 
@@ -108,6 +123,7 @@ S0 — Target Environment Verification
   ↓
 A1 — Operational Foundation
      AUTH-F01..F03 / SET-F01..F03 / PRD-F01..F03 / CUS-F01..F03
+     معیار پذیرش: docs/01_PRD/A1-Acceptance-Criteria.md
   ↓
 A2 — Sales & Field Core
      ORD-F01..F03 / TAR-F01..F02 / VIS-F01..F03
@@ -238,6 +254,8 @@ Remaining blockers: None.
 Next action: Proceed to Phase A1 Operational Foundation.
 
 ## Recent Actions
+- Two defects found while reading the A1 codebase were closed: (a) `orders.code` still used the count-based generator that A1 had already replaced for products/customers, and `orders.code` had no uniqueness constraint — it now derives from the row id and is unique, with regression tests for reuse-after-hard-delete and DB-level uniqueness; (b) `GET /api/notifications` was reachable without a token (verified live: `200` anonymous vs `401` for `/products`), so both notification endpoints are now behind `requireAuth` and the stream no longer takes the token from the URL.
+- Evidence: `pnpm run typecheck` PASS، `pnpm run build` PASS، API suite **63/63 در 12 فایل** روی هاست PASS، `db push` قید `orders_code_unique` را ساخت، و روی استک بازسازی‌شده: `login 200`، `GET /api/notifications` بدون توکن `401` و با توکن `200`، استریم با هدر فریم `__history__` فرستاد، سفارش نمونه `ORD-9192` (= 9000 + id) دریافت کرد (ردیف‌های آزمایشی پس از بررسی حذف شدند).
 - Demo Mode implemented for GitHub Pages deployment using a frontend mock interceptor (VITE_DEMO_MODE=true) and namespaced local storage session keys.
 - ADR-010 پذیرفته شد: قابلیت‌های بازارک در فروشیار پلاس ادغام شدند. Field Operations، Operational Alerts و Automation به Backlog فعال افزوده شدند؛ هیچ تغییر schema/API/UI/dependency/deployment در این اقدام انجام نشده است.
 - ADR-011 پذیرفته شد: نام رسمی محصول به «فروشیار پلاس / Forooshyar Plus» تغییر یافت؛ نام‌های فنی و remote فعلی بدون تغییر باقی می‌مانند.

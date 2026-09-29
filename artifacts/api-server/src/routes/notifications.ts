@@ -1,15 +1,15 @@
 import { Router } from "express";
-import { verifyToken } from "../lib/auth";
+import { requireAuth } from "../lib/auth";
 import { addClient, removeClient, getHistory } from "../lib/notifications";
 
 const router = Router();
 
-// SSE stream — token via query param (EventSource doesn't support headers)
-router.get("/notifications/stream", (req, res): void => {
-  const token = req.query["token"] as string | undefined;
-  if (!token) { res.status(401).json({ error: "Unauthorized" }); return; }
-  try { verifyToken(token); } catch { res.status(401).json({ error: "Invalid token" }); return; }
-
+// Notification payloads carry customer names, order codes and totals, so both
+// endpoints require the same `Authorization: Bearer` header as every other route.
+// The stream used to take the token from `?token=`, which put a live token in URLs,
+// browser history and the nginx access log; the client now streams over fetch and
+// sends a header, like the REST fallback does.
+router.get("/notifications/stream", requireAuth, (req, res): void => {
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache, no-transform");
   res.setHeader("Connection", "keep-alive");
@@ -25,7 +25,7 @@ router.get("/notifications/stream", (req, res): void => {
 });
 
 // REST fallback: get notification history
-router.get("/notifications", (req, res): void => {
+router.get("/notifications", requireAuth, (req, res): void => {
   res.json(getHistory());
 });
 

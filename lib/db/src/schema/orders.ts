@@ -6,7 +6,9 @@ import { customersTable } from "./customers";
 
 export const ordersTable = pgTable("orders", {
   id: serial("id").primaryKey(),
-  code: text("code").notNull(),
+  // Human-facing identifier, generated from the row's own id. Unique for the same
+  // reason as products/customers: it is displayed and searched by users.
+  code: text("code").notNull().unique(),
   customerId: integer("customer_id").notNull().references(() => customersTable.id),
   customerName: text("customer_name").notNull(),
   userId: integer("user_id").references(() => usersTable.id),
@@ -25,6 +27,6 @@ export const ordersTable = pgTable("orders", {
   deletedAtIdx: index("orders_deleted_at_idx").on(table.deletedAt),
 }));
 
-export const insertOrderSchema = createInsertSchema(ordersTable).omit({ id: true, createdAt: true, deletedAt: true });
+export const insertOrderSchema = createInsertSchema(ordersTable).omit({ code: true, id: true, createdAt: true, deletedAt: true });
 export type InsertOrder = z.infer<typeof insertOrderSchema>;
 export type Order = typeof ordersTable.$inferSelect;

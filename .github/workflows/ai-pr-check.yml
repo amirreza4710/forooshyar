@@ -9,6 +9,28 @@ jobs:
     name: Build, Lint, Tests & Doc Check
     runs-on: ubuntu-latest
 
+    # The API suite is an integration suite against a real database (see
+    # artifacts/api-server/src/test/fixtures.ts), so CI has to provide one.
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: farakhorasan
+          POSTGRES_PASSWORD: farakhorasan_password
+          POSTGRES_DB: farakhorasan_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U farakhorasan -d farakhorasan_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # Loopback-only credentials for the CI service container — not production values.
+      DATABASE_URL: postgresql://farakhorasan:farakhorasan_password@127.0.0.1:5432/farakhorasan_db
+      SESSION_SECRET: ci-only-session-secret-not-a-production-value
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -16,19 +38,23 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          # The repository lockfile uses pnpm 10 configuration (including allowBuilds/overrides).
-          # pnpm 9 rejects the existing lockfile with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
-          version: 10
+          # Must match the version pinned in the Dockerfiles, which is the version
+          # that generated pnpm-lock.yaml.
+          version: 11.21.0
           run_install: false
 
       - name: Set up Node.js Environment
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # Matches the runtime image (node:22-slim) the API is verified in.
+          node-version: '22'
           cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Push database schema
+        run: pnpm --filter @workspace/db run push
 
       - name: Lint Code Architecture
         run: if pnpm run | grep -q "lint"; then pnpm run lint; else echo "No lint script found"; fi
@@ -37,7 +63,9 @@ jobs:
         run: pnpm run typecheck
 
       - name: Run Automated Tests
-        run: if pnpm run | grep -q "test"; then pnpm run test; else echo "No test script found"; fi
+        # Explicit, so a missing or renamed script fails the job instead of
+        # reporting success with "No test script found".
+        run: pnpm run test
 
       - name: Build
         run: pnpm run build

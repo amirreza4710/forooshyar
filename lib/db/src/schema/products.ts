@@ -4,7 +4,9 @@ import { z } from "zod/v4";
 
 export const productsTable = pgTable("products", {
   id: serial("id").primaryKey(),
-  code: text("code").notNull(),
+  // Human-facing identifier, generated from the row's own id. Unique, because two
+  // products sharing a code is indistinguishable to users (the UI searches on it).
+  code: text("code").notNull().unique(),
   name: text("name").notNull(),
   category: text("category").notNull(),
   pack: text("pack"),
@@ -17,6 +19,6 @@ export const productsTable = pgTable("products", {
   deletedAtIdx: index("products_deleted_at_idx").on(table.deletedAt),
 }));
 
-export const insertProductSchema = createInsertSchema(productsTable).omit({ id: true, createdAt: true, deletedAt: true });
+export const insertProductSchema = createInsertSchema(productsTable).omit({ code: true, id: true, createdAt: true, deletedAt: true });
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof productsTable.$inferSelect;
