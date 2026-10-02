@@ -60,3 +60,7 @@ bash scripts/generate-graph.sh
 - هیچ‌وقت مستقیم روی دیتابیس **واقعی dev در Replit** از این محیط (لپ‌تاپ/چت) دستور destructive نزن — فقط از طریق merge شدن PR و اجرای دستی `pnpm --filter @workspace/db push` توسط امیررضا
 - کل جدول تست رو truncate نکن — دیتابیس تست همون dev واقعیه با داده‌ی واقعی
 - بدون تایید صریح امیررضا، تصمیم معماری (schema جدید، حذف قطعی، تغییر رفتار امنیتی) رو خودسرانه اجرا نکن
+
+
+## Verification Protocol
+Always strictly follow the operational and CI self-healing protocol defined in AGENTS.md.
