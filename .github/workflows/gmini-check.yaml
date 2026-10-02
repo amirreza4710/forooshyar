@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
@@ -22,15 +27,14 @@ jobs:
         run: |
           pip install google-genai pytest
 
-      # اجرای فرضی تست‌ها؛ با continue-on-error اجازه می‌دهیم در صورت شکست، اسکریپت تریاژ اجرا شود
+      # اجرای تست‌ها و ذخیره خروجی لاگ
       - name: Run Tests
         id: test_step
         continue-on-error: true
         run: |
-          # اجرای تست و ذخیره لاگ در فایل
           pytest | tee test_output.log
 
-      # اگر تست‌ها فیل شدند، جیمینای لاگ را ارزیابی می‌کند
+      # تریاژ شکست توسط جیمینای در صورت بروز خطا
       - name: Triage Failure with Gemini (System 1)
         id: gemini_triage
         if: steps.test_step.outcome != 'success'
@@ -39,10 +43,42 @@ jobs:
         run: |
           python scripts/gemini_gate.py
 
-      # استپ نمایشی تصمیم‌گیری: اگر سیستم تشخیص داد که خطا نیاز به جولز دارد
-      - name: Route to Jules Task
+      # ساخت خودکار Issue و تفویض تسک به جولز (System 2 Escalation)
+      - name: Create Jules Task Issue
         if: steps.test_step.outcome != 'success' && steps.gemini_triage.outputs.escalate_to_jules == 'true'
-        run: |
-          echo "خطا در دسته ${{ steps.gemini_triage.outputs.category }} ارزیابی شد."
-          echo "خلاصه: ${{ steps.gemini_triage.outputs.summary }}"
-          echo "در حال آماده‌سازی تسک برای ارجاع به Jules (System 2)..."
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const category = process.env.TRIAGE_CATEGORY || 'unknown';
+            const confidence = process.env.TRIAGE_CONFIDENCE || '0.0';
+            const summary = process.env.TRIAGE_SUMMARY || 'خطای تست نیازمند بررسی عمیق';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            
+            const issueTitle = `[Jules Task] CI Triage Escalation: ${summary}`;
+            const issueBody = `### 🚨 ارجاع خطا از تریاژ سیستم ۱ به ایجنت جولز (System 2)
+
+            - **دسته‌بندی خطا (Category):** \`${category}\`
+            - **سطح اطمینان مدل (Confidence):** \`${confidence}\`
+            - **خلاصه تریاژ:** ${summary}
+            - **لینک اجرای ناموفق اکشن:** [مشاهده لاگ اجرا](${runUrl})
+
+            ---
+
+            #### دستورالعمل برای جولز (@jules):
+            1. فایل‌های تست و کد مرتبط با دسته \`${category}\` را بررسی کن.
+            2. ریشه خطای لاگ در اجرای فوق را رفع کن.
+            3. یک پول ریکوئست (PR) جدید جهت رفع این مشکل باز کن.
+            `;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: issueTitle,
+              body: issueBody,
+              labels: ['jules-task', 'agent-escalation', `triage:${category}`]
+            });
+        env:
+          TRIAGE_CATEGORY: ${{ steps.gemini_triage.outputs.category }}
+          TRIAGE_CONFIDENCE: ${{ steps.gemini_triage.outputs.confidence }}
+          TRIAGE_SUMMARY: ${{ steps.gemini_triage.outputs.summary }}
