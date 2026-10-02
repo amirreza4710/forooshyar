@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  run-gemini-analysis:
+  run-pipeline:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -20,10 +20,29 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install google-genai
+          pip install google-genai pytest
 
-      - name: Run Gemini Script
+      # اجرای فرضی تست‌ها؛ با continue-on-error اجازه می‌دهیم در صورت شکست، اسکریپت تریاژ اجرا شود
+      - name: Run Tests
+        id: test_step
+        continue-on-error: true
+        run: |
+          # اجرای تست و ذخیره لاگ در فایل
+          pytest | tee test_output.log
+
+      # اگر تست‌ها فیل شدند، جیمینای لاگ را ارزیابی می‌کند
+      - name: Triage Failure with Gemini (System 1)
+        id: gemini_triage
+        if: steps.test_step.outcome != 'success'
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           python scripts/gemini_gate.py
+
+      # استپ نمایشی تصمیم‌گیری: اگر سیستم تشخیص داد که خطا نیاز به جولز دارد
+      - name: Route to Jules Task
+        if: steps.test_step.outcome != 'success' && steps.gemini_triage.outputs.escalate_to_jules == 'true'
+        run: |
+          echo "خطا در دسته ${{ steps.gemini_triage.outputs.category }} ارزیابی شد."
+          echo "خلاصه: ${{ steps.gemini_triage.outputs.summary }}"
+          echo "در حال آماده‌سازی تسک برای ارجاع به Jules (System 2)..."
