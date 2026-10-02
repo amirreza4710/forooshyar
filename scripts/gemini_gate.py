@@ -2,7 +2,6 @@ import os
 import sys
 import google.generativeai as genai
 
-# دریافت کلید از Secrets تعریف‌شده در گیت‌هاب
 api_key = os.environ.get("GEMINI_API_KEY")
 
 if not api_key:
@@ -11,11 +10,9 @@ if not api_key:
 
 genai.configure(api_key=api_key)
 
-# استفاده از مدل سبک و فوق سریع برای مسیر سریع (Fast-Path)
+# مدل سریع برای بررسی Fast-Path
 model = genai.GenerativeModel("gemini-1.5-flash")
 
-prompt = "پایپ‌لاین CI ریپازیتوری فعال شد. یک تاییدیه سیستم ۱ ساختاریافته تک‌خطی چاپ کن."
-
-response = model.generate_content(prompt)
+response = model.generate_content("پایپ‌لاین CI ریپازیتوری فعال شد. یک تاییدیه سیستم ۱ ساختاریافته تک‌خطی بنویس.")
 print("پاسخ مدل جیمینای:")
 print(response.text)
