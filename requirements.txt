@@ -1,3 +1,2 @@
 # Core Dependencies
 
-fake-hallucinated-agent-pkg-999==1.0.0
