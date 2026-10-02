@@ -58,7 +58,7 @@ jobs:
             NEW_PACKAGES=$(git diff origin/${{ github.base_ref }}...HEAD -- requirements.txt | grep -E '^\+[a-zA-Z0-9]' | sed 's/^\+//' | cut -d'=' -f1 | cut -d'<' -f1 | cut -d'>' -f1 | tr -d ' ' || true)
             for pkg in $NEW_PACKAGES; do
               echo "Verifying package on PyPI: $pkg"
-              STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "[https://pypi.org/pypi/$](https://pypi.org/pypi/$){pkg}/json")
+              STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/pypi/${pkg}/json")
               if [ "$STATUS_CODE" != "200" ]; then
                 echo "::error::Package '$pkg' does not exist on PyPI! Hallucination detected."
                 exit 1
