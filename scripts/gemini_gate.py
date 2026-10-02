@@ -12,38 +12,42 @@ if not api_key:
 
 client = genai.Client(api_key=api_key)
 
-# لیست مدل‌ها با اولویت برای پشتیبان‌‌گیری در زمان شلوغی سرور
-models_to_try = ["gemini-3.8-flash", "gemini-2.5-pro", "gemini-2.0-flash"]
-prompt = "پایپ‌لاین CI ریپازیتوری فعال شد. یک تاییدیه سیستم ۱ ساختاریافته تک‌خطی بنویس."
+# مدل‌های فعال و معتبر طبق لاگ پلتفرم
+models_to_try = [
+    "gemini-3.8-flash",
+    "gemini-3.1-pro-preview",
+]
 
+prompt = "پایپ‌لاین CI ریپازیتوری فعال شد. یک تاییدیه سیستم ۱ ساختاریافته تک‌خطی بنویس."
+delays = [3, 7, 15]
 success = False
 
 for model_name in models_to_try:
     print(f"در حال تلاش برای اتصال به مدل: {model_name}...")
-    for attempt in range(1, 4):
+    for attempt, wait_time in enumerate(delays, start=1):
         try:
-            response = client.models.generate_content(
-                model=model_name,
-                contents=prompt,
-            )
+            # استفاده از چت برای جلوگیری از اخطار AFC
+            chat = client.chats.create(model=model_name)
+            response = chat.send_message(prompt)
+            
             print("پاسخ مدل جیمینای:")
             print(response.text)
             success = True
             break
         except APIError as e:
             if e.code == 503:
-                print(f"سرور مدل {model_name} شلوغ است (۵۰۳). تلاش مجدد {attempt}/3 پس از ۳ ثانیه...")
-                time.sleep(3)
+                print(f"سرور مدل {model_name} موقتاً شلوغ است (۵۰۳). تلاش مجدد {attempt}/{len(delays)} پس از {wait_time} ثانیه...")
+                time.sleep(wait_time)
             else:
                 print(f"خطای مدل {model_name}: {e.message}")
                 break
         except Exception as e:
-            print(f"خطای پیش‌بینی نشده: {e}")
+            print(f"خطای پیش‌بینی نشده در {model_name}: {e}")
             break
     
     if success:
         break
 
 if not success:
-    print("خطا: تمامی تلاش‌ها برای اتصال به مدل‌های در دسترس با شکست مواجه شد.")
+    print("خطا: تمامی تلاش‌ها برای اتصال به مدل‌های فعال با شکست مواجه شد.")
     sys.exit(1)
