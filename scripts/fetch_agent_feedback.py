@@ -3,6 +3,13 @@ import re
 import subprocess
 import sys
 
+# تنظیم خروجی کنسول روی UTF-8 برای جلوگیری از خطای پرینت کاراکترهای خاص در ترمینال ویندوز
+if sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except AttributeError:
+        pass
+
 def get_latest_pr_comment_feedback(pr_identifier=None):
     try:
         cmd = ["gh", "pr", "view"]
@@ -10,10 +17,12 @@ def get_latest_pr_comment_feedback(pr_identifier=None):
             cmd.append(str(pr_identifier))
         cmd.extend(["--json", "comments"])
         
+        # قفل انکودینگ UTF-8 و جایگزینی کاراکترهای ناشناخته برای سیستم‌عامل ویندوز
         result = subprocess.run(
             cmd,
             capture_output=True,
-            text=True,
+            encoding="utf-8",
+            errors="replace",
             check=True
         )
         data = json.loads(result.stdout)
