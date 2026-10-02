@@ -3,11 +3,15 @@ import re
 import subprocess
 import sys
 
-def get_latest_pr_comment_feedback():
+def get_latest_pr_comment_feedback(pr_identifier=None):
     try:
-        # واکشی کامنت‌های آخرین PR با GitHub CLI
+        cmd = ["gh", "pr", "view"]
+        if pr_identifier:
+            cmd.append(str(pr_identifier))
+        cmd.extend(["--json", "comments"])
+        
         result = subprocess.run(
-            ["gh", "pr", "view", "--json", "comments"],
+            cmd,
             capture_output=True,
             text=True,
             check=True
@@ -15,15 +19,12 @@ def get_latest_pr_comment_feedback():
         data = json.loads(result.stdout)
         comments = data.get("comments", [])
         
-        # جستجو از جدیدترین کامنت به قدیمی‌ترین
         for comment in reversed(comments):
             body = comment.get("body", "")
             if "🤖 Agent Verification Feedback" in body:
-                # استخراج بلوک جیسون از کامنت مارک‌داون
                 match = re.search(r"```json\s*(\{.*?\})\s*```", body, re.DOTALL)
                 if match:
-                    feedback_json = json.loads(match.group(1))
-                    return feedback_json
+                    return json.loads(match.group(1))
         return None
     except Exception as e:
         print(f"Error reading PR comments: {e}", file=sys.stderr)
@@ -61,8 +62,9 @@ def build_repair_prompt(feedback):
     return "\n".join(prompt)
 
 if __name__ == "__main__":
-    feedback = get_latest_pr_comment_feedback()
+    pr_target = sys.argv[1] if len(sys.argv) > 1 else None
+    feedback = get_latest_pr_comment_feedback(pr_target)
     if feedback:
         print(build_repair_prompt(feedback))
     else:
-        print("No agent feedback comment detected on current PR.")
+        print("No agent feedback comment detected.")
