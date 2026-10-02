@@ -29,3 +29,9 @@ Every code change must adhere to the deterministic quality gates enforced by Git
 - ❌ **NEVER touch `.github/workflows/` or environment files (`.env*`):** Any modification to system-level files will immediately fail the blast radius gate.
 - ❌ **NO Hallucinated Dependencies:** Only add packages to `requirements.txt` that exist and are verified on PyPI.
 - ❌ **NO `[skip ci]` in commit messages:** Every commit must run through the automated audit.
+## Jules Automated Task Intake
+
+- هرگاه یک Issue با برچسب `jules-task` و `agent-escalation` ایجاد شد:
+  1. اولویت نخست، بازخوانی خلاصه تریاژ و دسته خطای مشخص‌شده در متن Issue است.
+  2. بدون نیاز به بازبینی تمام فایل‌های پروژه، صرفاً ماژول‌های مرتبط با آن دسته را بررسی و اصلاح کن.
+  3. پول ریکوئست نهایی باید حاوی تگ `Closes #IssueNumber` باشد.
