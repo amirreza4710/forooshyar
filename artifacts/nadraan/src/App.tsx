@@ -8,6 +8,7 @@ import { ApiError } from "@workspace/api-client-react";
 
 import LoginPage from "@/pages/login";
 import DashboardPage from "@/pages/dashboard";
+import OperationalCommandCenter from "@/pages/OperationalCommandCenter";
 import NewOrderPage from "@/pages/new-order";
 import OrdersPage from "@/pages/orders";
 import ProductsPage from "@/pages/products";
@@ -55,6 +56,10 @@ function Router() {
       <Route path="/login" component={LoginPage} />
       <Route
         path="/"
+        component={() => <ProtectedRoute component={OperationalCommandCenter} />}
+      />
+      <Route
+        path="/dashboard"
         component={() => <ProtectedRoute component={DashboardPage} />}
       />
       <Route

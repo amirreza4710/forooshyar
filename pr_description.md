@@ -1,12 +1,14 @@
-🎯 **What:**
-- Added test coverage for `signToken` and `verifyToken` functions in `artifacts/api-server/src/lib/auth.ts`.
-- Previously, these core JWT utility functions were missing tests, reducing confidence in the authentication layer.
+feat(ui): operational command center dashboard skeleton
 
-📊 **Coverage:**
-- Added `signToken should return a string token`: Verifies that signed tokens have the correct structure (3 parts).
-- Added `verifyToken should decode and return the payload for a valid token`: Verifies that a valid token is decoded into the correct payload.
-- Added `verifyToken should throw an error for an invalid token`: Verifies that invalid tokens correctly throw errors.
-- Added `verifyToken should throw an error for an expired token`: Verifies that expired tokens correctly throw `jwt expired` errors.
+Summary of discovered file paths:
+- artifacts/nadraan/src/pages/OperationalCommandCenter.tsx
+- artifacts/nadraan/src/App.tsx
+- artifacts/nadraan/package.json
+- artifacts/nadraan/components.json (checked, not changed)
 
-✨ **Result:**
-- Increased test coverage for the authentication library, ensuring token signing and verification work as expected and handle errors properly.
+Verification checklist:
+- [x] Build passes (`pnpm --filter nadraan build` succeeds)
+- [x] No type errors (`pnpm --filter nadraan exec tsc --noEmit` succeeds)
+
+Explicit confirmation:
+- The MVP Scope remained frozen. Only the UI skeleton (Dark mode, Persian/RTL layout, Mock Data) was implemented. No backend wiring, no autonomous agent state, and no extra heavy dependencies were added.
