@@ -26,7 +26,7 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      # ۱. مهار شعاع تخریب: مسدودسازی تغییر فایل‌های سیستمی
+      # ۱. مهار شعاع تخریب: مسدودسازی دستکاری فایل‌های سیستمی
       - name: Check Diff Scope
         id: scope_check
         run: |
@@ -58,7 +58,7 @@ jobs:
             NEW_PACKAGES=$(git diff origin/${{ github.base_ref }}...HEAD -- requirements.txt | grep -E '^\+[a-zA-Z0-9]' | sed 's/^\+//' | cut -d'=' -f1 | cut -d'<' -f1 | cut -d'>' -f1 | tr -d ' ' || true)
             for pkg in $NEW_PACKAGES; do
               echo "Verifying package on PyPI: $pkg"
-              STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/pypi/${pkg}/json")
+              STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "[https://pypi.org/pypi/$](https://pypi.org/pypi/$){pkg}/json")
               if [ "$STATUS_CODE" != "200" ]; then
                 echo "::error::Package '$pkg' does not exist on PyPI! Hallucination detected."
                 exit 1
@@ -139,19 +139,20 @@ jobs:
               json.dump(payload, f, indent=2, ensure_ascii=False)
           EOF
 
-      # ۸. ارسال کامنت روی PR
+      # ۸. ارسال کامنت فرمت‌شده روی PR
       - name: Post Feedback Comment to PR
         if: always() && github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          COMMENT_BODY=$(cat << 'EOF'
+          cat << 'EOF' > temp_comment.txt
           ### 🤖 Agent Verification Feedback
           ```json
           EOF
           cat agent-feedback.json >> temp_comment.txt
+          echo '' >> temp_comment.txt
           echo '```' >> temp_comment.txt
-          )
+          
           gh pr comment ${{ github.event.pull_request.number }} --body-file temp_comment.txt || true
 
       # ۹. ارزیابی نهایی برای تعیین وضعیت ادغام

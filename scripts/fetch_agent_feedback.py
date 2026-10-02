@@ -3,7 +3,6 @@ import re
 import subprocess
 import sys
 
-# تنظیم خروجی کنسول روی UTF-8 برای جلوگیری از خطای پرینت کاراکترهای خاص در ترمینال ویندوز
 if sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
     try:
         sys.stdout.reconfigure(encoding='utf-8')
@@ -17,7 +16,6 @@ def get_latest_pr_comment_feedback(pr_identifier=None):
             cmd.append(str(pr_identifier))
         cmd.extend(["--json", "comments"])
         
-        # قفل انکودینگ UTF-8 و جایگزینی کاراکترهای ناشناخته برای سیستم‌عامل ویندوز
         result = subprocess.run(
             cmd,
             capture_output=True,
@@ -30,10 +28,21 @@ def get_latest_pr_comment_feedback(pr_identifier=None):
         
         for comment in reversed(comments):
             body = comment.get("body", "")
-            if "🤖 Agent Verification Feedback" in body:
-                match = re.search(r"```json\s*(\{.*?\})\s*```", body, re.DOTALL)
+            # اعتبارسنجی منعطف: وجود هدر یا کلیدهای اختصاصی خروجی پایپ‌لاین
+            if "Agent Verification Feedback" in body or ("gate_summary" in body and "status" in body):
+                # ۱. استخراج از درون بلوک کد مارک‌داون
+                match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", body, re.DOTALL)
                 if match:
-                    return json.loads(match.group(1))
+                    return json.loads(match.group(1).strip())
+                
+                # ۲. استخراج به عنوان آبجکت جیسون خام
+                match_raw = re.search(r"(\{[\s\S]*\"status\"[\s\S]*\})", body)
+                if match_raw:
+                    raw_text = match_raw.group(1).strip()
+                    # تمیزکاری بک‌تیک‌های احتمالی در انتهای متن
+                    raw_text = re.sub(r"```+$", "", raw_text).strip()
+                    return json.loads(raw_text)
+                    
         return None
     except Exception as e:
         print(f"Error reading PR comments: {e}", file=sys.stderr)
