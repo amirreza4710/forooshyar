@@ -7,11 +7,14 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
   issues: write
   pull-requests: write
 
 jobs:
+  # -----------------------------------------------------------
+  # مرحله ۱: اجرای تست‌ها و ثبت خروجی
+  # -----------------------------------------------------------
   run-pipeline:
     runs-on: ubuntu-latest
     steps:
@@ -27,14 +30,15 @@ jobs:
         run: |
           pip install google-genai pytest
 
-      # اجرای تست‌ها و ذخیره خروجی لاگ
       - name: Run Tests
         id: test_step
         continue-on-error: true
         run: |
           pytest | tee test_output.log
 
-      # تریاژ شکست توسط جیمینای در صورت بروز خطا
+      # -----------------------------------------------------------
+      # مرحله ۲: ارزیابی سریع سیستم ۱ با مدل جیمینای
+      # -----------------------------------------------------------
       - name: Triage Failure with Gemini (System 1)
         id: gemini_triage
         if: steps.test_step.outcome != 'success'
@@ -43,8 +47,10 @@ jobs:
         run: |
           python scripts/gemini_gate.py
 
-      # ساخت خودکار Issue و تفویض تسک به جولز (System 2 Escalation)
-      - name: Create Jules Task Issue
+      # -----------------------------------------------------------
+      # مرحله ۳: گیت ارجاع و تفویض خودکار به جولز (System 2 Escalation)
+      # -----------------------------------------------------------
+      - name: Escalate to Jules Task
         if: steps.test_step.outcome != 'success' && steps.gemini_triage.outputs.escalate_to_jules == 'true'
         uses: actions/github-script@v7
         with:
@@ -52,24 +58,20 @@ jobs:
           script: |
             const category = process.env.TRIAGE_CATEGORY || 'unknown';
             const confidence = process.env.TRIAGE_CONFIDENCE || '0.0';
-            const summary = process.env.TRIAGE_SUMMARY || 'خطای تست نیازمند بررسی عمیق';
+            const summary = process.env.TRIAGE_SUMMARY || 'شکست در تست نیازمند بازبینی کد';
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             
             const issueTitle = `[Jules Task] CI Triage Escalation: ${summary}`;
-            const issueBody = `### 🚨 ارجاع خطا از تریاژ سیستم ۱ به ایجنت جولز (System 2)
-
-            - **دسته‌بندی خطا (Category):** \`${category}\`
-            - **سطح اطمینان مدل (Confidence):** \`${confidence}\`
-            - **خلاصه تریاژ:** ${summary}
-            - **لینک اجرای ناموفق اکشن:** [مشاهده لاگ اجرا](${runUrl})
-
-            ---
-
-            #### دستورالعمل برای جولز (@jules):
-            1. فایل‌های تست و کد مرتبط با دسته \`${category}\` را بررسی کن.
-            2. ریشه خطای لاگ در اجرای فوق را رفع کن.
-            3. یک پول ریکوئست (PR) جدید جهت رفع این مشکل باز کن.
-            `;
+            const issueBody = `### 🚨 ارجاع خطا از تریاژ سریع سیستم ۱ به جولز (System 2)\n\n` +
+              `- **دسته‌بندی خطا:** \`${category}\`\n` +
+              `- **درصد اطمینان ارزیابی:** \`${confidence}\`\n` +
+              `- **خلاصه گزارش:** ${summary}\n` +
+              `- **گزارش لاگ خطا:** [مشاهده اجرای اکشن](${runUrl})\n\n` +
+              `---\n\n` +
+              `#### ماموریت ایجنت جولز (@jules):\n` +
+              `1. فایل‌های مرتبط با رده \`${category}\` را بررسی و دیباگ کن.\n` +
+              `2. تست معیوب را اصلاح کن تا خروجی بیلد تیک سبز بگیرد.\n` +
+              `3. یک PR جهت بستن این تسک ارسال کن.`;
 
             await github.rest.issues.create({
               owner: context.repo.owner,
@@ -82,3 +84,12 @@ jobs:
           TRIAGE_CATEGORY: ${{ steps.gemini_triage.outputs.category }}
           TRIAGE_CONFIDENCE: ${{ steps.gemini_triage.outputs.confidence }}
           TRIAGE_SUMMARY: ${{ steps.gemini_triage.outputs.summary }}
+
+      # -----------------------------------------------------------
+      # مرحله ۴: سد امنیتی نهایی پایپ‌لاین
+      # -----------------------------------------------------------
+      - name: Final Pipeline Gate
+        if: steps.test_step.outcome != 'success'
+        run: |
+          echo "پایپ‌لاین به دلیل خطای تست متوقف شد و گزارش تریاژ به جولز تحویل داده شد."
+          exit 1
