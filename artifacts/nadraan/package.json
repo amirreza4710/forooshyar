@@ -80,5 +80,8 @@
     "vitest": "^3.2.7",
     "wouter": "^3.3.5",
     "zod": "catalog:"
+  },
+  "dependencies": {
+    "@workspace/api-zod": "workspace:*"
   }
 }
