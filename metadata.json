@@ -1,0 +1,8 @@
+{
+  "name": "نادرانگستر | پلتفرم مدیریت پخش",
+  "description": "پلتفرم مدیریت پخش و فروش نادرانگستر — ثبت سفارش، مدیریت مشتریان و محصولات",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

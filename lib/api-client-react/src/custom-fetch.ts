@@ -414,9 +414,38 @@ export async function customFetch<T = unknown>(
     }
   }
 
-  const response = await fetch(input, { ...init, method, headers });
+  let response: Response;
+  try {
+    response = await fetch(input, { ...init, method, headers });
+  } catch (netErr) {
+    const mockRes = createDemoMockResponse(
+      requestInfo.url,
+      requestInfo.method,
+      init.body,
+    );
+    if (mockRes) {
+      if (!mockRes.ok) {
+        const errorData = await parseErrorBody(mockRes, method);
+        throw new ApiError(mockRes, errorData, requestInfo);
+      }
+      return (await parseSuccessBody(mockRes, responseType, requestInfo)) as T;
+    }
+    throw netErr;
+  }
 
   if (!response.ok) {
+    const mockRes = createDemoMockResponse(
+      requestInfo.url,
+      requestInfo.method,
+      init.body,
+    );
+    if (mockRes && (response.status === 404 || response.status === 502 || response.status === 503)) {
+      if (!mockRes.ok) {
+        const errorData = await parseErrorBody(mockRes, method);
+        throw new ApiError(mockRes, errorData, requestInfo);
+      }
+      return (await parseSuccessBody(mockRes, responseType, requestInfo)) as T;
+    }
     const errorData = await parseErrorBody(response, method);
     throw new ApiError(response, errorData, requestInfo);
   }

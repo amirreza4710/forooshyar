@@ -20,7 +20,7 @@ router.post("/users", requireAuth, requireRole(...ADMIN_ROLES), async (req, res)
   if (parsed.success) {
     const pwParsed = PasswordSchema.safeParse(parsed.data.password);
     if (!pwParsed.success) {
-      res.status(400).json({ error: pwParsed.error.errors[0]?.message || "Invalid password" });
+      res.status(400).json({ error: pwParsed.error.issues[0]?.message || "Invalid password" });
       return;
     }
   }
@@ -46,7 +46,7 @@ router.patch("/users/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req,
   if (body.success && body.data.password) {
     const pwParsed = PasswordSchema.safeParse(body.data.password);
     if (!pwParsed.success) {
-      res.status(400).json({ error: pwParsed.error.errors[0]?.message || "Invalid password" });
+      res.status(400).json({ error: pwParsed.error.issues[0]?.message || "Invalid password" });
       return;
     }
   }
