@@ -4,6 +4,7 @@
 *   Updated `dev-seed.ts` endpoint to create/update an "admin" user with "admin" password if environment variables are not provided, only for local development/demo environments.
 *   Modified `login.tsx` to include "admin" in the demo user list and autofill the correct credentials.
 *   Updated relevant API tests (`dev-seed.test.ts`) to expect this fallback behavior.
+*   Added `pnpm-workspace.yaml` explicitly as it is required by the CI environment's action `pnpm/action-setup@v4`.
 
 ### Testing
 
