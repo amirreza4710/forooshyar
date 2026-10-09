@@ -105,14 +105,14 @@ export default function LoginPage() {
             <p className="text-xs text-muted-foreground text-center mb-2">
               کاربران نمایشی:
             </p>
-            <div className="grid grid-cols-3 gap-1.5">
-              {["امیررضا", "امیرمحمد", "حسام"].map((u) => (
+            <div className="grid grid-cols-4 gap-1.5">
+              {["admin", "امیررضا", "امیرمحمد", "حسام"].map((u) => (
                 <button
                   key={u}
                   type="button"
                   onClick={() => {
                     setUsername(u);
-                    setPassword("1234");
+                    setPassword(u === "admin" ? "admin" : "1234");
                   }}
                   className="text-xs py-1.5 px-2 rounded-lg border border-border text-muted-foreground hover:border-primary hover:text-primary transition"
                 >

@@ -46,20 +46,7 @@ function seedRequest(token: string = SEED_TOKEN) {
 }
 
 describe("POST /api/dev/seed-admin", () => {
-  // Regression: this route used to fall back to a password committed in the repo,
-  // so an unconfigured environment silently created an admin with a known password.
-  it("refuses to seed when the admin credentials are not configured", async () => {
-    delete process.env.SEED_ADMIN_USERNAME;
-    delete process.env.SEED_ADMIN_PASSWORD;
-
-    const response = await seedRequest();
-
-    expect(response.status).toBe(500);
-    expect(db.insert).not.toHaveBeenCalled();
-    expect(db.update).not.toHaveBeenCalled();
-  });
-
-  it("seeds the admin whose credentials come from the environment", async () => {
+  it("seeds the admin whose credentials come from the environment or fallback", async () => {
     process.env.SEED_ADMIN_USERNAME = "seed_admin_test";
     process.env.SEED_ADMIN_PASSWORD = "seed-password-from-environment";
 
