@@ -49,7 +49,7 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
     // and easily check against the single locked rows.
     const aggregatedItems = new Map<
       number,
-      { qty: number; originalItem: any }
+      { qty: number; originalItem: (typeof items)[0] }
     >();
     for (const item of items) {
       if (item.qty <= 0) {
