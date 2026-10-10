@@ -5,7 +5,7 @@ import sys
 
 if sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
     try:
-        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore
+        sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
     except AttributeError:
         pass
 
