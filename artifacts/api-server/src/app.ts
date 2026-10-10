@@ -40,7 +40,12 @@ let allowedOrigins: (string | RegExp)[] = process.env["CORS_ORIGIN"]
   : [];
 
 if (process.env["NODE_ENV"] !== "production" && allowedOrigins.length === 0) {
-  allowedOrigins = [/^http:\/\/localhost:\d+$/, /^http:\/\/127\.0\.0\.1:\d+$/];
+  allowedOrigins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost",
+    "http://127.0.0.1"
+  ];
 }
 
 app.use(cors({
