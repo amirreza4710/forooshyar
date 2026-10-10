@@ -32,6 +32,7 @@ describe('customFetch', () => {
         await customFetch('https://api.example.com/data');
         expect.fail('Expected customFetch to throw an error');
       } catch (error) {
+        if (error instanceof Error && error.name === "AssertionError") throw error;
         expect(error).toBeInstanceOf(ApiError);
         const apiError = error as ApiError;
         expect(apiError.status).toBe(400);
@@ -60,6 +61,7 @@ describe('customFetch', () => {
         await customFetch('https://api.example.com/data');
         expect.fail('Expected customFetch to throw an error');
       } catch (error) {
+        if (error instanceof Error && error.name === "AssertionError") throw error;
         expect(error).toBeInstanceOf(ApiError);
         const apiError = error as ApiError;
         expect(apiError.message).toBe('HTTP 404 Not Found: Only Message');
@@ -83,6 +85,7 @@ describe('customFetch', () => {
         await customFetch('https://api.example.com/data');
         expect.fail('Expected customFetch to throw an error');
       } catch (error) {
+        if (error instanceof Error && error.name === "AssertionError") throw error;
         expect(error).toBeInstanceOf(ApiError);
         const apiError = error as ApiError;
         expect(apiError.message).toBe('HTTP 500 Internal Server Error: Plain text error');
@@ -103,6 +106,7 @@ describe('customFetch', () => {
         await customFetch('https://api.example.com/data');
         expect.fail('Expected customFetch to throw an error');
       } catch (error) {
+        if (error instanceof Error && error.name === "AssertionError") throw error;
         expect(error).toBeInstanceOf(ApiError);
         const apiError = error as ApiError;
         expect(apiError.message).toBe('HTTP 401 Unauthorized');
@@ -151,6 +155,7 @@ describe('customFetch', () => {
         await customFetch('https://api.example.com/data');
         expect.fail('Expected to throw ResponseParseError');
       } catch (error) {
+        if (error instanceof Error && error.name === "AssertionError") throw error;
         expect(error).toBeInstanceOf(ResponseParseError);
         const parseError = error as ResponseParseError;
         expect(parseError.rawBody).toBe('invalid json');
@@ -164,6 +169,7 @@ describe('customFetch', () => {
         await customFetch('https://api.example.com/data', { method: 'GET', body: 'some body' });
         expect.fail('Expected to throw TypeError');
       } catch (error) {
+        if (error instanceof Error && error.name === "AssertionError") throw error;
         expect(error).toBeInstanceOf(TypeError);
         expect((error as TypeError).message).toContain('GET requests cannot have a body');
       }

@@ -439,13 +439,7 @@ export async function customFetch<T = unknown>(
       requestInfo.method,
       init.body,
     );
-    if (mockRes && (response.status === 404 || response.status === 502 || response.status === 503)) {
-      if (!mockRes.ok) {
-        const errorData = await parseErrorBody(mockRes, method);
-        throw new ApiError(mockRes, errorData, requestInfo);
-      }
-      return (await parseSuccessBody(mockRes, responseType, requestInfo)) as T;
-    }
+
     const errorData = await parseErrorBody(response, method);
     throw new ApiError(response, errorData, requestInfo);
   }
