@@ -18,17 +18,10 @@ router.post("/dev/seed-admin", async (req, res): Promise<void> => {
     return;
   }
 
-  // No hardcoded fallback: seeding a known password into a real database is how
-  // a dev shortcut becomes a production incident.
-  const username = process.env.SEED_ADMIN_USERNAME;
-  const password = process.env.SEED_ADMIN_PASSWORD;
-  if (!username || !password) {
-    req.log?.error(
-      "SEED_ADMIN_USERNAME / SEED_ADMIN_PASSWORD are not set — refusing to seed an admin",
-    );
-    res.status(500).json({ error: "Seed credentials are not configured" });
-    return;
-  }
+  // Use the admin/admin fallback only for the local development/demo environment.
+  // Note: this is a temporary fix due to Replit un-availability where .env was lost.
+  const username = process.env.SEED_ADMIN_USERNAME || "admin";
+  const password = process.env.SEED_ADMIN_PASSWORD || "admin";
 
   const passwordHash = await bcrypt.hash(password, 10);
   const [existing] = await db.select().from(usersTable).where(eq(usersTable.username, username));
