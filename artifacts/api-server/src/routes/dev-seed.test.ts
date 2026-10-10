@@ -24,8 +24,15 @@ app.use("/api", devSeedRouter);
 
 // Restore only the variables this file touches — replacing process.env wholesale
 // would also clobber whatever the test runner put there after module load.
-const touchedKeys = ["NODE_ENV", "SEED_TOKEN", "SEED_ADMIN_USERNAME", "SEED_ADMIN_PASSWORD"] as const;
-const originalEnv = Object.fromEntries(touchedKeys.map((key) => [key, process.env[key]]));
+const touchedKeys = [
+  "NODE_ENV",
+  "SEED_TOKEN",
+  "SEED_ADMIN_USERNAME",
+  "SEED_ADMIN_PASSWORD",
+] as const;
+const originalEnv = Object.fromEntries(
+  touchedKeys.map((key) => [key, process.env[key]]),
+);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -46,7 +53,7 @@ function seedRequest(token: string = SEED_TOKEN) {
 }
 
 describe("POST /api/dev/seed-admin", () => {
-  it("seeds the admin whose credentials come from the environment or fallback", async () => {
+  it("seeds the admin whose credentials come from the environment", async () => {
     process.env.SEED_ADMIN_USERNAME = "seed_admin_test";
     process.env.SEED_ADMIN_PASSWORD = "seed-password-from-environment";
 
@@ -65,7 +72,9 @@ describe("POST /api/dev/seed-admin", () => {
     const inserted = values.mock.calls[0]![0];
     expect(inserted.username).toBe("seed_admin_test");
     expect(inserted.password).not.toBe("seed-password-from-environment"); // stored hashed
-    expect(await bcrypt.compare("seed-password-from-environment", inserted.password)).toBe(true);
+    expect(
+      await bcrypt.compare("seed-password-from-environment", inserted.password),
+    ).toBe(true);
   });
 
   it("stays unreachable in production", async () => {
@@ -86,6 +95,45 @@ describe("POST /api/dev/seed-admin", () => {
     const response = await seedRequest("not-the-seed-token");
 
     expect(response.status).toBe(404);
+    expect(db.insert).not.toHaveBeenCalled();
+  });
+
+  it("returns 404 if SEED_TOKEN is missing from environment", async () => {
+    delete process.env.SEED_TOKEN;
+    process.env.SEED_ADMIN_USERNAME = "seed_admin_test";
+    process.env.SEED_ADMIN_PASSWORD = "seed-password-from-environment";
+
+    const response = await request(app)
+      .post("/api/dev/seed-admin")
+      .set("x-seed-token", "any-token");
+
+    expect(response.status).toBe(404);
+    expect(db.insert).not.toHaveBeenCalled();
+  });
+
+  it("returns 500 if SEED_ADMIN_USERNAME is missing from environment", async () => {
+    delete process.env.SEED_ADMIN_USERNAME;
+    process.env.SEED_ADMIN_PASSWORD = "seed-password-from-environment";
+
+    const response = await seedRequest();
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({
+      error: "Missing seed admin configuration",
+    });
+    expect(db.insert).not.toHaveBeenCalled();
+  });
+
+  it("returns 500 if SEED_ADMIN_PASSWORD is missing from environment", async () => {
+    process.env.SEED_ADMIN_USERNAME = "seed_admin_test";
+    delete process.env.SEED_ADMIN_PASSWORD;
+
+    const response = await seedRequest();
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({
+      error: "Missing seed admin configuration",
+    });
     expect(db.insert).not.toHaveBeenCalled();
   });
 });
