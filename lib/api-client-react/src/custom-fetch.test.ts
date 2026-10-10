@@ -6,6 +6,7 @@ describe('customFetch', () => {
 
   beforeEach(() => {
     global.fetch = vi.fn();
+    (import.meta as any).env = { VITE_DEMO_MODE: 'false' };
     setAuthTokenGetter(null); // Reset global auth token getter
   });
 

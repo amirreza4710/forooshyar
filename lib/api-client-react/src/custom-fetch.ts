@@ -171,8 +171,9 @@ function buildErrorMessage(response: Response, data: unknown): string {
 
   if (title && detail) return `${prefix}: ${title} — ${detail}`;
   if (detail) return `${prefix}: ${detail}`;
-  if (message) return `${prefix}: ${message}`;
+  if (message && !title && !detail) return `${prefix}: ${message}`;
   if (title) return `${prefix}: ${title}`;
+  if (message) return `${prefix}: ${message}`;
 
   return prefix;
 }
@@ -439,7 +440,7 @@ export async function customFetch<T = unknown>(
       requestInfo.method,
       init.body,
     );
-    if (mockRes && (response.status === 404 || response.status === 502 || response.status === 503)) {
+    if (typeof process !== 'undefined' && process.env && process.env.VITE_DEMO_MODE === 'true' && mockRes && (response.status === 404 || response.status === 502 || response.status === 503)) {
       if (!mockRes.ok) {
         const errorData = await parseErrorBody(mockRes, method);
         throw new ApiError(mockRes, errorData, requestInfo);
