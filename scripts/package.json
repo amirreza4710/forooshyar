@@ -9,7 +9,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@workspace/db": "*",
+    "@workspace/db": "workspace:*",
     "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
