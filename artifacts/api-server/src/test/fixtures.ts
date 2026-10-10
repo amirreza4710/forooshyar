@@ -5,7 +5,7 @@
  * دقیقاً با همون id حذف بشه. هرگز کل جدول یا رکوردهای بدون فیلتر پاک نشه.
  */
 import { db, usersTable, customersTable, productsTable, ordersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { signToken } from "../lib/auth";
 import crypto from "crypto";
 
@@ -61,16 +61,16 @@ export async function cleanup(opts: {
   customerIds?: number[];
   userIds?: number[];
 }) {
-  for (const id of opts.orderIds ?? []) {
-    await db.delete(ordersTable).where(eq(ordersTable.id, id));
+  if (opts.orderIds?.length) {
+    await db.delete(ordersTable).where(inArray(ordersTable.id, opts.orderIds));
   }
-  for (const id of opts.productIds ?? []) {
-    await db.delete(productsTable).where(eq(productsTable.id, id));
+  if (opts.productIds?.length) {
+    await db.delete(productsTable).where(inArray(productsTable.id, opts.productIds));
   }
-  for (const id of opts.customerIds ?? []) {
-    await db.delete(customersTable).where(eq(customersTable.id, id));
+  if (opts.customerIds?.length) {
+    await db.delete(customersTable).where(inArray(customersTable.id, opts.customerIds));
   }
-  for (const id of opts.userIds ?? []) {
-    await db.delete(usersTable).where(eq(usersTable.id, id));
+  if (opts.userIds?.length) {
+    await db.delete(usersTable).where(inArray(usersTable.id, opts.userIds));
   }
 }
