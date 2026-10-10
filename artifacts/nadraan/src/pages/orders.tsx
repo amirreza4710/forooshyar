@@ -174,14 +174,7 @@ export default function OrdersPage() {
 
   const applyBulkStatus = useCallback(async () => {
     const ids = Array.from(selected);
-    await Promise.all(
-      ids.map((id) =>
-        updateOrder.mutateAsync({
-          id,
-          data: { status: bulkStatus as OrderUpdateStatus },
-        }),
-      ),
-    );
+    await Promise.all(ids.map(id => updateOrder.mutateAsync({ id, data: { status: bulkStatus as OrderUpdateStatus } })));
     toast({ title: `✅ وضعیت ${n(ids.length)} سفارش تغییر کرد` });
     setSelected(new Set());
   }, [selected, bulkStatus, updateOrder, toast]);
@@ -417,26 +410,20 @@ export default function OrdersPage() {
                       ))}
                     </div>
                   </td>
-                </tr>
-              ) : paginated.length === 0 ? (
-                <tr>
-                  <td colSpan={7}>
-                    <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-3">
-                      <ClipboardList size={40} className="opacity-20" />
-                      <span className="text-sm">
-                        {hasActiveFilter
-                          ? "سفارشی با این مشخصات یافت نشد"
-                          : "هنوز سفارشی ثبت نشده"}
-                      </span>
-                      {hasActiveFilter && (
-                        <button
-                          onClick={clearFilters}
-                          className="text-xs text-primary hover:underline"
-                        >
-                          پاک کردن فیلترها
-                        </button>
-                      )}
-                    </div>
+                  <td className="px-3 sm:px-4 py-3 font-mono text-xs text-muted-foreground whitespace-nowrap">{o.code}</td>
+                  <td className="px-3 sm:px-4 py-3 font-medium text-sm whitespace-nowrap">{o.customerName}</td>
+                  <td className="px-3 sm:px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{o.repName}</td>
+                  <td className="px-3 sm:px-4 py-3 font-bold text-sm whitespace-nowrap tabular-nums">{n(o.total ?? 0)}</td>
+                  <td className="px-3 sm:px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{formatDate(o.createdAt ?? "")}</td>
+                  <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                    <select
+                      value={o.status ?? "در انتظار"}
+                      onChange={e => updateOrder.mutate({ id: o.id, data: { status: e.target.value as OrderUpdateStatus } })}
+                      className={`text-xs px-2.5 py-1.5 rounded-full border font-medium focus:outline-none cursor-pointer transition-colors min-h-[32px] ${STATUS_STYLE[o.status ?? "در انتظار"] ?? "bg-muted text-muted-foreground border-border"}`}
+                      aria-label={`وضعیت سفارش ${o.code}`}
+                    >
+                      {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
                   </td>
                 </tr>
               ) : (
