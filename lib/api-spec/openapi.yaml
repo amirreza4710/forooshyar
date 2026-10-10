@@ -372,6 +372,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/Order"
 
+  /orders/bulk-update:
+    patch:
+      operationId: bulkUpdateOrders
+      tags: [orders]
+      summary: Bulk update order statuses
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderBulkUpdate"
+      responses:
+        "200":
+          description: Orders updated successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+
   /orders/{id}:
     get:
       operationId: getOrder
@@ -691,6 +712,18 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/OrderItem"
+
+    OrderBulkUpdate:
+      type: object
+      required: [ids, status]
+      properties:
+        ids:
+          type: array
+          items:
+            type: integer
+        status:
+          type: string
+          enum: ["در انتظار", "تایید شده", "تکمیل شده", "لغو شده"]
 
     OrderUpdate:
       type: object

@@ -6,6 +6,7 @@ import { requireAuth } from "../lib/auth";
 import {
   CreateOrderBody,
   UpdateOrderBody,
+  BulkUpdateOrdersBody,
   UpdateOrderParams,
   GetOrderParams,
 } from "@workspace/api-zod";
@@ -179,6 +180,45 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
   });
 
   res.status(201).json(serializeOrder(order));
+});
+
+
+router.patch("/orders/bulk-update", requireAuth, async (req, res): Promise<void> => {
+  const body = BulkUpdateOrdersBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+  const { ids, status } = body.data;
+
+  if (ids.length === 0) {
+    res.json([]);
+    return;
+  }
+
+  const updatedOrders = await db
+    .update(ordersTable)
+    .set({ status })
+    .where(
+      and(
+        sql`${ordersTable.id} IN ${sql`(${sql.join(
+          ids.map((id) => sql`${id}`),
+          sql`, `
+        )})`}`,
+        isNull(ordersTable.deletedAt)
+      )
+    )
+    .returning();
+
+  const user = (req as Request & { user: JwtPayload }).user;
+  broadcast({
+    type: "order_updated",
+    message: `وضعیت ${updatedOrders.length} سفارش به «${status}» تغییر یافت`,
+    actor: user.name,
+    meta: { count: updatedOrders.length, status },
+  });
+
+  res.json(updatedOrders.map(serializeOrder));
 });
 
 router.get("/orders/:id", requireAuth, async (req, res): Promise<void> => {

@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type OrderUpdateStatus = typeof OrderUpdateStatus[keyof typeof OrderUpdateStatus];
+export type OrderBulkUpdateStatus = typeof OrderBulkUpdateStatus[keyof typeof OrderBulkUpdateStatus];
 
 
-export const OrderUpdateStatus = {
+export const OrderBulkUpdateStatus = {
   در_انتظار: 'در انتظار',
   تایید_شده: 'تایید شده',
   تکمیل_شده: 'تکمیل شده',

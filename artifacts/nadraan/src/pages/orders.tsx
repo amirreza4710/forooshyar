@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
-import { useListOrders, useUpdateOrder, getListOrdersQueryKey } from "@workspace/api-client-react";
+import { useListOrders, useUpdateOrder,
+  useBulkUpdateOrders, getListOrdersQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -46,6 +47,9 @@ export default function OrdersPage() {
 
   const orders: Order[] = useMemo(() => Array.isArray(ordersRaw) ? ordersRaw : [], [ordersRaw]);
 
+  const bulkUpdateOrders = useBulkUpdateOrders({
+    mutation: { onSuccess: () => qc.invalidateQueries({ queryKey: getListOrdersQueryKey() }) }
+  });
   const updateOrder = useUpdateOrder({
     mutation: {
       onSuccess() { toast({ title: "✅ وضعیت بروز شد" }); qc.invalidateQueries({ queryKey: getListOrdersQueryKey() }); },
@@ -115,10 +119,10 @@ export default function OrdersPage() {
 
   const applyBulkStatus = useCallback(async () => {
     const ids = Array.from(selected);
-    await Promise.all(ids.map(id => updateOrder.mutateAsync({ id, data: { status: bulkStatus as any } })));
+    await bulkUpdateOrders.mutateAsync({ data: { ids, status: bulkStatus as any } });
     toast({ title: `✅ وضعیت ${n(ids.length)} سفارش تغییر کرد` });
     setSelected(new Set());
-  }, [selected, bulkStatus, updateOrder, toast]);
+  }, [selected, bulkStatus, bulkUpdateOrders, toast]);
 
   function handleExport() {
     const headers = ["کد سفارش", "مشتری", "نماینده", "مبلغ (ریال)", "تاریخ", "وضعیت"];
@@ -218,10 +222,10 @@ export default function OrdersPage() {
             </select>
             <button
               onClick={applyBulkStatus}
-              disabled={updateOrder.isPending}
+              disabled={bulkUpdateOrders.isPending}
               className="px-3 py-1.5 text-xs rounded-lg bg-primary text-white hover:opacity-90 disabled:opacity-60 transition font-medium min-h-[34px]"
             >
-              {updateOrder.isPending ? "در حال اعمال..." : "اعمال"}
+              {bulkUpdateOrders.isPending ? "در حال اعمال..." : "اعمال"}
             </button>
             <button onClick={() => setSelected(new Set())} className="text-xs text-muted-foreground hover:text-foreground px-2 min-h-[34px]">
               انصراف

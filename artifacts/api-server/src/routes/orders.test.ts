@@ -205,3 +205,68 @@ describe("POST /api/orders", () => {
     ).rejects.toThrow();
   });
 });
+
+describe("PATCH /api/orders/bulk-update", () => {
+  let user: Awaited<ReturnType<typeof createTestUser>>;
+  let customer: Awaited<ReturnType<typeof createTestCustomer>>;
+  let token: string;
+  const createdOrderIds: number[] = [];
+
+  beforeEach(async () => {
+    user = await createTestUser();
+    customer = await createTestCustomer();
+    token = tokenFor(user);
+  });
+
+  afterEach(async () => {
+    await cleanup({
+      orderIds: createdOrderIds.splice(0),
+      customerIds: [customer.id],
+      userIds: [user.id],
+    });
+  });
+
+  it("چندین سفارش رو به صورت گروهی تغییر وضعیت میده", async () => {
+    // ایجاد چند سفارش تستی
+    const [order1] = await db.insert(ordersTable).values({
+      code: `ORD-BULK-1-${Date.now()}`,
+      customerId: customer.id,
+      customerName: customer.name,
+      userId: user.id,
+      repName: user.name,
+      total: 1000,
+      status: "در انتظار",
+      items: [],
+    }).returning();
+    const [order2] = await db.insert(ordersTable).values({
+      code: `ORD-BULK-2-${Date.now()}`,
+      customerId: customer.id,
+      customerName: customer.name,
+      userId: user.id,
+      repName: user.name,
+      total: 2000,
+      status: "در انتظار",
+      items: [],
+    }).returning();
+
+    createdOrderIds.push(order1!.id, order2!.id);
+
+    const res = await request(app)
+      .patch("/api/orders/bulk-update")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        ids: [order1!.id, order2!.id],
+        status: "تایید شده"
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBe(2);
+    expect(res.body.every((o: any) => o.status === "تایید شده")).toBe(true);
+
+    const updated1 = await db.select().from(ordersTable).where(eq(ordersTable.id, order1!.id));
+    const updated2 = await db.select().from(ordersTable).where(eq(ordersTable.id, order2!.id));
+
+    expect(updated1[0]?.status).toBe("تایید شده");
+    expect(updated2[0]?.status).toBe("تایید شده");
+  });
+});

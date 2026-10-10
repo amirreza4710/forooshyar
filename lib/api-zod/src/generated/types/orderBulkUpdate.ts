@@ -5,10 +5,9 @@
  * نادران‌گستر - پلتفرم مدیریت پخش و فروش
  * OpenAPI spec version: 0.1.0
  */
+import type { OrderBulkUpdateStatus } from './orderBulkUpdateStatus';
 
-export interface OrderItem {
-  productId: number;
-  productName: string;
-  qty: number;
-  price: number;
+export interface OrderBulkUpdate {
+  ids: number[];
+  status: OrderBulkUpdateStatus;
 }
