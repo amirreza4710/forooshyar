@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, ordersTable, customersTable, productsTable } from "@workspace/db";
-import { sql, count, sum, isNull } from "drizzle-orm";
+import { sql, count, sum, isNull, and } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
 
 const router = Router();
@@ -46,26 +46,28 @@ router.get("/dashboard/summary", requireAuth, async (req, res): Promise<void> =>
 
 router.get("/dashboard/sales-chart", requireAuth, async (req, res): Promise<void> => {
   try {
-    const result = await db.execute(sql`
-      SELECT
-        TO_CHAR(created_at AT TIME ZONE 'Asia/Tehran', 'YYYY-MM-DD') as day,
-        COALESCE(SUM(total), 0) as total
-      FROM orders
-      WHERE created_at >= NOW() - INTERVAL '7 days' AND deleted_at IS NULL
-      GROUP BY day
-      ORDER BY day ASC
-    `);
-
     const dayNames: Record<string, string> = {
       '0': 'یکشنبه', '1': 'دوشنبه', '2': 'سه‌شنبه',
       '3': 'چهارشنبه', '4': 'پنجشنبه', '5': 'جمعه', '6': 'شنبه',
     };
 
-    const rows = (result.rows ?? []) as Array<{ day: string; total: string }>;
+    const rows = await db.select({
+      day: sql<string>`TO_CHAR(${ordersTable.createdAt} AT TIME ZONE 'Asia/Tehran', 'YYYY-MM-DD')`,
+      total: sql<string>`COALESCE(SUM(${ordersTable.total}), 0)`
+    })
+    .from(ordersTable)
+    .where(
+      and(
+        sql`${ordersTable.createdAt} >= NOW() - INTERVAL '7 days'`,
+        isNull(ordersTable.deletedAt)
+      )
+    )
+    .groupBy(sql`1`)
+    .orderBy(sql`1 ASC`);
     const chartData = rows.map(r => {
       if (!r || !r.day) return null;
       const d = new Date(r.day);
-      const parsedTotal = parseInt(r.total, 10);
+      const parsedTotal = typeof r.total === 'number' ? r.total : parseInt(String(r.total), 10);
       return {
         label: dayNames[String(d.getDay())] ?? r.day,
         value: isNaN(parsedTotal) ? 0 : parsedTotal
