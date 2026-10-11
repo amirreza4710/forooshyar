@@ -61,16 +61,16 @@ export async function cleanup(opts: {
   customerIds?: number[];
   userIds?: number[];
 }) {
-  if (opts.orderIds?.length) {
+  if (opts.orderIds && opts.orderIds.length > 0) {
     await db.delete(ordersTable).where(inArray(ordersTable.id, opts.orderIds));
   }
-  if (opts.productIds?.length) {
+  if (opts.productIds && opts.productIds.length > 0) {
     await db.delete(productsTable).where(inArray(productsTable.id, opts.productIds));
   }
-  if (opts.customerIds?.length) {
+  if (opts.customerIds && opts.customerIds.length > 0) {
     await db.delete(customersTable).where(inArray(customersTable.id, opts.customerIds));
   }
-  if (opts.userIds?.length) {
+  if (opts.userIds && opts.userIds.length > 0) {
     await db.delete(usersTable).where(inArray(usersTable.id, opts.userIds));
   }
 }
