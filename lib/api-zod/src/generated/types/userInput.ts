@@ -10,5 +10,6 @@ export interface UserInput {
   username: string;
   password: string;
   name: string;
+  phone?: string;
   role: string;
 }

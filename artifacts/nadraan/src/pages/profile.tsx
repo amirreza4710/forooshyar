@@ -1,9 +1,21 @@
+import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { useListOrders } from "@workspace/api-client-react";
-import { ShoppingCart, TrendingUp, Clock, CheckCircle2, UserCircle, LogOut, Download } from "lucide-react";
+import { useListOrders, useChangePassword } from "@workspace/api-client-react";
+import { ShoppingCart, TrendingUp, Clock, CheckCircle2, UserCircle, LogOut, Download, KeyRound } from "lucide-react";
 import { useLocation } from "wouter";
 import { exportCSV, todayStr } from "@/lib/csv";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import type { Order } from "@workspace/api-client-react";
 
 function n(v: number) { return v.toLocaleString("fa-IR"); }
@@ -25,6 +37,7 @@ export default function ProfilePage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { data: ordersRaw, isLoading } = useListOrders();
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
 
   const allOrders: Order[] = Array.isArray(ordersRaw) ? ordersRaw : [];
   const myOrders = allOrders.filter(o => o.userId === user?.id);
@@ -62,15 +75,25 @@ export default function ProfilePage() {
             {user?.role}
           </span>
         </div>
-        {/* Logout button */}
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors text-sm font-medium shrink-0 min-h-[40px]"
-          aria-label="خروج از حساب"
-        >
-          <LogOut size={15} aria-hidden />
-          خروج از سیستم
-        </button>
+        {/* Actions */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setPasswordDialogOpen(true)}
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-border hover:border-primary/40 text-foreground hover:bg-muted/40 transition-colors text-sm font-medium shrink-0 min-h-[40px]"
+            aria-label="تغییر رمز عبور"
+          >
+            <KeyRound size={15} aria-hidden />
+            تغییر رمز عبور
+          </button>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors text-sm font-medium shrink-0 min-h-[40px]"
+            aria-label="خروج از حساب"
+          >
+            <LogOut size={15} aria-hidden />
+            خروج از سیستم
+          </button>
+        </div>
       </div>
 
       {/* ── Stats ── */}
@@ -150,7 +173,173 @@ export default function ProfilePage() {
           )}
         </div>
       </section>
+
+      {/* ── Security section ── */}
+      <section className="bg-card border border-card-border rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-sm font-bold flex items-center gap-2">
+            <KeyRound size={16} className="text-primary" />
+            امنیت حساب کاربری
+          </h2>
+          <p className="text-xs text-muted-foreground mt-1">
+            برای افزایش امنیت حساب، می‌توانید رمز عبور خود را تغییر دهید. تمام نشست‌های فعال دیگر پس از تغییر رمز باطل می‌شوند.
+          </p>
+        </div>
+        <button
+          onClick={() => setPasswordDialogOpen(true)}
+          className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-sm font-medium shrink-0"
+        >
+          <KeyRound size={14} />
+          تغییر رمز عبور
+        </button>
+      </section>
+
+      {/* ── Password change dialog ── */}
+      <ChangePasswordDialog
+        open={passwordDialogOpen}
+        onOpenChange={setPasswordDialogOpen}
+      />
     </div>
+  );
+}
+
+function ChangePasswordDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { toast } = useToast();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const changePasswordMutation = useChangePassword({
+    mutation: {
+      onSuccess: () => {
+        toast({ title: "✅ رمز عبور با موفقیت تغییر کرد" });
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setFormError(null);
+        onOpenChange(false);
+      },
+      onError: (err: any) => {
+        const msg =
+          err?.data?.error ||
+          err?.response?.data?.error ||
+          err?.message ||
+          "خطا در تغییر رمز عبور";
+        setFormError(msg);
+      },
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+
+    if (!currentPassword) {
+      setFormError("لطفاً رمز عبور فعلی را وارد کنید");
+      return;
+    }
+    if (!newPassword || newPassword.length < 6) {
+      setFormError("رمز عبور جدید باید حداقل ۶ کاراکتر باشد");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setFormError("رمز عبور جدید و تکرار آن یکسان نیستند");
+      return;
+    }
+
+    changePasswordMutation.mutate({
+      data: {
+        currentPassword,
+        newPassword,
+      },
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md" dir="rtl">
+        <DialogHeader>
+          <DialogTitle className="text-right">تغییر رمز عبور</DialogTitle>
+          <DialogDescription className="text-right text-xs text-muted-foreground">
+            پس از تغییر رمز عبور، تمام نشست‌های فعال دیگر شما خاتمه می‌یابد.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+          {formError && (
+            <div className="p-3 text-xs rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-right">
+              {formError}
+            </div>
+          )}
+
+          <div className="space-y-1.5 text-right">
+            <Label htmlFor="current-password">رمز عبور فعلی</Label>
+            <Input
+              id="current-password"
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="••••••••"
+              dir="ltr"
+              className="text-left"
+              required
+            />
+          </div>
+
+          <div className="space-y-1.5 text-right">
+            <Label htmlFor="new-password">رمز عبور جدید</Label>
+            <Input
+              id="new-password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="حداقل ۶ کاراکتر"
+              dir="ltr"
+              className="text-left"
+              required
+            />
+          </div>
+
+          <div className="space-y-1.5 text-right">
+            <Label htmlFor="confirm-password">تکرار رمز عبور جدید</Label>
+            <Input
+              id="confirm-password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="••••••••"
+              dir="ltr"
+              className="text-left"
+              required
+            />
+          </div>
+
+          <DialogFooter className="flex-row justify-start gap-2 pt-2">
+            <Button
+              type="submit"
+              disabled={changePasswordMutation.isPending}
+              className="min-w-[100px]"
+            >
+              {changePasswordMutation.isPending ? "در حال ثبت..." : "ذخیره تغییرات"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              انصراف
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 

@@ -43,6 +43,7 @@ export const LoginResponse = zod.object({
   "id": zod.number(),
   "username": zod.string(),
   "name": zod.string(),
+  "phone": zod.string().optional(),
   "role": zod.string(),
   "createdAt": zod.string().optional()
 })
@@ -63,6 +64,7 @@ export const RefreshResponse = zod.object({
   "id": zod.number(),
   "username": zod.string(),
   "name": zod.string(),
+  "phone": zod.string().optional(),
   "role": zod.string(),
   "createdAt": zod.string().optional()
 })
@@ -82,8 +84,23 @@ export const GetMeResponse = zod.object({
   "id": zod.number(),
   "username": zod.string(),
   "name": zod.string(),
+  "phone": zod.string().optional(),
   "role": zod.string(),
   "createdAt": zod.string().optional()
+})
+
+
+/**
+ * @summary Change password for current user
+ */
+export const ChangePasswordBody = zod.object({
+  "currentPassword": zod.string(),
+  "newPassword": zod.string()
+})
+
+export const ChangePasswordResponse = zod.object({
+  "success": zod.boolean(),
+  "message": zod.string()
 })
 
 
@@ -94,6 +111,7 @@ export const ListUsersResponseItem = zod.object({
   "id": zod.number(),
   "username": zod.string(),
   "name": zod.string(),
+  "phone": zod.string().optional(),
   "role": zod.string(),
   "createdAt": zod.string().optional()
 })
@@ -107,6 +125,7 @@ export const CreateUserBody = zod.object({
   "username": zod.string(),
   "password": zod.string(),
   "name": zod.string(),
+  "phone": zod.string().optional(),
   "role": zod.string()
 })
 
@@ -114,6 +133,7 @@ export const CreateUserResponse = zod.object({
   "id": zod.number(),
   "username": zod.string(),
   "name": zod.string(),
+  "phone": zod.string().optional(),
   "role": zod.string(),
   "createdAt": zod.string().optional()
 })
@@ -128,6 +148,7 @@ export const UpdateUserParams = zod.object({
 
 export const UpdateUserBody = zod.object({
   "name": zod.string().optional(),
+  "phone": zod.string().optional(),
   "role": zod.string().optional(),
   "password": zod.string().nullish()
 })
@@ -136,6 +157,7 @@ export const UpdateUserResponse = zod.object({
   "id": zod.number(),
   "username": zod.string(),
   "name": zod.string(),
+  "phone": zod.string().optional(),
   "role": zod.string(),
   "createdAt": zod.string().optional()
 })
@@ -445,5 +467,72 @@ export const GetSalesChartResponseItem = zod.object({
   "value": zod.number()
 })
 export const GetSalesChartResponse = zod.array(GetSalesChartResponseItem)
+
+
+/**
+ * @summary Get system and business settings
+ */
+export const GetSettingsResponse = zod.object({
+  "id": zod.number(),
+  "businessName": zod.string(),
+  "phone": zod.string(),
+  "address": zod.string(),
+  "currency": zod.string(),
+  "productCodePrefix": zod.string(),
+  "customerCodePrefix": zod.string(),
+  "orderCodePrefix": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Update system and business settings
+ */
+export const UpdateSettingsBody = zod.object({
+  "businessName": zod.string().optional(),
+  "phone": zod.string().optional(),
+  "address": zod.string().optional(),
+  "currency": zod.string().optional(),
+  "productCodePrefix": zod.string().optional(),
+  "customerCodePrefix": zod.string().optional(),
+  "orderCodePrefix": zod.string().optional()
+})
+
+export const UpdateSettingsResponse = zod.object({
+  "id": zod.number(),
+  "businessName": zod.string(),
+  "phone": zod.string(),
+  "address": zod.string(),
+  "currency": zod.string(),
+  "productCodePrefix": zod.string(),
+  "customerCodePrefix": zod.string(),
+  "orderCodePrefix": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary List audit logs of sensitive operations
+ */
+export const listAuditLogsQueryLimitDefault = 50;
+export const listAuditLogsQueryOffsetDefault = 0;
+
+export const ListAuditLogsQueryParams = zod.object({
+  "limit": zod.coerce.number().default(listAuditLogsQueryLimitDefault),
+  "offset": zod.coerce.number().default(listAuditLogsQueryOffsetDefault)
+})
+
+export const ListAuditLogsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number().nullish(),
+  "actorName": zod.string().nullish(),
+  "action": zod.string(),
+  "entity": zod.string(),
+  "entityId": zod.string().nullish(),
+  "details": zod.string().nullish(),
+  "ipAddress": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListAuditLogsResponse = zod.array(ListAuditLogsResponseItem)
 
 

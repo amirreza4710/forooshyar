@@ -14,6 +14,8 @@ tags:
   - name: products
   - name: orders
   - name: dashboard
+  - name: settings
+  - name: audit
 
 paths:
   /healthz:
@@ -125,6 +127,37 @@ paths:
                 $ref: "#/components/schemas/User"
         "401":
           description: Unauthorized
+
+  /auth/change-password:
+    post:
+      operationId: changePassword
+      tags: [auth]
+      summary: Change password for current user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordInput"
+      responses:
+        "200":
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Invalid request or weak password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Current password incorrect or unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   # ─── USERS ───
   /users:
@@ -443,6 +476,102 @@ paths:
                 items:
                   $ref: "#/components/schemas/SalesChartPoint"
 
+  # ─── SETTINGS ───
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      summary: Get system and business settings
+      responses:
+        "200":
+          description: System settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateSettings
+      tags: [settings]
+      summary: Update system and business settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsUpdate"
+      responses:
+        "200":
+          description: Settings updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden (Admin role required)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ─── AUDIT ───
+  /audit-logs:
+    get:
+      operationId: listAuditLogs
+      tags: [audit]
+      summary: List audit logs of sensitive operations
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: List of audit logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditLog"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden (Admin role required)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -515,6 +644,8 @@ components:
           type: string
         name:
           type: string
+        phone:
+          type: string
         role:
           type: string
         createdAt:
@@ -530,6 +661,8 @@ components:
           type: string
         name:
           type: string
+        phone:
+          type: string
         role:
           type: string
 
@@ -537,6 +670,8 @@ components:
       type: object
       properties:
         name:
+          type: string
+        phone:
           type: string
         role:
           type: string
@@ -725,3 +860,85 @@ components:
           type: string
         value:
           type: integer
+
+    ChangePasswordInput:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+
+    SuccessResponse:
+      type: object
+      required: [success, message]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+    Settings:
+      type: object
+      required: [id, businessName, phone, address, currency, productCodePrefix, customerCodePrefix, orderCodePrefix, updatedAt]
+      properties:
+        id:
+          type: integer
+        businessName:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        currency:
+          type: string
+        productCodePrefix:
+          type: string
+        customerCodePrefix:
+          type: string
+        orderCodePrefix:
+          type: string
+        updatedAt:
+          type: string
+
+    SettingsUpdate:
+      type: object
+      properties:
+        businessName:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        currency:
+          type: string
+        productCodePrefix:
+          type: string
+        customerCodePrefix:
+          type: string
+        orderCodePrefix:
+          type: string
+
+    AuditLog:
+      type: object
+      required: [id, action, entity, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: ["integer", "null"]
+        actorName:
+          type: ["string", "null"]
+        action:
+          type: string
+        entity:
+          type: string
+        entityId:
+          type: ["string", "null"]
+        details:
+          type: ["string", "null"]
+        ipAddress:
+          type: ["string", "null"]
+        createdAt:
+          type: string

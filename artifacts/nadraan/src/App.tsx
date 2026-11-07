@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { ApiError } from "@workspace/api-client-react";
+import { canAccessRoute } from "@/lib/permissions";
 
 import LoginPage from "@/pages/login";
 import DashboardPage from "@/pages/dashboard";
@@ -31,16 +32,24 @@ const queryClient = new QueryClient({
 
 function ProtectedRoute({
   component: Component,
+  path,
 }: {
   component: React.ComponentType;
+  path?: string;
 }) {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [, navigate] = useLocation();
 
   useEffect(() => {
-    if (!token) navigate("/login");
-  }, [token, navigate]);
+    if (!token) {
+      navigate("/login");
+    } else if (path && user && !canAccessRoute(user.role, path)) {
+      navigate(canAccessRoute(user.role, "/") ? "/" : "/profile");
+    }
+  }, [token, user, path, navigate]);
+
   if (!token) return null;
+  if (path && user && !canAccessRoute(user.role, path)) return null;
 
   return (
     <AppLayout>
@@ -55,31 +64,31 @@ function Router() {
       <Route path="/login" component={LoginPage} />
       <Route
         path="/"
-        component={() => <ProtectedRoute component={DashboardPage} />}
+        component={() => <ProtectedRoute component={DashboardPage} path="/" />}
       />
       <Route
         path="/new-order"
-        component={() => <ProtectedRoute component={NewOrderPage} />}
+        component={() => <ProtectedRoute component={NewOrderPage} path="/new-order" />}
       />
       <Route
         path="/orders"
-        component={() => <ProtectedRoute component={OrdersPage} />}
+        component={() => <ProtectedRoute component={OrdersPage} path="/orders" />}
       />
       <Route
         path="/products"
-        component={() => <ProtectedRoute component={ProductsPage} />}
+        component={() => <ProtectedRoute component={ProductsPage} path="/products" />}
       />
       <Route
         path="/customers"
-        component={() => <ProtectedRoute component={CustomersPage} />}
+        component={() => <ProtectedRoute component={CustomersPage} path="/customers" />}
       />
       <Route
         path="/users"
-        component={() => <ProtectedRoute component={UsersPage} />}
+        component={() => <ProtectedRoute component={UsersPage} path="/users" />}
       />
       <Route
         path="/profile"
-        component={() => <ProtectedRoute component={ProfilePage} />}
+        component={() => <ProtectedRoute component={ProfilePage} path="/profile" />}
       />
       <Route component={NotFound} />
     </Switch>

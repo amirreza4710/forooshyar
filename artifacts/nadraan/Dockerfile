@@ -7,6 +7,7 @@ WORKDIR /app
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
 COPY artifacts/nadraan/package.json ./artifacts/nadraan/package.json
 COPY lib/api-client-react/package.json ./lib/api-client-react/package.json
+COPY lib/api-zod/package.json ./lib/api-zod/package.json
 RUN pnpm install --frozen-lockfile --filter "@workspace/nadraan..."
 
 # ---- Build Stage ----
@@ -14,7 +15,10 @@ FROM deps AS builder
 COPY tsconfig.base.json tsconfig.json ./
 COPY --from=deps /app/node_modules ./node_modules
 COPY lib/api-client-react ./lib/api-client-react
+COPY lib/api-zod ./lib/api-zod
 COPY artifacts/nadraan ./artifacts/nadraan
+COPY --from=deps /app/lib/api-client-react/node_modules ./lib/api-client-react/node_modules
+COPY --from=deps /app/lib/api-zod/node_modules ./lib/api-zod/node_modules
 COPY --from=deps /app/artifacts/nadraan/node_modules ./artifacts/nadraan/node_modules
 RUN pnpm --filter @workspace/nadraan run build
 

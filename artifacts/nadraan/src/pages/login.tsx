@@ -101,29 +101,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-5 pt-4 border-t border-border">
-            <p className="text-xs text-muted-foreground text-center mb-2">
-              کاربران نمایشی:
-            </p>
-            <div className="grid grid-cols-3 gap-1.5">
-              {["امیررضا", "امیرمحمد", "حسام"].map((u) => (
-                <button
-                  key={u}
-                  type="button"
-                  onClick={() => {
-                    setUsername(u);
-                    setPassword("1234");
-                  }}
-                  className="text-xs py-1.5 px-2 rounded-lg border border-border text-muted-foreground hover:border-primary hover:text-primary transition"
-                >
-                  {u}
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground text-center mt-2">
-              رمز عبور همه: ۱۲۳۴
-            </p>
-          </div>
+
         </div>
       </div>
     </div>

@@ -27,9 +27,10 @@ import { promisify } from "util";
 const randomBytesAsync = promisify(crypto.randomBytes);
 import { eq, and, isNull } from "drizzle-orm";
 import { signToken, requireAuth } from "../lib/auth";
-import { LoginBody, RefreshBody } from "@workspace/api-zod";
+import { LoginBody, RefreshBody, ChangePasswordBody, PasswordSchema } from "@workspace/api-zod";
 import type { JwtPayload } from "../lib/auth";
 import type { Request } from "express";
+import { logAudit } from "../lib/audit";
 
 const router = Router();
 
@@ -44,12 +45,30 @@ router.post("/auth/login", loginLimiter, async (req, res): Promise<void> => {
     .where(and(eq(usersTable.username, username), isNull(usersTable.deletedAt)));
   if (!user) {
     req.log?.warn({ ip: req.ip, username, reason: "User not found or deleted" }, "Failed login attempt");
+    await logAudit(db, {
+      userId: null,
+      actorName: username,
+      action: "LOGIN_FAILURE",
+      entity: "auth",
+      entityId: null,
+      details: { reason: "User not found or deleted" },
+      ipAddress: req.ip,
+    });
     res.status(401).json({ error: "نام کاربری یا رمز عبور اشتباه است" });
     return;
   }
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) {
     req.log?.warn({ ip: req.ip, username, reason: "Invalid password" }, "Failed login attempt");
+    await logAudit(db, {
+      userId: user.id,
+      actorName: user.name,
+      action: "LOGIN_FAILURE",
+      entity: "auth",
+      entityId: String(user.id),
+      details: { reason: "Invalid password" },
+      ipAddress: req.ip,
+    });
     res.status(401).json({ error: "نام کاربری یا رمز عبور اشتباه است" });
     return;
   }
@@ -67,6 +86,16 @@ router.post("/auth/login", loginLimiter, async (req, res): Promise<void> => {
     expiresAt,
   });
 
+  await logAudit(db, {
+    userId: user.id,
+    actorName: user.name,
+    action: "LOGIN_SUCCESS",
+    entity: "auth",
+    entityId: String(user.id),
+    details: { username: user.username },
+    ipAddress: req.ip,
+  });
+
   req.log?.info({ ip: req.ip, username, userId: user.id }, "Successful login");
   res.json({ token, refreshToken: rawRefreshToken, user: { id: user.id, username: user.username, name: user.name, role: user.role, createdAt: user.createdAt.toISOString() } });
 });
@@ -82,7 +111,76 @@ router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
   res.json({ id: dbUser.id, username: dbUser.username, name: dbUser.name, role: dbUser.role, createdAt: dbUser.createdAt.toISOString() });
 });
 
-export default router;
+router.post("/auth/change-password", requireAuth, async (req, res): Promise<void> => {
+  const parsed = ChangePasswordBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const pwParsed = PasswordSchema.safeParse(parsed.data.newPassword);
+  if (!pwParsed.success) {
+    res.status(400).json({ error: pwParsed.error.errors[0]?.message || "Invalid new password" });
+    return;
+  }
+
+  const currentUser = (req as Request & { user: JwtPayload }).user;
+  const [dbUser] = await db
+    .select()
+    .from(usersTable)
+    .where(and(eq(usersTable.id, currentUser.id), isNull(usersTable.deletedAt)));
+
+  if (!dbUser) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+
+  const valid = await bcrypt.compare(parsed.data.currentPassword, dbUser.password);
+  if (!valid) {
+    await logAudit(db, {
+      userId: dbUser.id,
+      actorName: dbUser.name,
+      action: "PASSWORD_CHANGE_FAILURE",
+      entity: "auth",
+      entityId: String(dbUser.id),
+      details: { reason: "Current password incorrect" },
+      ipAddress: req.ip,
+    });
+    res.status(401).json({ error: "رمز عبور فعلی نادرست است" });
+    return;
+  }
+
+  const hashed = await bcrypt.hash(parsed.data.newPassword, 10);
+
+  await db.transaction(async (tx) => {
+    await tx
+      .update(usersTable)
+      .set({ password: hashed })
+      .where(eq(usersTable.id, dbUser.id));
+
+    await tx
+      .update(refreshTokensTable)
+      .set({ revokedAt: new Date() })
+      .where(
+        and(
+          eq(refreshTokensTable.userId, dbUser.id),
+          isNull(refreshTokensTable.revokedAt)
+        )
+      );
+
+    await logAudit(tx, {
+      userId: dbUser.id,
+      actorName: dbUser.name,
+      action: "PASSWORD_CHANGE",
+      entity: "user",
+      entityId: String(dbUser.id),
+      details: { success: true },
+      ipAddress: req.ip,
+    });
+  });
+
+  res.json({ success: true, message: "رمز عبور با موفقیت تغییر کرد" });
+});
 
 router.post("/auth/refresh", async (req, res): Promise<void> => {
   const parsed = RefreshBody.safeParse(req.body);
@@ -141,3 +239,5 @@ router.post("/auth/logout", requireAuth, async (req, res): Promise<void> => {
   }
   res.json({ status: "ok" });
 });
+
+export default router;

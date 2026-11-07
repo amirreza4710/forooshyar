@@ -4,6 +4,7 @@ import {
   useCreateCustomer,
   useUpdateCustomer,
   useDeleteCustomer,
+  getListCustomersQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -132,7 +133,7 @@ export default function CustomersPage() {
         { id: editing.id, data: values },
         {
           onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ["listCustomers"] });
+            qc.invalidateQueries({ queryKey: getListCustomersQueryKey() });
             toast({
               title: "مشتری ویرایش شد",
               description: "اطلاعات مشتری با موفقیت به‌روزرسانی شد.",
@@ -153,7 +154,7 @@ export default function CustomersPage() {
         { data: values },
         {
           onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ["listCustomers"] });
+            qc.invalidateQueries({ queryKey: getListCustomersQueryKey() });
             toast({
               title: "مشتری اضافه شد",
               description: "مشتری جدید با موفقیت ثبت شد.",
@@ -178,7 +179,7 @@ export default function CustomersPage() {
       { id: deleteId },
       {
         onSuccess: () => {
-          qc.invalidateQueries({ queryKey: ["listCustomers"] });
+          qc.invalidateQueries({ queryKey: getListCustomersQueryKey() });
           toast({
             title: "مشتری حذف شد",
             description: "مشتری با موفقیت از سیستم حذف شد.",

@@ -8,6 +8,7 @@
 
 export interface UserUpdate {
   name?: string;
+  phone?: string;
   role?: string;
   /** @nullable */
   password?: string | null;

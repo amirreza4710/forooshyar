@@ -7,6 +7,8 @@ import productsRouter from "./products";
 import ordersRouter from "./orders";
 import dashboardRouter from "./dashboard";
 import notificationsRouter from "./notifications";
+import settingsRouter from "./settings";
+import auditRouter from "./audit";
 import devSeedRouter from "./dev-seed";
 
 const router: IRouter = Router();
@@ -19,6 +21,8 @@ router.use(productsRouter);
 router.use(ordersRouter);
 router.use(dashboardRouter);
 router.use(notificationsRouter);
+router.use(settingsRouter);
+router.use(auditRouter);
 if (process.env.NODE_ENV !== "production") router.use(devSeedRouter);
 
 export default router;

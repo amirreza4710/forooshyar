@@ -31,6 +31,7 @@ export interface User {
   id: number;
   username: string;
   name: string;
+  phone?: string;
   role: string;
   createdAt?: string;
 }
@@ -56,11 +57,13 @@ export interface UserInput {
   username: string;
   password: string;
   name: string;
+  phone?: string;
   role: string;
 }
 
 export interface UserUpdate {
   name?: string;
+  phone?: string;
   role?: string;
   /** @nullable */
   password?: string | null;
@@ -185,4 +188,58 @@ export interface SalesChartPoint {
   label: string;
   value: number;
 }
+
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface SuccessResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface Settings {
+  id: number;
+  businessName: string;
+  phone: string;
+  address: string;
+  currency: string;
+  productCodePrefix: string;
+  customerCodePrefix: string;
+  orderCodePrefix: string;
+  updatedAt: string;
+}
+
+export interface SettingsUpdate {
+  businessName?: string;
+  phone?: string;
+  address?: string;
+  currency?: string;
+  productCodePrefix?: string;
+  customerCodePrefix?: string;
+  orderCodePrefix?: string;
+}
+
+export interface AuditLog {
+  id: number;
+  /** @nullable */
+  userId?: number | null;
+  /** @nullable */
+  actorName?: string | null;
+  action: string;
+  entity: string;
+  /** @nullable */
+  entityId?: string | null;
+  /** @nullable */
+  details?: string | null;
+  /** @nullable */
+  ipAddress?: string | null;
+  createdAt: string;
+}
+
+export type ListAuditLogsParams = {
+limit?: number;
+offset?: number;
+};
 

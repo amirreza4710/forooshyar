@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
 
 const router = Router();
-const role = "مدیر فروش / نماینده";
+const role = "مدیر عامل";
 
 router.post("/dev/seed-admin", async (req, res): Promise<void> => {
   if (process.env.NODE_ENV === "production") {

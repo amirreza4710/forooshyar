@@ -12,6 +12,8 @@ import {
 import { broadcast } from "../lib/notifications";
 import type { Request } from "express";
 import type { JwtPayload } from "../lib/auth";
+import { getOrCreateSettings } from "./settings";
+import { logAudit } from "../lib/audit";
 
 const router = Router();
 
@@ -154,14 +156,27 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
       })
       .returning();
 
+    const settings = await getOrCreateSettings(tx);
+    const prefix = settings?.orderCodePrefix || "ORD-";
+
     // The code comes from the row's own id, so it cannot be reused after a hard
     // delete and two concurrent creates cannot race onto the same code. The
     // previous `9000 + count + 1` generator did both (`code` is unique now).
     const [final] = await tx
       .update(ordersTable)
-      .set({ code: `ORD-${9000 + inserted.id}` })
+      .set({ code: `${prefix}${9000 + inserted.id}` })
       .where(eq(ordersTable.id, inserted.id))
       .returning();
+
+    await logAudit(tx, {
+      userId: user.id,
+      actorName: user.name,
+      action: "ORDER_CREATE",
+      entity: "order",
+      entityId: String(final!.id),
+      details: { code: final!.code, customerId, total },
+      ipAddress: req.ip || null,
+    });
 
     return final!;
   });
@@ -211,19 +226,36 @@ router.patch("/orders/:id", requireAuth, async (req, res): Promise<void> => {
     res.status(400).json({ error: body.error.message });
     return;
   }
-  const [order] = await db
-    .update(ordersTable)
-    .set(body.data)
-    .where(
-      and(eq(ordersTable.id, params.data.id), isNull(ordersTable.deletedAt)),
-    )
-    .returning();
+  const user = (req as Request & { user: JwtPayload }).user;
+
+  const order = await db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(ordersTable)
+      .set(body.data)
+      .where(
+        and(eq(ordersTable.id, params.data.id), isNull(ordersTable.deletedAt)),
+      )
+      .returning();
+    if (!updated) return null;
+
+    await logAudit(tx, {
+      userId: user.id,
+      actorName: user.name,
+      action: "ORDER_UPDATE",
+      entity: "order",
+      entityId: String(updated.id),
+      details: { code: updated.code, ...body.data },
+      ipAddress: req.ip || null,
+    });
+
+    return updated;
+  });
+
   if (!order) {
     res.status(404).json({ error: "Order not found" });
     return;
   }
 
-  const user = (req as Request & { user: JwtPayload }).user;
   if (body.data.status) {
     broadcast({
       type: "order_updated",
@@ -242,20 +274,37 @@ router.delete("/orders/:id", requireAuth, async (req, res): Promise<void> => {
     res.status(400).json({ error: "Invalid id" });
     return;
   }
+  const user = (req as Request & { user: JwtPayload }).user;
+
   // soft-delete: سفارش برای سابقه‌ی مالی و گزارش‌گیری نگه داشته میشه، فقط از لیست‌ها کنار میره
-  const [order] = await db
-    .update(ordersTable)
-    .set({ deletedAt: new Date() })
-    .where(
-      and(eq(ordersTable.id, params.data.id), isNull(ordersTable.deletedAt)),
-    )
-    .returning();
+  const order = await db.transaction(async (tx) => {
+    const [deleted] = await tx
+      .update(ordersTable)
+      .set({ deletedAt: new Date() })
+      .where(
+        and(eq(ordersTable.id, params.data.id), isNull(ordersTable.deletedAt)),
+      )
+      .returning();
+    if (!deleted) return null;
+
+    await logAudit(tx, {
+      userId: user.id,
+      actorName: user.name,
+      action: "ORDER_DELETE",
+      entity: "order",
+      entityId: String(deleted.id),
+      details: { code: deleted.code, customerName: deleted.customerName },
+      ipAddress: req.ip || null,
+    });
+
+    return deleted;
+  });
+
   if (!order) {
     res.status(404).json({ error: "Order not found" });
     return;
   }
 
-  const user = (req as Request & { user: JwtPayload }).user;
   broadcast({
     type: "order_deleted",
     message: `سفارش ${order.code} حذف شد`,

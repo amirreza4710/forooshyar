@@ -21,7 +21,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/orders":      "لیست سفارشات",
   "/products":    "کاتالوگ محصولات",
   "/customers":   "مشتریان",
-  "/users":       "تیم فروش",
+  "/users":       "مدیریت و تنظیمات",
   "/profile":     "پروفایل من",
 };
 
