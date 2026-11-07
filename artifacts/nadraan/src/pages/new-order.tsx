@@ -88,6 +88,7 @@ export default function NewOrderPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("همه");
   const [cart, setCart] = useState<CartItem[]>([]);
+  const cartMap = useMemo(() => new Map(cart.map((c) => [c.productId, c])), [cart]);
   const [customerId, setCustomerId] = useState<number | null>(null);
   const [customerSearch, setCustomerSearch] = useState("");
   const [customerDropdownOpen, setCustomerDropdownOpen] = useState(false);
@@ -629,7 +630,7 @@ export default function NewOrderPage() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
               {filteredProducts.map((p) => {
-                const inCart = cart.find((c) => c.productId === p.id);
+                const inCart = cartMap.get(p.id);
                 const stock = p.stock ?? 0;
                 const outOfStock = stock <= 0;
 

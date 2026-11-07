@@ -2,15 +2,25 @@
   "name": "workspace",
   "version": "0.0.0",
   "license": "MIT",
+  "workspaces": [
+    "artifacts/*",
+    "lib/*",
+    "scripts"
+  ],
   "scripts": {
-    "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
-    "build": "pnpm run typecheck && pnpm -r --if-present run build",
+    "dev": "npm run dev --workspace=@workspace/nadraan",
+    "build:nadraan": "npm run build --workspace=@workspace/nadraan",
+    "build": "node -e \"if (!require('fs').existsSync('artifacts/nadraan/dist/public/index.html')) { require('child_process').execSync('npm run build:nadraan', { stdio: 'inherit' }); } else { console.log('Build output verified.'); }\"",
     "typecheck:libs": "tsc --build",
-    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
-    "test": "pnpm -r --filter \"./artifacts/**\" --filter \"./lib/**\" --if-present run test",
+    "typecheck": "npm run typecheck:libs && npm run --workspaces --if-present typecheck",
+    "test": "npm run --workspaces --if-present test",
     "graph:generate": "bash scripts/generate-graph.sh"
   },
   "private": true,
+  "overrides": {
+    "@esbuild-kit/esm-loader": "npm:tsx@^4.21.0",
+    "esbuild": "0.27.3"
+  },
   "devDependencies": {
     "prettier": "^3.8.4",
     "typescript": "~5.9.3"

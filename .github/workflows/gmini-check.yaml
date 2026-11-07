@@ -1,0 +1,95 @@
+name: Gemini Fast Gate Check
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  # -----------------------------------------------------------
+  # مرحله ۱: اجرای تست‌ها و ثبت خروجی
+  # -----------------------------------------------------------
+  run-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          pip install google-genai pytest
+
+      - name: Run Tests
+        id: test_step
+        continue-on-error: true
+        run: |
+          pytest | tee test_output.log
+
+      # -----------------------------------------------------------
+      # مرحله ۲: ارزیابی سریع سیستم ۱ با مدل جیمینای
+      # -----------------------------------------------------------
+      - name: Triage Failure with Gemini (System 1)
+        id: gemini_triage
+        if: steps.test_step.outcome != 'success'
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python scripts/gemini_gate.py
+
+      # -----------------------------------------------------------
+      # مرحله ۳: گیت ارجاع و تفویض خودکار به جولز (System 2 Escalation)
+      # -----------------------------------------------------------
+      - name: Escalate to Jules Task
+        if: steps.test_step.outcome != 'success' && steps.gemini_triage.outputs.escalate_to_jules == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const category = process.env.TRIAGE_CATEGORY || 'unknown';
+            const confidence = process.env.TRIAGE_CONFIDENCE || '0.0';
+            const summary = process.env.TRIAGE_SUMMARY || 'شکست در تست نیازمند بازبینی کد';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            
+            const issueTitle = `[Jules Task] CI Triage Escalation: ${summary}`;
+            const issueBody = `### 🚨 ارجاع خطا از تریاژ سریع سیستم ۱ به جولز (System 2)\n\n` +
+              `- **دسته‌بندی خطا:** \`${category}\`\n` +
+              `- **درصد اطمینان ارزیابی:** \`${confidence}\`\n` +
+              `- **خلاصه گزارش:** ${summary}\n` +
+              `- **گزارش لاگ خطا:** [مشاهده اجرای اکشن](${runUrl})\n\n` +
+              `---\n\n` +
+              `#### ماموریت ایجنت جولز (@jules):\n` +
+              `1. فایل‌های مرتبط با رده \`${category}\` را بررسی و دیباگ کن.\n` +
+              `2. تست معیوب را اصلاح کن تا خروجی بیلد تیک سبز بگیرد.\n` +
+              `3. یک PR جهت بستن این تسک ارسال کن.`;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: issueTitle,
+              body: issueBody,
+              labels: ['jules-task', 'agent-escalation', `triage:${category}`]
+            });
+        env:
+          TRIAGE_CATEGORY: ${{ steps.gemini_triage.outputs.category }}
+          TRIAGE_CONFIDENCE: ${{ steps.gemini_triage.outputs.confidence }}
+          TRIAGE_SUMMARY: ${{ steps.gemini_triage.outputs.summary }}
+
+      # -----------------------------------------------------------
+      # مرحله ۴: سد امنیتی نهایی پایپ‌لاین
+      # -----------------------------------------------------------
+      - name: Final Pipeline Gate
+        if: steps.test_step.outcome != 'success'
+        run: |
+          echo "پایپ‌لاین به دلیل خطای تست متوقف شد و گزارش تریاژ به جولز تحویل داده شد."
+          exit 1

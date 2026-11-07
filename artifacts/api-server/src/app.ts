@@ -2,6 +2,7 @@ import express, { type Express, type ErrorRequestHandler } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
+import { requestId } from "./middleware/request-id";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
@@ -11,6 +12,8 @@ const app: Express = express();
 // address: the login limiter would share one bucket for every user and audit logs
 // would record the proxy instead of the caller.
 app.set("trust proxy", 1);
+
+app.use(requestId);
 
 app.use(
   pinoHttp({
@@ -37,7 +40,12 @@ let allowedOrigins: (string | RegExp)[] = process.env["CORS_ORIGIN"]
   : [];
 
 if (process.env["NODE_ENV"] !== "production" && allowedOrigins.length === 0) {
-  allowedOrigins = [/^http:\/\/localhost:\d+$/, /^http:\/\/127\.0\.0\.1:\d+$/];
+  allowedOrigins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost",
+    "http://127.0.0.1"
+  ];
 }
 
 app.use(cors({

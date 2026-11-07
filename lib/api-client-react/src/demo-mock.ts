@@ -42,7 +42,25 @@ export function createDemoMockResponse(
   const path = url.split("?")[0];
   let data: any = {};
 
-  if (path.includes("/api/dashboard/summary")) {
+  if (path.includes("/api/auth/me")) {
+    data = {
+      id: 1,
+      username: "امیررضا",
+      name: "امیررضا",
+      role: "admin",
+      createdAt: new Date().toISOString(),
+    };
+  } else if (path.includes("/api/notifications")) {
+    data = [
+      {
+        id: 1,
+        title: "سفارش جدید",
+        message: "سفارش شماره ۱۰۱ با موفقیت ثبت گردید.",
+        read: false,
+        createdAt: new Date().toISOString(),
+      },
+    ];
+  } else if (path.includes("/api/dashboard/summary")) {
     data = {
       totalOrders: 120,
       totalSales: 15000000,
@@ -51,14 +69,14 @@ export function createDemoMockResponse(
       recentOrders: [
         {
           id: 1,
-          customerName: "مشتری نمایشی ۱",
+          customerName: "فروشگاه نمونه ۱",
           totalAmount: 500000,
           status: "تایید شده",
           createdAt: new Date().toISOString(),
         },
         {
           id: 2,
-          customerName: "مشتری نمایشی ۲",
+          customerName: "سوپرمارکت امید",
           totalAmount: 1200000,
           status: "در انتظار",
           createdAt: new Date().toISOString(),
@@ -73,16 +91,37 @@ export function createDemoMockResponse(
     ];
   } else if (path.includes("/api/orders")) {
     if (method === "GET") {
-      data = [];
+      data = [
+        {
+          id: 1,
+          customerName: "فروشگاه نمونه ۱",
+          customerId: 1,
+          totalAmount: 500000,
+          status: "تایید شده",
+          createdAt: new Date().toISOString(),
+          items: [{ productId: 1, productName: "محصول نمونه الف", quantity: 10, unitPrice: 50000 }],
+        },
+      ];
     } else if (method === "POST") {
       data = { id: 999, status: "در انتظار" };
     }
   } else if (path.includes("/api/products")) {
-    data = [];
+    data = [
+      { id: 1, name: "روغن سرخ‌کردنی ۱.۵ لیتری", price: 180000, stock: 50, code: "PRD-01" },
+      { id: 2, name: "برنج طارم هاشمی ۱۰ کیلویی", price: 1250000, stock: 25, code: "PRD-02" },
+      { id: 3, name: "چای ممتاز خارجی ۵۰۰ گرمی", price: 340000, stock: 40, code: "PRD-03" },
+    ];
   } else if (path.includes("/api/customers")) {
-    data = [];
+    data = [
+      { id: 1, name: "فروشگاه نمونه ۱", phone: "09123456789", address: "تهران، خیابان ولیعصر", balance: 500000 },
+      { id: 2, name: "سوپرمارکت امید", phone: "09129876543", address: "مشهد، بلوار سجاد", balance: 1200000 },
+    ];
   } else if (path.includes("/api/users")) {
-    data = [];
+    data = [
+      { id: 1, username: "امیررضا", name: "امیررضا", role: "admin" },
+      { id: 2, username: "امیرمحمد", name: "امیرمحمد", role: "user" },
+      { id: 3, username: "حسام", name: "حسام", role: "user" },
+    ];
   }
 
   return new Response(JSON.stringify(data), {

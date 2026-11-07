@@ -1,4 +1,3 @@
-@import url("https://cdn.jsdelivr.net/fontsource/css/vazirmatn@latest/index.css");
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
