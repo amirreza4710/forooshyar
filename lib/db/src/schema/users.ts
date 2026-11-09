@@ -28,4 +28,5 @@ export const refreshTokensTable = pgTable("refresh_tokens", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
   userIdIdx: index("refresh_tokens_user_id_idx").on(table.userId),
+  tokenHashIdx: index("refresh_tokens_token_hash_idx").on(table.tokenHash),
 }));

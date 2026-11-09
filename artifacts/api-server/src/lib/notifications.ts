@@ -17,6 +17,19 @@ const clients = new Set<Response>();
 const history: AppNotification[] = [];
 const MAX_HISTORY = 100;
 
+// Heartbeat to keep SSE connections alive through reverse proxies (e.g. Nginx 60s timeout)
+if (process.env.NODE_ENV !== "test") {
+  setInterval(() => {
+    for (const client of clients) {
+      try {
+        client.write(": ping\n\n");
+      } catch {
+        clients.delete(client);
+      }
+    }
+  }, 30000).unref();
+}
+
 export function addClient(res: Response): void {
   clients.add(res);
 }
