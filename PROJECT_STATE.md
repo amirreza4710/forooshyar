@@ -277,3 +277,8 @@ Next action: Proceed to Phase A1 Operational Foundation.
   - اعمال گارد مسیرهای React (`App.tsx`) با هدایت خودکار بر اساس سطح دسترسی و پنهان‌سازی هوشمند منوهای سایدبار و نوبار موبایل.
   - پیاده‌سازی ماتریس تعاملی مجوزها و قوانین مدیریت سلسله‌مراتبی (امکان تخصیص و ویرایش فقط برای سطوح پایین‌تر از خود).
   - به‌روزرسانی کاربر مدیر پیش‌فرض به نقش «مدیر عامل» و هماهنگی کامل فرانت‌اند، بک‌اند و پایگاه داده.
+- **TASK-003: Hydra Agent Communication Protocol (ACP) Contracts (Active Milestone)**:
+  - پیاده‌سازی و استقرار قراردادهای تایپ‌اسکریپتی ۵ و اسکیماهای Zod برای پروتکل ارتباطی ایجنت‌های هیدرا در `@workspace/api-zod` (`lib/api-zod/src/hydra-acp.contract.ts`).
+  - تضمین عدم وجود کست‌های `any`، تفکیک نقش‌های ایجنتیک (President, Strategist, Architect, Auditor, Operator, System).
+  - تثبیت قانون سقف ۲ راند مناظره سنا (`HYDRA_MAX_DEBATE_ROUNDS = 2`) و ساختار رسیدهای اجرایی قطعی (`HydraExecutionReceipt`).
+  - Evidence: اجرای ۱۳ آزمون واحد با Vitest با نتیجه **۱۳ از ۱۳ پاس (۱۰۰٪)** در ۱۹ میلی‌ثانیه، بیلد موفقیت‌آمیز Vite فرانت‌اند با کد 0، و ثبت مستندات رسمی تحویل در `HANDOVER.md`.
