@@ -120,7 +120,7 @@ router.post("/auth/change-password", requireAuth, async (req, res): Promise<void
 
   const pwParsed = PasswordSchema.safeParse(parsed.data.newPassword);
   if (!pwParsed.success) {
-    res.status(400).json({ error: pwParsed.error.errors[0]?.message || "Invalid new password" });
+    res.status(400).json({ error: pwParsed.error.issues[0]?.message || "Invalid new password" });
     return;
   }
 

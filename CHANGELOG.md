@@ -13,6 +13,12 @@ All notable changes to this project will be documented in this file.
   - Added `./hydra-acp` subpath export in `lib/api-zod/package.json` and root re-export in `lib/api-zod/src/index.ts`.
   - Added `HANDOVER.md` documentation detailing verification steps and contract signatures.
 
+### Fixed
+- **Typecheck & Monorepo Code Health (Zero-Error Baseline):**
+  - Resolved TypeScript error TS2339 in `artifacts/api-server/src/routes/auth.ts` by aligning Zod error handling to `pwParsed.error.issues[0]?.message`.
+  - Removed dangling table cells referencing undefined variable `o` inside the skeleton loading row in `artifacts/nadraan/src/pages/orders.tsx`.
+  - Confirmed 100% clean typecheck (`pnpm run typecheck`) across all workspaces (`@workspace/api-server`, `@workspace/nadraan`, `@workspace/scripts`, and `lib/`).
+
 ### Known issues
 - The API test suite is intermittently flaky **inside the container** (roughly 3 in 10 runs): a test fails with `Test timed out` or `Hook timed out`, never with an assertion error, and the affected test moves between runs. The host and CI (which runs the suite on the runner against a service container) have been stable across 9 consecutive runs. Tracked as `OPEN-1` in `PROJECT_STATE.md`; only Sprint 0 gate 3 is affected.
 - `artifacts/api-server/src/routes/orders.test.ts` and `soft-delete.test.ts` used to call `pool.end()` in `afterAll` on the module-level pool shared by every test file in a worker; that was removed.

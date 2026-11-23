@@ -246,6 +246,6 @@ What changed: ADR-010 و ADR-011، قابلیت‌های بازارک و نام 
 
 Evidence: `docs/ADR/ADR-010.md`، `docs/ADR/ADR-011.md`، `docs/01_PRD/FOROOSHYAR_PLUS_INTEGRATION.md` و سند تحویل `HANDOVER.md` به همراه ۱۳ تست واحد سبز (`13 passed` در Vitest).
 
-Remaining blockers: برطرف‌سازی خطاهای Typecheck ناشی از بدهی فنی در `api-server` و `nadraan` (مربوط به TASK-002) جهت رساندن کل مونو‌ریپو به صفر ارور.
+Remaining blockers: هیچ خطای بلاک‌کننده‌ای وجود ندارد؛ کلیه خطاهای Typecheck مونو‌ریپو با موفقیت برطرف شده و نتیجه `pnpm run typecheck` با کد ۰ کامل تایید شد.
 
-Next action: تکمیل خط لوله خودکار انطباق مستندات (Docs Compliance Workflow) و سپس ادغام برنچ `feat/task-003-hydra-acp-contract`.
+Next action: بررسی و تایید ادغام برنچ در گیت‌هاب (PR Review & Merge) و شروع تسک TASK-004 در فاز A1.

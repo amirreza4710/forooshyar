@@ -410,21 +410,6 @@ export default function OrdersPage() {
                       ))}
                     </div>
                   </td>
-                  <td className="px-3 sm:px-4 py-3 font-mono text-xs text-muted-foreground whitespace-nowrap">{o.code}</td>
-                  <td className="px-3 sm:px-4 py-3 font-medium text-sm whitespace-nowrap">{o.customerName}</td>
-                  <td className="px-3 sm:px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{o.repName}</td>
-                  <td className="px-3 sm:px-4 py-3 font-bold text-sm whitespace-nowrap tabular-nums">{n(o.total ?? 0)}</td>
-                  <td className="px-3 sm:px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{formatDate(o.createdAt ?? "")}</td>
-                  <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
-                    <select
-                      value={o.status ?? "در انتظار"}
-                      onChange={e => updateOrder.mutate({ id: o.id, data: { status: e.target.value as OrderUpdateStatus } })}
-                      className={`text-xs px-2.5 py-1.5 rounded-full border font-medium focus:outline-none cursor-pointer transition-colors min-h-[32px] ${STATUS_STYLE[o.status ?? "در انتظار"] ?? "bg-muted text-muted-foreground border-border"}`}
-                      aria-label={`وضعیت سفارش ${o.code}`}
-                    >
-                      {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </td>
                 </tr>
               ) : (
                 paginated.map((o) => (
