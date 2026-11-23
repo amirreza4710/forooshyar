@@ -1,13 +1,23 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { getToken, getUser, saveAuth, clearAuth, isAuthenticated, AuthUser } from "./auth";
+
+let storage: Record<string, string> = {};
+const localStorageMock = {
+  getItem: (key: string) => storage[key] ?? null,
+  setItem: (key: string, value: string) => { storage[key] = String(value); },
+  removeItem: (key: string) => { delete storage[key]; },
+  clear: () => { storage = {}; },
+};
+
+vi.stubGlobal("localStorage", localStorageMock);
 
 describe("auth localStorage wrappers", () => {
   beforeEach(() => {
-    localStorage.clear();
+    localStorageMock.clear();
   });
 
   afterEach(() => {
-    localStorage.clear();
+    localStorageMock.clear();
   });
 
   describe("getToken", () => {
