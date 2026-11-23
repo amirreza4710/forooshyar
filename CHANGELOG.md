@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- **Phase A1 Operational Foundation Completion & Freeze:**
+  - Resolved and verified all 3 open decisions (D1 Basic Settings, D2 Self-service Password Change, D3 Audit Enabler).
+  - Hardened `POST /api/auth/change-password` route with identical-password rejection, active refresh token revocation, transactional audit logging, and Persian error messaging.
+  - Added unit test in `src/routes/auth.test.ts` verifying rejection (400) when new password matches current password.
+  - Verified dynamic prefix resolution from `settingsTable` (`productCodePrefix`, `customerCodePrefix`, `orderCodePrefix`) in product, customer, and order creation transactions.
+  - Updated and approved `docs/01_PRD/A1-Acceptance-Criteria.md` as 100% passed and frozen.
+
+### Added
 - **TASK-003: Hydra Agent Communication Protocol (ACP) Contracts:**
   - Defined strict TypeScript 5.x contracts and Zod validation schemas in `@workspace/api-zod` (`lib/api-zod/src/hydra-acp.contract.ts`).
   - Implemented discriminated union protocol events (`HYDRA_INTENT_PROPOSED`, `HYDRA_DEBATE_ROUND_COMPLETED`, `HYDRA_EXECUTION_DECIDED`).

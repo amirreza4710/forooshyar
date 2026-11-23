@@ -2,15 +2,15 @@
 
 > این فایل Operational Status (وضعیت اجرایی) پروژه است. هر Agent باید قبل از شروع کار آن را بخواند و بعد از هر اقدام مهم، وضعیت خود را با **What changed / Evidence / Remaining blockers / Next action** به‌روزرسانی کند. اگر چیزی واقعاً اجرا نشده، مقدار آن `PENDING` یا `UNVERIFIED` است، نه `PASS`.
 
-**آخرین آپدیت:** ۲۳ نوامبر ۲۰۲۶ — پیاده‌سازی و اعتبارسنجی قراردادهای Hydra ACP (TASK-003) و به‌روزرسانی مستندات سیستم
+**آخرین آپدیت:** ۲۳ نوامبر ۲۰۲۶ — تکمیل و فریز رسمی فاز A1 (Operational Foundation) و آماده‌سازی فاز A2
 
 ---
 
 ## 1. خلاصه اجرایی
 
-پروژه در وضعیت **Checkpoint 1.7 — Engineering Foundation Ready (Frozen)** و Workstream فعال **A1 — Operational Foundation** قرار دارد.
+پروژه در وضعیت **Checkpoint A1 — Operational Foundation (Approved & Frozen)** قرار دارد و Workstream بعدی **A2 — Sales & Field Core** آماده اجرا است.
 
-ADR-010 قابلیت‌های بازارک را در محصول فروشیار پلاس ادغام کرده و ADR-011 نام رسمی محصول را تثبیت کرده است. Backlog فعال 14 Epic و 41 Feature است؛ baseline v2.4 با 32 Feature به‌صورت تاریخی frozen باقی می‌ماند.
+کلیه ۱۲ فیچر عملیاتی فاز A1 (`AUTH-F01..F03`، `SET-F01..F03`، `PRD-F01..F03`، `CUS-F01..F03`) به همراه `AUD-ENABLER` در سند `docs/01_PRD/A1-Acceptance-Criteria.md` با شواهد عینی تست‌ها تایید و فریز شدند. همچنین قراردادهای پروتکل ارتباطی ایجنت‌های هیدرا (TASK-003) ادغام و مستقر گردید.
 
 ---
 
@@ -242,10 +242,10 @@ Next action:
 14. Freeze Checkpoint 1.7 only if all gates PASS
 ```
 
-What changed: ADR-010 و ADR-011، قابلیت‌های بازارک و نام فروشیار پلاس را ثبت کردند؛ Roadmap و وضعیت‌ها با A1 و backlog 41-feature هم‌راستا شدند. همچنین در تسک TASK-003، قراردادهای پروتکل ارتباطی ایجنت‌ها (Hydra ACP) به صورت کامل در پکیج `@workspace/api-zod` پیاده‌سازی و تست شد.
+What changed: تکمیل و فریز رسمی فاز A1 (Operational Foundation)؛ سخت‌سازی امنیتی روت تغییر رمز عبور توسط خود کاربر (`POST /api/auth/change-password`) با منع رمز مشابه و ابطال توکن‌های فعال، اعتبارسنجی پیوند داینامیک پیشوندهای تنظیمات پایه (`settingsTable`) در ایجاد کالا، مشتری و سفارش، به‌روزرسانی و تصویب سند `docs/01_PRD/A1-Acceptance-Criteria.md` به وضعیت تایید و فریز کامل (۱۰۰٪ پاس).
 
-Evidence: `docs/ADR/ADR-010.md`، `docs/ADR/ADR-011.md`، `docs/01_PRD/FOROOSHYAR_PLUS_INTEGRATION.md` و سند تحویل `HANDOVER.md` به همراه ۱۳ تست واحد سبز (`13 passed` در Vitest).
+Evidence: اجرای کامل تایپ‌چک با ۰ خطا در سراسر مونو‌ریپو (`pnpm run typecheck` با کد ۰)، ۱۱ تست سبز در `auth.test.ts`، ۵ تست سبز در `settings.test.ts`، ۳ تست سبز در `audit.test.ts`، ۱۳ تست سبز قراردادهای هیدرا در `hydra-acp.contract.test.ts`، و بیلد موفق کلاینت در ۱۳.۸ ثانیه.
 
-Remaining blockers: هیچ خطای بلاک‌کننده‌ای وجود ندارد؛ کلیه خطاهای Typecheck مونو‌ریپو با موفقیت برطرف شده و نتیجه `pnpm run typecheck` با کد ۰ کامل تایید شد.
+Remaining blockers: هیچ خطای بلاک‌کننده‌ای وجود ندارد؛ وضعیت گیت‌های A1 کاملاً سبز و تثبیت‌شده است.
 
-Next action: بررسی و تایید ادغام برنچ در گیت‌هاب (PR Review & Merge) و شروع تسک TASK-004 در فاز A1.
+Next action: آغاز فاز A2 (Sales & Field Core: مسیر ویزیت تا ثبت سفارش و دستاورد تارگت فروش ORD-F01..F03 / TAR-F01..F02 / VIS-F01..F03) و آماده‌سازی موتور ران‌تایم دیسپچر هیدرا (TASK-004).
