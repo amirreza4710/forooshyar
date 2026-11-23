@@ -237,6 +237,27 @@ describe("Auth Routes", () => {
       expect(res.body.error).toContain("رمز عبور فعلی نادرست است");
     });
 
+    it("should return 400 when new password is identical to current password", async () => {
+      const mockSelect = {
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockResolvedValue([user])
+      };
+      (db.select as any).mockReturnValue(mockSelect);
+
+      // Both comparisons return true: current is valid, but new is also identical to current
+      vi.spyOn(bcrypt, "compare")
+        .mockResolvedValueOnce(true as never)
+        .mockResolvedValueOnce(true as never);
+
+      const res = await request(app)
+        .post("/api/auth/change-password")
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({ currentPassword: "OldPassword123!", newPassword: "OldPassword123!" });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toContain("یکسان باشد");
+    });
+
     it("should return 200 on valid current password, update password, and revoke active refresh tokens", async () => {
       const mockSelect = {
         from: vi.fn().mockReturnThis(),
@@ -244,7 +265,9 @@ describe("Auth Routes", () => {
       };
       (db.select as any).mockReturnValue(mockSelect);
 
-      vi.spyOn(bcrypt, "compare").mockResolvedValue(true as never);
+      vi.spyOn(bcrypt, "compare")
+        .mockResolvedValueOnce(true as never)
+        .mockResolvedValueOnce(false as never);
 
       const updateWhereMock = vi.fn().mockResolvedValue([{ id: 1 }]);
       const updateSetMock = vi.fn().mockReturnValue({ where: updateWhereMock });

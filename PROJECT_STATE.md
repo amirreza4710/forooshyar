@@ -9,18 +9,18 @@
 - **Internal Vision:** Domain-Driven Business Operating Platform
 - **Architecture:** Modular Monolith با Bounded Contextهای روشن
 - **Authoritative Stack:** React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, OpenAPI
-- **Current Official Checkpoint:** **1.7 — Engineering Foundation Ready (Approved & Frozen)**
-- **Next Checkpoint:** **A1 — Operational Foundation**
-- **Current Workstream:** Phase A1 — Operational Foundation
+- **Current Official Checkpoint:** **A1 — Operational Foundation (Approved & Frozen)**
+- **Next Checkpoint:** **A2 — Sales & Field Core**
+- **Current Workstream:** Phase A2 — Sales & Field Core (Preparation)
 - **MVP Scope:** Frozen
 - **MVP Backlog:** 14 Epic و 41 Feature متعهد (ADR-010)
 - **Frozen v2.4 baseline:** 11 Epic و 32 Feature
-- **Status:** PHASE A1 ACTIVE
-- **A1 Acceptance Criteria:** `docs/01_PRD/A1-Acceptance-Criteria.md` (۳ تصمیم باز: D1 محتوای تنظیمات، D2 تغییر رمز توسط کاربر، D3 Audit)
+- **Status:** PHASE A1 FROZEN / PHASE A2 PREPARATION
+- **A1 Acceptance Criteria:** `docs/01_PRD/A1-Acceptance-Criteria.md` (هر ۱۲ فیچر + Audit Enabler کامل، ۱۰۰٪ پاس و فریز شدند)
 
 ## Execution Rule
 
-Checkpoint 1.7 is Frozen. Development for Phase A1 can proceed.
+Checkpoint A1 is Frozen. Development for Phase A2 can proceed.
 
 فقط **یک Workstream اجرایی** در هر لحظه فعال است. هر Agent قبل از شروع کار باید این فایل را بخواند و پس از پایان هر اقدام مهم، وضعیت، Evidence، Blocker و Next Action را در همین فایل و در صورت لزوم `PROJECT_STATUS.md` ثبت کند.
 
@@ -148,8 +148,8 @@ Design Partner Pilot
 | 1.6 | MVP Delivery Ready | FROZEN | قبلاً تأیید شده |
 | S0 | Target Environment Verification | FROZEN | هر ۸ Gate با Evidence |
 | 1.7 | Engineering Foundation Ready | FROZEN | Gateهای S0 پاس شوند |
-| A1 | Operational Foundation | ACTIVE | 12 Feature + Exit Gate |
-| A2 | Sales & Field Core | NOT STARTED | 8 Feature + Visit → Order E2E |
+| A1 | Operational Foundation | FROZEN | 12 Feature + Audit Enabler (پاس کامل) |
+| A2 | Sales & Field Core | READY | 8 Feature + Visit → Order E2E |
 | A3 | Performance, Cash & Automation | NOT STARTED | 15 Feature + traceability |
 | A4 | Decision Layer | NOT STARTED | Dashboard/Report operational |
 | A5 | Stabilization | NOT STARTED | Critical/High صفر یا accepted |
@@ -282,3 +282,10 @@ Next action: Proceed to Phase A1 Operational Foundation.
   - تضمین عدم وجود کست‌های `any`، تفکیک نقش‌های ایجنتیک (President, Strategist, Architect, Auditor, Operator, System).
   - تثبیت قانون سقف ۲ راند مناظره سنا (`HYDRA_MAX_DEBATE_ROUNDS = 2`) و ساختار رسیدهای اجرایی قطعی (`HydraExecutionReceipt`).
   - Evidence: اجرای ۱۳ آزمون واحد با Vitest با نتیجه **۱۳ از ۱۳ پاس (۱۰۰٪)** در ۱۹ میلی‌ثانیه، بیلد موفقیت‌آمیز Vite فرانت‌اند با کد 0، و ثبت مستندات رسمی تحویل در `HANDOVER.md`.
+- **Phase A1 Operational Foundation Completion & Official Freeze (Approved & Frozen)**:
+  - حل و اعتبارسنجی ۳ تصمیم باز (D1 تنظیمات پایه، D2 تغییر رمز عبور توسط خود کاربر، D3 ممیزی و Audit Enabler).
+  - پیاده‌سازی و سخت‌سازی امنیتی روت `POST /api/auth/change-password` همراه با رد رمزهای تکراری، ابطال توکن‌های فعال، اعتبارسنجی فارسی، لاگ ممیزی و دیالوگ اختصاصی در `profile.tsx`.
+  - اعتبارسنجی و پیوند داینامیک پیشوندهای کدگذاری محصول (`productCodePrefix`)، مشتری (`customerCodePrefix`) و سفارش (`orderCodePrefix`) از جدول `settingsTable` در تراکنش‌های دیتابیس.
+  - به‌روزرسانی سند معیار پذیرش `docs/01_PRD/A1-Acceptance-Criteria.md` به وضعیت تایید و فریز کامل (۱۰۰٪ پاس).
+  - Evidence: آزمون‌های تایپ‌چک سراسری با کد 0 و بدون خطا، ۱۱ تست احراز هویت پاس‌شده در `auth.test.ts`، ۵ تست تنظیمات پاس‌شده در `settings.test.ts`، ۳ تست ممیزی پاس‌شده در `audit.test.ts`، بیلد کامل فرانت‌اند در ۱۳.۸ ثانیه.
+  - وضعیت خروج: گیت A1 با موفقیت عبور کرد و فریز شد؛ فاز بعدی A2 (Sales & Field Core) آماده استارت است.
