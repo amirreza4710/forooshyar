@@ -150,8 +150,7 @@ router.post("/auth/change-password", requireAuth, async (req, res): Promise<void
     return;
   }
 
-  const isSame = await bcrypt.compare(parsed.data.newPassword, dbUser.password);
-  if (isSame) {
+  if (parsed.data.currentPassword === parsed.data.newPassword) {
     res.status(400).json({ error: "رمز عبور جدید نمی‌تواند با رمز عبور فعلی یکسان باشد" });
     return;
   }
