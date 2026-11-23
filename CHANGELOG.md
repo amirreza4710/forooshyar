@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
+
+### Added
+- **TASK-003: Hydra Agent Communication Protocol (ACP) Contracts:**
+  - Defined strict TypeScript 5.x contracts and Zod validation schemas in `@workspace/api-zod` (`lib/api-zod/src/hydra-acp.contract.ts`).
+  - Implemented discriminated union protocol events (`HYDRA_INTENT_PROPOSED`, `HYDRA_DEBATE_ROUND_COMPLETED`, `HYDRA_EXECUTION_DECIDED`).
+  - Enforced 2-round Senate debate cap invariant (`HYDRA_MAX_DEBATE_ROUNDS = 2`) and deterministic multi-tenant headers.
+  - Added 13 Vitest unit tests covering envelopes, headers, debate rounds, receipts, and event schemas (`lib/api-zod/src/hydra-acp.contract.test.ts` - 100% pass).
+  - Added `./hydra-acp` subpath export in `lib/api-zod/package.json` and root re-export in `lib/api-zod/src/index.ts`.
+  - Added `HANDOVER.md` documentation detailing verification steps and contract signatures.
+
+### Fixed
+- **Typecheck & Monorepo Code Health (Zero-Error Baseline):**
+  - Resolved TypeScript error TS2339 in `artifacts/api-server/src/routes/auth.ts` by aligning Zod error handling to `pwParsed.error.issues[0]?.message`.
+  - Removed dangling table cells referencing undefined variable `o` inside the skeleton loading row in `artifacts/nadraan/src/pages/orders.tsx`.
+  - Confirmed 100% clean typecheck (`pnpm run typecheck`) across all workspaces (`@workspace/api-server`, `@workspace/nadraan`, `@workspace/scripts`, and `lib/`).
+- **CI Test Suite & Agent Boundary Compliance:**
+  - Reverted `.github/workflows/docs.yml` to adhere strictly to `agent-microtask-gate` scope boundaries (which bans modifying `.github/` files).
+  - Fixed `customFetch` in `@workspace/api-client-react` to guard demo-mock fallbacks behind `isDemo`, ensuring HTTP error statuses properly throw `ApiError`.
+  - Aligned `dashboard.test.ts` in `@workspace/api-server` to mock Drizzle `db.select` instead of obsolete `db.execute`.
+  - Added `localStorage` stub in `auth.test.ts` for Node 22 testing compatibility.
+  - Added `PyYAML>=6.0` to `requirements.txt` to satisfy Python test suite dependencies (`test_docker_empirical.py`) in CI.
+
 ### Known issues
 - The API test suite is intermittently flaky **inside the container** (roughly 3 in 10 runs): a test fails with `Test timed out` or `Hook timed out`, never with an assertion error, and the affected test moves between runs. The host and CI (which runs the suite on the runner against a service container) have been stable across 9 consecutive runs. Tracked as `OPEN-1` in `PROJECT_STATE.md`; only Sprint 0 gate 3 is affected.
 - `artifacts/api-server/src/routes/orders.test.ts` and `soft-delete.test.ts` used to call `pool.end()` in `afterAll` on the module-level pool shared by every test file in a worker; that was removed.

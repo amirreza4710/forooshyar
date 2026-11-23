@@ -1,5 +1,6 @@
 export * from "./generated/api";
 export * as Types from "./generated/types/index";
+export * from "./hydra-acp.contract";
 
 import { z } from "zod";
 export const PasswordSchema = z

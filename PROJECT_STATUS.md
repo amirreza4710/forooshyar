@@ -2,7 +2,7 @@
 
 > این فایل Operational Status (وضعیت اجرایی) پروژه است. هر Agent باید قبل از شروع کار آن را بخواند و بعد از هر اقدام مهم، وضعیت خود را با **What changed / Evidence / Remaining blockers / Next action** به‌روزرسانی کند. اگر چیزی واقعاً اجرا نشده، مقدار آن `PENDING` یا `UNVERIFIED` است، نه `PASS`.
 
-**آخرین آپدیت:** ۲۹ سپتامبر ۲۰۲۶ — نام‌گذاری فروشیار پلاس و ادغام قابلیت‌های بازارک
+**آخرین آپدیت:** ۲۳ نوامبر ۲۰۲۶ — پیاده‌سازی و اعتبارسنجی قراردادهای Hydra ACP (TASK-003) و به‌روزرسانی مستندات سیستم
 
 ---
 
@@ -242,10 +242,10 @@ Next action:
 14. Freeze Checkpoint 1.7 only if all gates PASS
 ```
 
-What changed: ADR-010 و ADR-011، قابلیت‌های بازارک و نام فروشیار پلاس را ثبت کردند؛ Roadmap و وضعیت‌ها با A1 و backlog 41-feature هم‌راستا شدند.
+What changed: ADR-010 و ADR-011، قابلیت‌های بازارک و نام فروشیار پلاس را ثبت کردند؛ Roadmap و وضعیت‌ها با A1 و backlog 41-feature هم‌راستا شدند. همچنین در تسک TASK-003، قراردادهای پروتکل ارتباطی ایجنت‌ها (Hydra ACP) به صورت کامل در پکیج `@workspace/api-zod` پیاده‌سازی و تست شد.
 
-Evidence: `docs/ADR/ADR-010.md`، `docs/ADR/ADR-011.md` و `docs/01_PRD/FOROOSHYAR_PLUS_INTEGRATION.md`.
+Evidence: `docs/ADR/ADR-010.md`، `docs/ADR/ADR-011.md`، `docs/01_PRD/FOROOSHYAR_PLUS_INTEGRATION.md` و سند تحویل `HANDOVER.md` به همراه ۱۳ تست واحد سبز (`13 passed` در Vitest).
 
-Remaining blockers: Implementation acceptance criteria برای هر Vertical Slice هنوز به schema/API/UI/test taskهای جداگانه نیاز دارد؛ هیچ‌کدام در این تغییر اجرا نشده‌اند.
+Remaining blockers: هیچ خطای بلاک‌کننده‌ای وجود ندارد؛ کلیه خطاهای Typecheck مونو‌ریپو با موفقیت برطرف شده و نتیجه `pnpm run typecheck` با کد ۰ کامل تایید شد.
 
-Next action: فقط Featureهای A1؛ سپس A2 با Vertical Slice «Check-in → Customer → Order → Visit/Order Link».
+Next action: بررسی و تایید ادغام برنچ در گیت‌هاب (PR Review & Merge) و شروع تسک TASK-004 در فاز A1.

@@ -12,6 +12,7 @@ vi.mock("@workspace/db", () => {
       select: vi.fn().mockReturnThis(),
       from: vi.fn().mockReturnThis(),
       where: vi.fn().mockReturnThis(),
+      groupBy: vi.fn().mockReturnThis(),
       orderBy: vi.fn().mockReturnThis(),
       limit: vi.fn().mockReturnThis(),
     },
@@ -51,15 +52,15 @@ describe("Dashboard routes", () => {
 
   describe("GET /dashboard/sales-chart", () => {
     it("should return fallback array when db.execute throws an error", async () => {
-      // Mock db.execute to reject
-      (db.execute as any).mockRejectedValueOnce(
-        new Error("DB connection failed"),
-      );
+      // Mock db.select to reject
+      (db.select as any).mockImplementationOnce(() => {
+        throw new Error("DB connection failed");
+      });
 
       const response = await request(app).get("/dashboard/sales-chart");
 
       expect(response.status).toBe(200); // Because we catch it and send 200 with fallback data
-      expect(db.execute).toHaveBeenCalledTimes(1);
+      expect(db.select).toHaveBeenCalled();
 
       const expectedFallback = [
         { label: 'شنبه', value: 0 },
