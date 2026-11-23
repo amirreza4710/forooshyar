@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
   - Fixed `customFetch` in `@workspace/api-client-react` to guard demo-mock fallbacks behind `isDemo`, ensuring HTTP error statuses properly throw `ApiError`.
   - Aligned `dashboard.test.ts` in `@workspace/api-server` to mock Drizzle `db.select` instead of obsolete `db.execute`.
   - Added `localStorage` stub in `auth.test.ts` for Node 22 testing compatibility.
+  - Added `PyYAML>=6.0` to `requirements.txt` to satisfy Python test suite dependencies (`test_docker_empirical.py`) in CI.
 
 ### Known issues
 - The API test suite is intermittently flaky **inside the container** (roughly 3 in 10 runs): a test fails with `Test timed out` or `Hook timed out`, never with an assertion error, and the affected test moves between runs. The host and CI (which runs the suite on the runner against a service container) have been stable across 9 consecutive runs. Tracked as `OPEN-1` in `PROJECT_STATE.md`; only Sprint 0 gate 3 is affected.
