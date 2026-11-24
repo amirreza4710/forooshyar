@@ -8,12 +8,13 @@
     "scripts"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace=@workspace/nadraan",
-    "build:nadraan": "npm run build --workspace=@workspace/nadraan",
-    "build": "node -e \"if (!require('fs').existsSync('artifacts/nadraan/dist/public/index.html')) { require('child_process').execSync('npm run build:nadraan', { stdio: 'inherit' }); } else { console.log('Build output verified.'); }\"",
+    "dev": "pnpm --filter @workspace/nadraan run dev",
+    "build:nadraan": "pnpm --filter @workspace/nadraan run build",
+    "build": "node -e \"if (!require('fs').existsSync('artifacts/nadraan/dist/public/index.html')) { require('child_process').execSync('pnpm run build:nadraan', { stdio: 'inherit' }); } else { console.log('Build output verified.'); }\"",
     "typecheck:libs": "tsc --build",
-    "typecheck": "npm run typecheck:libs && npm run --workspaces --if-present typecheck",
-    "test": "npm run --workspaces --if-present test",
+    "typecheck": "pnpm run typecheck:libs && pnpm run --recursive --if-present typecheck",
+    "test:libs": "pnpm --filter \"./lib/*\" test",
+    "test": "pnpm run --recursive --if-present test",
     "graph:generate": "bash scripts/generate-graph.sh"
   },
   "private": true,

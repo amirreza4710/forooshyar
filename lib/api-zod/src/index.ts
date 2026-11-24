@@ -1,6 +1,9 @@
 export * from "./generated/api";
 export * as Types from "./generated/types/index";
 export * from "./hydra-acp.contract";
+export * from "./model-routing.schema";
+export * from "./model-selector";
+export type { RefreshResponse } from "./generated/types/refreshResponse";
 
 import { z } from "zod";
 export const PasswordSchema = z
@@ -9,3 +12,4 @@ export const PasswordSchema = z
   .regex(/[a-z]/, "Password must contain at least one lowercase letter")
   .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
   .regex(/[0-9]/, "Password must contain at least one number");
+export * from './generated/types';

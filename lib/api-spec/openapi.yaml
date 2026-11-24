@@ -13,6 +13,7 @@ tags:
   - name: customers
   - name: products
   - name: orders
+  - name: visits
   - name: dashboard
   - name: settings
   - name: audit
@@ -447,6 +448,219 @@ paths:
               schema:
                 $ref: "#/components/schemas/Order"
 
+  # ─── VISITS ───
+  /visits:
+    get:
+      operationId: listVisits
+      tags: [visits]
+      summary: List field visits
+      parameters:
+        - name: customerId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of visits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Visit"
+    post:
+      operationId: createVisit
+      tags: [visits]
+      summary: Start a customer visit (Check-in)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VisitInput"
+      responses:
+        "201":
+          description: Created visit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Visit"
+
+  /visits/stats/summary:
+    get:
+      operationId: getVisitsSummary
+      tags: [visits]
+      summary: Get visits summary and conversion rate
+      responses:
+        "200":
+          description: Visits summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VisitsSummary"
+
+  /visits/{id}:
+    get:
+      operationId: getVisit
+      tags: [visits]
+      summary: Get visit detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Visit detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Visit"
+    patch:
+      operationId: updateVisit
+      tags: [visits]
+      summary: Complete or update a visit (Check-out and outcome)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VisitUpdate"
+      responses:
+        "200":
+          description: Updated visit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Visit"
+
+  # ─── TARGETS (TAR-F01..F02) ───
+  /targets:
+    get:
+      operationId: listTargets
+      tags: [targets]
+      summary: List visitor sales targets
+      parameters:
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: targetType
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of targets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Target"
+    post:
+      operationId: createTarget
+      tags: [targets]
+      summary: Create a sales target for a sales representative
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TargetInput"
+      responses:
+        "201":
+          description: Created target
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Target"
+
+  /targets/stats/summary:
+    get:
+      operationId: getTargetsSummary
+      tags: [targets]
+      summary: Get overall targets performance and achievement summary
+      responses:
+        "200":
+          description: Targets summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TargetsSummary"
+
+  /targets/{id}:
+    get:
+      operationId: getTarget
+      tags: [targets]
+      summary: Get target detail with computed achievement metrics
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Target detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Target"
+    patch:
+      operationId: updateTarget
+      tags: [targets]
+      summary: Update a sales target
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TargetUpdate"
+      responses:
+        "200":
+          description: Updated target
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Target"
+
   # ─── DASHBOARD ───
   /dashboard/summary:
     get:
@@ -693,6 +907,12 @@ components:
           type: string
         address:
           type: ["string", "null"]
+        creditLimit:
+          type: integer
+          description: سقف اعتبار مشتری به ریال
+        balance:
+          type: integer
+          description: مانده بدهی جاری مشتری به ریال
         createdAt:
           type: string
 
@@ -706,6 +926,9 @@ components:
           type: string
         address:
           type: string
+        creditLimit:
+          type: integer
+          description: سقف اعتبار مشتری به ریال
 
     CustomerUpdate:
       type: object
@@ -716,6 +939,10 @@ components:
           type: string
         address:
           type: ["string", "null"]
+        creditLimit:
+          type: integer
+        balance:
+          type: integer
 
     # ── Product ──
     Product:
@@ -804,6 +1031,9 @@ components:
           type: ["integer", "null"]
         repName:
           type: string
+        visitId:
+          type: ["integer", "null"]
+          description: شناسه ویزیت متصل
         total:
           type: integer
         status:
@@ -822,6 +1052,9 @@ components:
       properties:
         customerId:
           type: integer
+        visitId:
+          type: integer
+          description: شناسه ویزیت اختیاری جهت اتصال سفارش به ویزیت جاری
         items:
           type: array
           items:
@@ -942,3 +1175,195 @@ components:
           type: ["string", "null"]
         createdAt:
           type: string
+
+    VisitInput:
+      type: object
+      required: [customerId]
+      properties:
+        customerId:
+          type: integer
+        latitude:
+          type: ["string", "null"]
+        longitude:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+
+    VisitUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [IN_PROGRESS, COMPLETED, CANCELLED]
+        result:
+          type: ["string", "null"]
+          enum: [ORDERED, NO_ORDER, FOLLOW_UP, CLOSED, null]
+        notes:
+          type: ["string", "null"]
+        orderId:
+          type: ["integer", "null"]
+
+    Visit:
+      type: object
+      required: [id, code, customerId, customerName, userId, repName, checkIn, status, createdAt]
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        customerId:
+          type: integer
+        customerName:
+          type: string
+        userId:
+          type: integer
+        repName:
+          type: string
+        checkIn:
+          type: string
+          format: date-time
+        checkOut:
+          type: ["string", "null"]
+          format: date-time
+        latitude:
+          type: ["string", "null"]
+        longitude:
+          type: ["string", "null"]
+        status:
+          type: string
+        result:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        orderId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    VisitsSummary:
+      type: object
+      required: [totalVisits, completedVisits, orderedVisits, conversionRate]
+      properties:
+        totalVisits:
+          type: integer
+        completedVisits:
+          type: integer
+        orderedVisits:
+          type: integer
+        conversionRate:
+          type: number
+
+    Target:
+      type: object
+      required: [id, code, userId, repName, title, targetType, targetAmount, targetQuantity, achievedAmount, achievedQuantity, startDate, endDate, status, achievementRate, quantityAchievementRate, createdAt]
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        userId:
+          type: integer
+        repName:
+          type: string
+        title:
+          type: string
+        targetType:
+          type: string
+          enum: [AMOUNT, QUANTITY, HYBRID]
+        targetAmount:
+          type: integer
+        targetQuantity:
+          type: integer
+        achievedAmount:
+          type: integer
+        achievedQuantity:
+          type: integer
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [IN_PROGRESS, ACHIEVED, MISSED, CANCELLED]
+        achievementRate:
+          type: number
+        quantityAchievementRate:
+          type: number
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    TargetInput:
+      type: object
+      required: [userId, title, startDate, endDate]
+      properties:
+        userId:
+          type: integer
+        title:
+          type: string
+        targetType:
+          type: string
+          enum: [AMOUNT, QUANTITY, HYBRID]
+          default: AMOUNT
+        targetAmount:
+          type: integer
+          default: 0
+        targetQuantity:
+          type: integer
+          default: 0
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        notes:
+          type: ["string", "null"]
+
+    TargetUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        targetType:
+          type: string
+          enum: [AMOUNT, QUANTITY, HYBRID]
+        targetAmount:
+          type: integer
+        targetQuantity:
+          type: integer
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [IN_PROGRESS, ACHIEVED, MISSED, CANCELLED]
+        notes:
+          type: ["string", "null"]
+
+    TargetsSummary:
+      type: object
+      required: [totalTargets, inProgressTargets, achievedTargets, totalTargetAmount, totalAchievedAmount, overallAchievementRate]
+      properties:
+        totalTargets:
+          type: integer
+        inProgressTargets:
+          type: integer
+        achievedTargets:
+          type: integer
+        totalTargetAmount:
+          type: integer
+        totalAchievedAmount:
+          type: integer
+        overallAchievementRate:
+          type: number
+
+

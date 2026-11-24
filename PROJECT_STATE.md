@@ -11,11 +11,11 @@
 - **Authoritative Stack:** React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, OpenAPI
 - **Current Official Checkpoint:** **A1 — Operational Foundation (Approved & Frozen)**
 - **Next Checkpoint:** **A2 — Sales & Field Core**
-- **Current Workstream:** Phase A2 — Sales & Field Core (Preparation)
+- **Current Workstream:** Phase A2 — Sales & Field Core (Active: Visits, Orders Credit Link & Visitor Targets Infrastructure Complete) + TASK-004-PRE (Complete)
 - **MVP Scope:** Frozen
 - **MVP Backlog:** 14 Epic و 41 Feature متعهد (ADR-010)
 - **Frozen v2.4 baseline:** 11 Epic و 32 Feature
-- **Status:** PHASE A1 FROZEN / PHASE A2 PREPARATION
+- **Status:** PHASE A2 IN PROGRESS (Visits Backend, Credit Link, Visitor Targets & Hydra Model Selector Delivered)
 - **A1 Acceptance Criteria:** `docs/01_PRD/A1-Acceptance-Criteria.md` (هر ۱۲ فیچر + Audit Enabler کامل، ۱۰۰٪ پاس و فریز شدند)
 
 ## Execution Rule

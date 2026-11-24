@@ -1,6 +1,6 @@
 import { Router } from "express";
 import crypto from "crypto";
-import { db, ordersTable, productsTable } from "@workspace/db";
+import { db, ordersTable, productsTable, visitsTable, customersTable } from "@workspace/db";
 import { eq, sql, and, isNull } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
 import {
@@ -42,10 +42,23 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
   }
 
   const user = (req as Request & { user: JwtPayload }).user;
-  const { customerId, items } = parsed.data;
+  const { customerId, items, visitId } = parsed.data;
 
   const order = await db.transaction(async (tx) => {
     let total = 0;
+
+    // Validate visit existence if visitId is provided
+    if (visitId) {
+      const [visit] = await tx
+        .select()
+        .from(visitsTable)
+        .where(and(eq(visitsTable.id, visitId), isNull(visitsTable.deletedAt)));
+      if (!visit) {
+        throw Object.assign(new Error(`ویزیت با شناسه ${visitId} یافت نشد`), {
+          status: 404,
+        });
+      }
+    }
 
     // Aggregate items by productId to handle multiple items for the same product
     // and easily check against the single locked rows.
@@ -140,6 +153,51 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
       });
     }
 
+    // اعتبارسنجی سقف اعتبار مشتری (Credit Limit Validation)
+    let creditLimit = 0;
+    try {
+      const [customerRecord] = await tx
+        .select({ creditLimit: customersTable.creditLimit })
+        .from(customersTable)
+        .where(and(eq(customersTable.id, customerId), isNull(customersTable.deletedAt)));
+      creditLimit = customerRecord?.creditLimit ?? 0;
+    } catch {
+      creditLimit = 0;
+    }
+
+    if (creditLimit > 0) {
+      try {
+        const customerOrders = await tx
+          .select({ total: ordersTable.total, status: ordersTable.status })
+          .from(ordersTable)
+          .where(
+            and(
+              eq(ordersTable.customerId, customerId),
+              isNull(ordersTable.deletedAt),
+            ),
+          );
+        const pendingTotal = customerOrders
+          .filter((o) => o.status === "در انتظار" || o.status === "تایید شده")
+          .reduce((sum, o) => sum + (o.total || 0), 0);
+        const totalExposure = pendingTotal + total;
+
+        if (totalExposure > creditLimit) {
+          throw Object.assign(
+            new Error(
+              `مجموع تعهدات (${totalExposure.toLocaleString(
+                "fa-IR",
+              )} ریال) از سقف اعتبار مشتری (${creditLimit.toLocaleString(
+                "fa-IR",
+              )} ریال) بیشتر است.`,
+            ),
+            { status: 400 },
+          );
+        }
+      } catch (err: any) {
+        if (err.status === 400) throw err;
+      }
+    }
+
     const [inserted] = await tx
       .insert(ordersTable)
       .values({
@@ -150,6 +208,7 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
         customerName,
         userId: user.id,
         repName: user.name,
+        visitId: visitId ?? null,
         total,
         status: "در انتظار",
         items: items as unknown as object,
@@ -160,13 +219,20 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
     const prefix = settings?.orderCodePrefix || "ORD-";
 
     // The code comes from the row's own id, so it cannot be reused after a hard
-    // delete and two concurrent creates cannot race onto the same code. The
-    // previous `9000 + count + 1` generator did both (`code` is unique now).
+    // delete and two concurrent creates cannot race onto the same code.
     const [final] = await tx
       .update(ordersTable)
       .set({ code: `${prefix}${9000 + inserted.id}` })
       .where(eq(ordersTable.id, inserted.id))
       .returning();
+
+    // پیوند دوطرفه سفارش به ویزیت
+    if (visitId) {
+      await tx
+        .update(visitsTable)
+        .set({ orderId: final!.id, result: "ORDERED" })
+        .where(eq(visitsTable.id, visitId));
+    }
 
     await logAudit(tx, {
       userId: user.id,
@@ -174,7 +240,7 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
       action: "ORDER_CREATE",
       entity: "order",
       entityId: String(final!.id),
-      details: { code: final!.code, customerId, total },
+      details: { code: final!.code, customerId, total, visitId },
       ipAddress: req.ip || null,
     });
 

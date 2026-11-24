@@ -80,20 +80,22 @@ router.post("/auth/login", loginLimiter, async (req, res): Promise<void> => {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 7);
 
-  await db.insert(refreshTokensTable).values({
-    userId: user.id,
-    tokenHash,
-    expiresAt,
-  });
+  await db.transaction(async (tx) => {
+    await tx.insert(refreshTokensTable).values({
+      userId: user.id,
+      tokenHash,
+      expiresAt,
+    });
 
-  await logAudit(db, {
-    userId: user.id,
-    actorName: user.name,
-    action: "LOGIN_SUCCESS",
-    entity: "auth",
-    entityId: String(user.id),
-    details: { username: user.username },
-    ipAddress: req.ip,
+    await logAudit(tx, {
+      userId: user.id,
+      actorName: user.name,
+      action: "LOGIN_SUCCESS",
+      entity: "auth",
+      entityId: String(user.id),
+      details: { username: user.username },
+      ipAddress: req.ip,
+    });
   });
 
   req.log?.info({ ip: req.ip, username, userId: user.id }, "Successful login");

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import request from "supertest";
 import app from "../app";
-import { db, ordersTable, productsTable } from "@workspace/db";
+import { db, ordersTable, productsTable, customersTable, visitsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { createTestUser, createTestCustomer, createTestProduct, tokenFor, cleanup } from "../test/fixtures";
 
@@ -11,6 +11,7 @@ describe("POST /api/orders", () => {
   let token: string;
   const createdOrderIds: number[] = [];
   const createdProductIds: number[] = [];
+  const createdVisitIds: number[] = [];
 
   beforeEach(async () => {
     user = await createTestUser();
@@ -20,6 +21,7 @@ describe("POST /api/orders", () => {
 
   afterEach(async () => {
     await cleanup({
+      visitIds: createdVisitIds.splice(0),
       orderIds: createdOrderIds.splice(0),
       productIds: createdProductIds.splice(0),
       customerIds: [customer.id],
@@ -203,5 +205,80 @@ describe("POST /api/orders", () => {
         repName: "کاربر تستی",
       }),
     ).rejects.toThrow();
+  });
+
+  it("سفارش در صورت عبور از سقف اعتبار مشتری ریجکت میشه (ORD-F02)", async () => {
+    // تنظیم سقف اعتبار ۵,۰۰۰ ریال برای مشتری
+    await db
+      .update(customersTable)
+      .set({ creditLimit: 5000 })
+      .where(eq(customersTable.id, customer.id));
+
+    const product = await createTestProduct(10, 3000);
+    createdProductIds.push(product.id);
+
+    // ثبت سفارش اول: ۳,۰۰۰ ریال (مجاز)
+    const firstRes = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: customer.id,
+        items: [{ productId: product.id, productName: product.name, qty: 1, price: 3000 }],
+      });
+    expect(firstRes.status).toBe(201);
+    createdOrderIds.push(firstRes.body.id);
+
+    // ثبت سفارش دوم: ۳,۰۰۰ ریال (مجموع ۶,۰۰۰ > سقف ۵,۰۰۰ => ریجکت)
+    const secondRes = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: customer.id,
+        items: [{ productId: product.id, productName: product.name, qty: 1, price: 3000 }],
+      });
+    expect(secondRes.status).toBe(400);
+    expect(secondRes.body.error).toContain("سقف اعتبار");
+  });
+
+  it("سفارش متصل به ویزیت ثبت میشه و ویزیت رو به ORDERED آپدیت میکنه (ORD-F01)", async () => {
+    // ایجاد ویزیت
+    const [visit] = await db
+      .insert(visitsTable)
+      .values({
+        code: `VIS-TEST-${Date.now()}`,
+        customerId: customer.id,
+        customerName: customer.name,
+        userId: user.id,
+        repName: user.name,
+        status: "IN_PROGRESS",
+      })
+      .returning();
+    createdVisitIds.push(visit!.id);
+
+    const product = await createTestProduct(10, 2000);
+    createdProductIds.push(product.id);
+
+    // ثبت سفارش با پیوند visitId
+    const res = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: customer.id,
+        visitId: visit!.id,
+        items: [{ productId: product.id, productName: product.name, qty: 1, price: 2000 }],
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.visitId).toBe(visit!.id);
+    createdOrderIds.push(res.body.id);
+
+    // بررسی آپدیت دوطرفه در visitsTable
+    const [updatedVisit] = await db
+      .select()
+      .from(visitsTable)
+      .where(eq(visitsTable.id, visit!.id));
+
+    expect(updatedVisit?.orderId).toBe(res.body.id);
+    expect(updatedVisit?.result).toBe("ORDERED");
   });
 });

@@ -3,6 +3,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
 import { customersTable } from "./customers";
+import { visitsTable } from "./visits";
 
 export const ordersTable = pgTable("orders", {
   id: serial("id").primaryKey(),
@@ -13,6 +14,7 @@ export const ordersTable = pgTable("orders", {
   customerName: text("customer_name").notNull(),
   userId: integer("user_id").references(() => usersTable.id),
   repName: text("rep_name").notNull(),
+  visitId: integer("visit_id").references(() => visitsTable.id),
   total: integer("total").notNull().default(0),
   status: text("status").notNull().default("در انتظار"),
   items: jsonb("items").notNull().default([]),
@@ -24,6 +26,7 @@ export const ordersTable = pgTable("orders", {
   // کلید خارجی — پستگرس خودکار ایندکس نمی‌سازه؛ لازم برای حذف/آپدیت مشتری و فیلتر آینده
   customerIdIdx: index("orders_customer_id_idx").on(table.customerId),
   userIdIdx: index("orders_user_id_idx").on(table.userId),
+  visitIdIdx: index("orders_visit_id_idx").on(table.visitId),
   deletedAtIdx: index("orders_deleted_at_idx").on(table.deletedAt),
 }));
 

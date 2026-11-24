@@ -123,6 +123,63 @@ describe("Auth Routes", () => {
       expect(res.status).toBe(429);
       expect(res.body.error).toContain("Too many login attempts");
     });
+
+    it("should atomically roll back refresh token issuance if logAudit throws inside transaction", async () => {
+      const mockUser = {
+        id: 1,
+        username: "atomicuser",
+        password: "hashed_password",
+        name: "Atomic Test",
+        role: "نماینده فروش",
+        createdAt: new Date(),
+      };
+
+      const mockSelect = {
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockResolvedValue([mockUser]),
+      };
+      (db.select as any).mockReturnValue(mockSelect);
+      vi.spyOn(bcrypt, "compare").mockResolvedValue(true as never);
+
+      const auditFailure = new Error("DB_FATAL: audit_logs write error");
+      let refreshTokenInserted = false;
+
+      const txMock = {
+        insert: vi.fn((table) => {
+          if (table === refreshTokensTable) {
+            refreshTokenInserted = true;
+            return {
+              values: vi.fn().mockResolvedValue([{ id: 101 }]),
+            };
+          }
+          if (table === auditLogsTable) {
+            return {
+              values: vi.fn().mockRejectedValue(auditFailure),
+            };
+          }
+          return {
+            values: vi.fn().mockResolvedValue([{ id: 1 }]),
+          };
+        }),
+      };
+
+      (db.transaction as any).mockImplementation(async (cb: any) => {
+        try {
+          return await cb(txMock);
+        } catch (err) {
+          refreshTokenInserted = false;
+          throw err;
+        }
+      });
+
+      const res = await request(app)
+        .post("/api/auth/login")
+        .send({ username: "atomicuser", password: "Admin123!" });
+
+      expect(res.status).toBe(500);
+      expect(db.transaction).toHaveBeenCalled();
+      expect(refreshTokenInserted).toBe(false);
+    });
   });
 
   describe("POST /api/auth/refresh", () => {

@@ -1,113 +1,66 @@
-# AGENTS.md — Forooshyar Plus
+# AGENTS.md — Forooshyar Plus / فروشیار پلاس
+**Universal Agent Directives & Multi-Harness Collaboration Standard**
 
-این دستورالعمل برای همهٔ دستیارهای هوش مصنوعی در کل مخزن اعمال می‌شود.
-
-## مرجع حقیقت و محدوده کار
-
-نام محصول **فروشیار پلاس / Forooshyar Plus** است. بازارک نام منبع قابلیت‌های Field Operations و Automation در این محصول است، نه محصول مستقل.
-
-پیش از هر تغییر، به‌ترتیب بخوانید: `PROJECT_STATE.md`، این فایل، `README.md`، `docs/00_Project/governance-v2.4/README.md`، `docs/00_Project/Roadmap.md` و `docs/README.md`.
-
-`docs/` مرجع محصول، کسب‌وکار، UX، معماری و توسعه است. قابلیت جدید پیش‌فرض `POST_MVP_CANDIDATE` است. تغییر معماری، دامنه، چندسازمانی یا قرارداد عمومی بدون ADR پذیرفته‌شده، Scope Review و معیار پذیرش مجاز نیست. فقط روی Workstream فعال کار کنید و تغییرات کوچک، متمرکز و قابل بازگشت نگه دارید.
-
-## ساختار کد
-
-| مسیر | مسئولیت |
-|---|---|
-| `artifacts/api-server/` | Express 5 API، routeها، middleware و تست‌های Vitest/Supertest |
-| `artifacts/nadraan/` | React 19 + Vite frontend، صفحه‌ها، layout و UI |
-| `lib/api-spec/openapi.yaml` | قرارداد canonical API |
-| `lib/api-zod/` | validatorها و typeهای تولیدشده از OpenAPI |
-| `lib/api-client-react/` | React Query client تولیدشده و `custom-fetch` |
-| `lib/db/` | PostgreSQL/Drizzle schema و اتصال دیتابیس |
-| `docs/` | مستندات canonical و ADRها |
-| `scripts/` | seed، backup/restore و verification |
-
-## Build و Test
-
-فقط از `pnpm` استفاده کنید؛ `npm`، `yarn` و lockfileهای آن‌ها مجاز نیستند. `minimumReleaseAge` در `pnpm-workspace.yaml` را تضعیف نکنید.
-
-```bash
-pnpm install
-pnpm run typecheck
-pnpm run build
-
-pnpm --filter @workspace/api-server test
-pnpm --filter @workspace/nadraan test
-pnpm --filter @workspace/api-client-react test
-
-pnpm --filter @workspace/api-spec codegen
-pnpm --filter @workspace/db push
-docker compose up --build
-```
-
-- پس از تغییر `openapi.yaml`، `codegen` را اجرا و خروجی‌های تولیدشده را همراه تغییر commit کنید.
-- `db push` فقط پس از بررسی اثر schema روی محیط هدف اجرا می‌شود. `push-force` بدون تأیید صریح و backup بازیافت‌پذیر ممنوع است.
-- پیش از تحویل، دست‌کم `pnpm run typecheck` و test/build مرتبط با تغییر را اجرا کنید. تغییر API یا schema به codegen و تست API هم نیاز دارد.
-
-## قراردادهای Backend و Database
-
-- API contract-first است: OpenAPI → codegen → route Express → UI client.
-- routeهای محافظت‌شده از `requireAuth` و عملیات مدیریتی پس از آن از `requireRole` استفاده می‌کنند.
-- ورودی‌های route با validatorهای تولیدشدهٔ Zod و `safeParse` اعتبارسنجی شوند؛ خطای ورودی `4xx` است و خطای غیرمنتظره به error handler می‌رود.
-- عملیات چندمرحله‌ای، موجودی یا مالی در `db.transaction` انجام می‌شوند. validation و قفل‌گذاری تراکنشی سفارش موجود را تکرار یا دور نزنید.
-- `deletedAt` الگوی soft delete است. queryهای domain باید `isNull(...deletedAt)` داشته باشند، مگر برای audit صریح.
-- schema فقط در `lib/db/src/schema/` تعریف و از `schema/index.ts` export می‌شود. Foreign key و index queryهای پرتکرار را در schema در نظر بگیرید.
-- مرز چندسازمانی اجباری معماری است؛ پیش از افزودن `organization_id` یا تغییر access-control، ADR و معیار پذیرش لازم است.
-- Pino، request ID و خط‌مشی عدم ثبت secret/password/token در log حفظ شوند. endpointهای dev/seed نباید در production در دسترس باشند.
-
-## قراردادهای Frontend
-
-- صفحه‌ها در `src/pages/`، layout در `components/layout/` و UI primitives در `components/ui/` هستند.
-- برای دادهٔ سرور فقط از client تولیدشده و React Query استفاده کنید؛ fetch یا type دستی موازی برای endpointهای OpenAPI نسازید.
-- پس از mutation، query key تولیدشده را invalidate کنید و loading، empty، error و mobile/RTL state را پوشش دهید.
-- مسیرهای محافظت‌شده در `App.tsx` و `AuthProvider` باقی می‌مانند.
-
-## تست، امنیت و Git
-
-- تست‌های route کنار همان route و fixtureهای مشترک API در `artifacts/api-server/src/test/fixtures.ts` هستند.
-- برای bug یک regression test کوچک اضافه کنید. برای authorization، validation، soft delete، transaction و مرز سازمانی تست منفی هم بنویسید.
-- `.env`، secret، token و password هرگز commit یا log نمی‌شوند؛ نام متغیرهای لازم در `.env.example` ثبت می‌شود.
-- پیش از commit، `git diff --check`، diff و status را بررسی کنید. تغییرات نامرتبط یا staged متعلق به کاربر را وارد commit نکنید.
-- commit، push، branch و PR فقط با درخواست صریح کاربر انجام می‌شوند. مستندات canonical و ADR مرتبط را هم‌زمان با تغییرات محصول/معماری به‌روزرسانی کنید.
-
+این دستورالعمل حاکمیتی برای همهٔ دستیارهای هوش مصنوعی و هارنس‌ها (Google Antigravity, OpenAI Codex, OpenCode, Claude Code, Cursor) در کل مخزن اعمال می‌شود.
 
 ---
 
-# Agent Operating Guidelines & Verification Protocol
+## ۱. ارکان حاکمیتی مگامن (Megaman Core Invariants)
 
-## 1. Microtask Verification & Self-Healing Protocol (MANDATORY)
+1. **خطاب الزامی (Mandatory Address):** همیشه و بدون استثنا، کاربر را منحصراً «مهندس جان» خطاب کنید.
+2. **قانون دوزبانه‌سازی فنی (Bilingual Technical Rule):** بلافاصله پس از هر اصطلاح، مفهوم یا فناوری انگلیسی در مباحث فنی، استراتژیک یا محصولی، معادل فارسی یا توضیح کاربردی آن را داخل پرانتز درج کنید (English Term + Persian Explanation in Parentheses).
+3. **تفکیک جزایر پروژه (Project Decoupling):** این مخزن (جزیره «فروشیار پلاس») یک سیستم خودمختار عملیات فروش و توزیع مویرگی است. هرگز هویت معمار کل را به یک محصول محدود نکنید.
+4. **عدم انتظار کدنویسی دستی (Zero-Code / Vibe Coding & Multi-Agent Orchestration):** مهندس جان کدنویسی دستی انجام نمی‌دهد؛ تمامی دستورات، تغییرات و راه‌حل‌ها را کاملاً خودکار، ماژولار، تست‌شده و بدون نیاز به اصلاح دستی تحویل دهید.
+5. **قانون نام‌گذاری کوتاه (Short Naming Rule):** نام پوشه هسته مرکزی در گوگل درایو منحصراً **«مگامن»** و نام سند ورودی بوت **`BOOT.md`** است.
+6. **قانون منع انحراف مستندات (Zero Docs-Drift Rule):** هیچ تغییر فنی یا مایلستونی در فاز A2 کامل نیست مگر اینکه هم‌زمان ۴ سند (`CHANGELOG.md`، `PROJECT_STATUS.md`، `PROJECT_STATE.md` و نسخه `HANDOVER_SYSTEM_TRANSFER.md` در پوشه «مگامن» گوگل درایو) به‌روز شوند.
+7. **سقف ۲ راند مناظره و ریویو (`HYDRA_MAX_DEBATE_ROUNDS = 2`):** در بازبینی متقابل بین ایجنت‌ها، ساب‌ایجنت‌ها و مدل‌ها، حداکثر ۲ راند مجاز است؛ در صورت عدم توافق در پایان راند دوم، توقف و گزارش با ۲ گزینه شفاف به مهندس جان.
 
-Every code change must adhere to the deterministic quality gates enforced by GitHub Actions. Bypassing or attempting to alter the verification system is strictly prohibited.
+---
 
-### Execution Lifecycle:
-1. **Branch & Implement:**
-   - Create a feature branch (e.g., `feat/...` or `fix/...`).
-   - Implement only the logic requested. Keep PR diffs minimal and focused.
+## ۲. مرجع حقیقت و محدوده کار
 
-2. **Wait for CI Deterministic Checks:**
-   - After pushing the branch and opening a PR, wait for the verification pipeline to finish:
-     ```bash
-     gh pr checks
-     ```
+- نام محصول **فروشیار پلاس / Forooshyar Plus** است. بازارک نام منبع قابلیت‌های Field Operations و Automation در این محصول است.
+- مستندات `docs/` مرجع محصول، معماری و توسعه است.
+- پیش از هر تغییر، به‌ترتیب بخوانید: `PROJECT_STATE.md`، این فایل، `docs/09_Development/AGENT_HANDOFF.md`، `README.md` و `docs/00_Project/Roadmap.md`.
+- فاز فعال فعلی: **Phase A2 — Sales & Field Core** (شامل ۸ فیچر در ۳ اپیک: Visits, Orders, Targets).
 
-3. **Self-Healing on Failure (Max 3 Retry Rounds):**
-   - If `Agent Microtask Verification Gate` fails, retrieve the machine-readable failure summary:
-     ```bash
-     python scripts/fetch_agent_feedback.py
-     ```
-   - Analyze the extracted `failed_tests` and `type_errors`.
-   - Fix the implementation code.
-   - Commit and push the fix back to the branch.
+---
 
-### Strict Invariants & Constraints:
-- ❌ **NEVER edit or delete files in `tests/`:** Any failure must be resolved by fixing implementation logic, not modifying test expectations.
-- ❌ **NEVER touch `.github/workflows/` or environment files (`.env*`):** Any modification to system-level files will immediately fail the blast radius gate.
-- ❌ **NO Hallucinated Dependencies:** Only add packages to `requirements.txt` that exist and are verified on PyPI.
-- ❌ **NO `[skip ci]` in commit messages:** Every commit must run through the automated audit.
-## Jules Automated Task Intake
+## ۳. ساختار مونو‌ریپو و قفل مالکیت مسیرها (Strict Path Ownership)
 
-- هرگاه یک Issue با برچسب `jules-task` و `agent-escalation` ایجاد شد:
-  1. اولویت نخست، بازخوانی خلاصه تریاژ و دسته خطای مشخص‌شده در متن Issue است.
-  2. بدون نیاز به بازبینی تمام فایل‌های پروژه، صرفاً ماژول‌های مرتبط با آن دسته را بررسی و اصلاح کن.
-  3. پول ریکوئست نهایی باید حاوی تگ `Closes #IssueNumber` باشد.
+| مسیر | مسئولیت و دامنه کار | مالک انحصاری (Author) | بازبین (Reviewer) |
+|---|---|---|---|
+| `lib/db/` | PostgreSQL/Drizzle schema و migrations | **Antigravity** | Codex |
+| `lib/api-spec/openapi.yaml` | قرارداد canonical API | **Antigravity** | Codex |
+| `lib/api-zod/`, `lib/api-client-react/` | Zod validators و React Query hooks (تولید با codegen) | **Antigravity** | Codex |
+| `artifacts/api-server/` | Express 5 API، routeها، middleware و تست‌های Vitest | **Antigravity** | Codex |
+| `artifacts/nadraan/` | React 19 + Vite frontend، صفحات، layout، کامپوننت‌ها و استایل RTL | **Codex** | Antigravity |
+| `docs/` | مستندات canonical و ADRها | **Antigravity** | Codex |
+| `scripts/` | seed، backup/restore و verification | **Antigravity** | — |
+
+> [!CAUTION]
+> هیچ ایجنتی حق ویرایش فایل‌های خارج از محدوده مالکیت خود را ندارد. هماهنگی صرفاً از طریق `docs/09_Development/AGENT_HANDOFF.md` انجام می‌شود.
+
+---
+
+## ۴. ابزارهای مجاز، ساخت و تست
+
+- **فقط از `pnpm` استفاده کنید.** `npm`، `yarn` و lockfileهای آن‌ها اکیداً ممنوع هستند.
+- کانتینرها و دیتابیس محلی روی **Kiri** (موتور کانتینر سبک Rust روی WSL2) اجرا می‌شوند.
+- دستورات اصلی:
+  ```bash
+  pnpm install
+  pnpm run typecheck
+  pnpm run test:libs
+  pnpm run build
+  pnpm --filter @workspace/api-spec codegen
+  ```
+
+---
+
+## ۵. گاردریل‌های هم‌افزایی دو ایجنت (Antigravity + VSCode Codex)
+
+1. **Section-Locked Handoff:** هر ایجنت در `docs/09_Development/AGENT_HANDOFF.md` فقط در بخش و ستون اختصاصی خود وضعیت را ثبت می‌کند. وضعیت‌های مجاز:
+   `🟡 IN_PROGRESS` ──→ `🟢 READY_FOR_REVIEW` ──→ `✅ APPROVED`
+2. **Contract-First:** کدکس فقط و فقط از کلاینت تولیدشده React Query استفاده می‌کند و هرگز fetch دستی یا تایپ موازی نمی‌سازد.
+3. **Commit & Push Guardrail:** دستورات `git commit`، `git push` و ساخت branch منحصراً با درخواست صریح مهندس جان و توسط بازوی اجرایی Antigravity انجام می‌شود.

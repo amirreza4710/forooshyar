@@ -16,7 +16,7 @@ export const ROLE_HIERARCHY: RoleDefinition[] = [
     enTitle: "Managing Director / CEO",
     color: "bg-amber-500/15 text-amber-300 border-amber-500/30",
     description: "بالاترین مقام پلتفرم؛ دسترسی کامل و نامحدود به تمامی بخش‌ها، تنظیمات زیرساختی، لاگ‌های امنیتی و مدیریت کاربران.",
-    allowedNav: ["/", "/new-order", "/orders", "/products", "/customers", "/users", "/profile"],
+    allowedNav: ["/", "/new-order", "/orders", "/visits", "/products", "/customers", "/users", "/profile"],
   },
   {
     id: "مدیر فروش",
@@ -25,7 +25,7 @@ export const ROLE_HIERARCHY: RoleDefinition[] = [
     enTitle: "Sales Director",
     color: "bg-blue-500/15 text-blue-400 border-blue-500/30",
     description: "مدیریت کل فرآیند فروش و کاتالوگ، نظارت بر سرپرستان و ویزیتورها، قیمت‌گذاری و تایید سفارشات.",
-    allowedNav: ["/", "/new-order", "/orders", "/products", "/customers", "/users", "/profile"],
+    allowedNav: ["/", "/new-order", "/orders", "/visits", "/products", "/customers", "/users", "/profile"],
   },
   {
     id: "سرپرست فروش",
@@ -34,7 +34,7 @@ export const ROLE_HIERARCHY: RoleDefinition[] = [
     enTitle: "Sales Supervisor",
     color: "bg-purple-500/15 text-purple-400 border-purple-500/30",
     description: "نظارت بر ویزیتورهای منطقه، تایید سفارشات میدانی، کنترل سقف اعتبار و مطالبات مشتریان.",
-    allowedNav: ["/", "/new-order", "/orders", "/products", "/customers", "/profile"],
+    allowedNav: ["/", "/new-order", "/orders", "/visits", "/products", "/customers", "/profile"],
   },
   {
     id: "حسابدار / مدیر مالی",
@@ -61,7 +61,7 @@ export const ROLE_HIERARCHY: RoleDefinition[] = [
     enTitle: "Field Sales Rep / Visitor",
     color: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
     description: "ویزیت میدانی فروشگاه‌ها، ثبت سفارش‌های سریع، تعریف مشتریان جدید و استعلام آنلاین موجودی انبار.",
-    allowedNav: ["/new-order", "/orders", "/products", "/customers", "/profile"],
+    allowedNav: ["/new-order", "/orders", "/visits", "/products", "/customers", "/profile"],
   },
   {
     id: "موزع / راننده",

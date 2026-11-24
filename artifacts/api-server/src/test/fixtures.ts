@@ -4,7 +4,7 @@
  * غیرقابل‌اشتباه با داده‌ی واقعی باشه (پیشوند TEST-) و در پایان هر تست
  * دقیقاً با همون id حذف بشه. هرگز کل جدول یا رکوردهای بدون فیلتر پاک نشه.
  */
-import { db, usersTable, customersTable, productsTable, ordersTable } from "@workspace/db";
+import { db, usersTable, customersTable, productsTable, ordersTable, visitsTable, targetsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { signToken } from "../lib/auth";
 import crypto from "crypto";
@@ -56,13 +56,25 @@ export function tokenFor(user: { id: number; username: string; name: string; rol
 
 /** فقط رکوردهایی که با id دقیق مشخص شدن رو پاک می‌کنه — هیچ‌وقت با شرط باز/like نه. */
 export async function cleanup(opts: {
+  targetIds?: number[];
+  visitIds?: number[];
   orderIds?: number[];
   productIds?: number[];
   customerIds?: number[];
   userIds?: number[];
 }) {
+  // ابتدا پیوندهای متقابل ویزیت و سفارش را پاک می‌کنیم تا قفل کلید خارجی باز شود
+  for (const id of opts.targetIds ?? []) {
+    await db.delete(targetsTable).where(eq(targetsTable.id, id));
+  }
+  for (const id of opts.visitIds ?? []) {
+    await db.update(visitsTable).set({ orderId: null }).where(eq(visitsTable.id, id));
+  }
   for (const id of opts.orderIds ?? []) {
     await db.delete(ordersTable).where(eq(ordersTable.id, id));
+  }
+  for (const id of opts.visitIds ?? []) {
+    await db.delete(visitsTable).where(eq(visitsTable.id, id));
   }
   for (const id of opts.productIds ?? []) {
     await db.delete(productsTable).where(eq(productsTable.id, id));
