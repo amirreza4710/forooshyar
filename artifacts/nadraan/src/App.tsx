@@ -12,6 +12,7 @@ import DashboardPage from "@/pages/dashboard";
 import OperationalCommandCenter from "@/pages/OperationalCommandCenter";
 import NewOrderPage from "@/pages/new-order";
 import OrdersPage from "@/pages/orders";
+import VisitsPage from "@/pages/visits";
 import ProductsPage from "@/pages/products";
 import CustomersPage from "@/pages/customers";
 import UsersPage from "@/pages/users";
@@ -79,6 +80,7 @@ function Router() {
         path="/orders"
         component={() => <ProtectedRoute component={OrdersPage} path="/orders" />}
       />
+      <Route path="/visits" component={() => <ProtectedRoute component={VisitsPage} path="/visits" />} />
       <Route
         path="/products"
         component={() => <ProtectedRoute component={ProductsPage} path="/products" />}

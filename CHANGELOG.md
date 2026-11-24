@@ -5,8 +5,27 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
-- **Phase A1 Operational Foundation Completion & Freeze:**
+- **TASK-004-PRE: Merit-Based Model Selector Contract for Hydra ACP:**
+  - Designed runtime model discovery and dispatch contracts in `@workspace/api-zod` (`model-routing.schema.ts`).
+  - Added `DiscoveredModelSchema`, `HydraModelSelectionRequestSchema`, `HydraModelDispatchPlanSchema`, and `MeritFeedbackEventSchema`.
+  - Implemented pure function `selectHydraModels(request)` with cost-penalized merit score formula: `meritScore = (0.6 * prior + 0.4 * empirical) - lambda * costIndex`.
+  - Implemented dynamic Orchestrator selection based on weighted architecture skill (70%) and context window capacity (30%).
+  - Enforced cross-family reviewer verification (`crossFamilyVerified`) for L2/L3 tiers with single-family fallback handling (`fallbackUsed: true`).
+  - Added Zod `superRefine` invariant strictly blocking identical executor and reviewer model families when `crossFamilyVerified` is asserted.
+  - Mapped execution dispatch to ACP Senate roles (`strategist`, `architect`, `auditor`) locked to `HYDRA_MAX_DEBATE_ROUNDS = 2`.
+  - Authored comprehensive Vitest unit tests in `model-selector.test.ts` (8 tests passing, 21 total in `api-zod`).
+
+- **Phase A2: Sales & Field Operations Core (Visits, Orders & Visitor Targets):**
+  - **A2-TASK-01 (Database Schema):** Created `visitsTable` in `lib/db/src/schema/visits.ts` with GPS check-in/check-out coordinates, deterministic `code` derivation, status, result, and soft-delete support. Added foreign key `orders.visitId -> visits.id`.
+  - **A2-TASK-02 (Canonical API & Codegen):** Extended `lib/api-spec/openapi.yaml` with `/visits`, `/visits/{id}`, and `/visits/stats/summary`. Generated canonical Zod validation schemas and React Query client hooks.
+  - **A2-TASK-03 (API Server Routes & Integration):** Implemented Express routes in `artifacts/api-server/src/routes/visits.ts` with audit logging, zero-division safe conversion metrics, and 5 integration tests (`src/routes/visits.test.ts` passing on Kiri PostgreSQL container).
+  - **A2-TASK-06 (Credit Limit Validation & Two-Way Visit Link ORD-F01..F02):** Added `creditLimit` and `balance` to `customersTable` and OpenAPI schema. Enforced customer credit ceiling in order transaction (rejecting order with 400 if pending orders + new order exceed `creditLimit`). Established two-way link updating `visitsTable.orderId = order.id` and `visitsTable.result = 'ORDERED'`. Added 2 integration tests (12 tests passing in `orders.test.ts`).
+  - **A2-TASK-07 (Sales Targets Infrastructure TAR-F01..F02):** Created `targetsTable` in `lib/db/src/schema/targets.ts` with amount/quantity quotas, period dates, and status. Implemented canonical OpenAPI endpoints (`/targets`, `/targets/{id}`, `/targets/stats/summary`), Zod validation, and React Query client codegen. Implemented Express routes with role-based isolation (regular reps see only self, managers manage all), dynamic achievement tracking calculated from actual orders in target window, zero-division safe metrics, transactional audit logging, and soft-delete. Authored 7 comprehensive integration tests in `targets.test.ts` (100% passing).
+
+- **Phase A1 Operational Foundation Completion & Codex P2 Hardening:**
   - Resolved and verified all 3 open decisions (D1 Basic Settings, D2 Self-service Password Change, D3 Audit Enabler).
+  - **P2 Finding 1 Resolved (Atomic Token Issuance & Audit):** Wrapped refresh token issuance and audit log creation in `artifacts/api-server/src/routes/auth.ts` inside a single atomic Drizzle transaction `await db.transaction(async (tx) => ...)`. Added unit and stress tests verifying rollback when audit logging throws.
+  - **P2 Finding 2 Resolved (SET-F02 Acceptance Scope Narrowing):** Clarified acceptance criteria in `docs/01_PRD/A1-Acceptance-Criteria.md` to scope configurable currency (`تومان`) to A1, and explicitly designated dynamic date/number formats as `POST_MVP_CANDIDATE`.
   - Hardened `POST /api/auth/change-password` route with identical-password rejection, active refresh token revocation, transactional audit logging, and Persian error messaging.
   - Added unit test in `src/routes/auth.test.ts` verifying rejection (400) when new password matches current password.
   - Verified dynamic prefix resolution from `settingsTable` (`productCodePrefix`, `customerCodePrefix`, `orderCodePrefix`) in product, customer, and order creation transactions.

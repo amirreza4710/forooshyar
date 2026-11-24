@@ -52,6 +52,14 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+.replit-artifact/
+
+# Database backups (keep local, do not track binary dumps in VCS)
+backups/*.dump
+
+# Disallowed lockfiles (project is strictly pnpm-only per AGENTS.md)
+package-lock.json
+yarn.lock
 
 # فایل‌های کش/متادیتای داخلی Graphify — فقط خروجی نهایی commit میشه
 graphify-out/cache/

@@ -1,2 +1,0 @@
-# Core Dependencies
-PyYAML>=6.0

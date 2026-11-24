@@ -620,5 +620,50 @@ describe("Empirical Challenger Stress Suite — Milestone 1 (D1, D2, D3)", () =>
       // Must fail with 500
       expect(res.status).toBe(500);
     });
+
+    it("D3.4: Login token issuance rolls back atomically if audit log fails inside transaction", async () => {
+      const mockSelect = {
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockResolvedValue([repUser]),
+      };
+      (db.select as any).mockReturnValue(mockSelect);
+      vi.spyOn(bcrypt, "compare").mockResolvedValue(true as never);
+
+      const auditFailure = new Error("DB_FATAL: audit_logs write error");
+      let tokenPersisted = false;
+
+      const txMock = {
+        insert: vi.fn((table) => {
+          if (table === refreshTokensTable) {
+            tokenPersisted = true;
+            return {
+              values: vi.fn().mockResolvedValue([{ id: 1 }]),
+            };
+          }
+          return {
+            values: vi.fn().mockRejectedValue(auditFailure),
+          };
+        }),
+      };
+
+      (db.transaction as any).mockImplementation(async (cb: any) => {
+        try {
+          return await cb(txMock);
+        } catch (err) {
+          tokenPersisted = false;
+          throw err;
+        }
+      });
+
+      const res = await request(app)
+        .post("/api/auth/login")
+        .send({
+          username: repUser.username,
+          password: "ValidPassword123!",
+        });
+
+      expect(res.status).toBe(500);
+      expect(tokenPersisted).toBe(false);
+    });
   });
 });
