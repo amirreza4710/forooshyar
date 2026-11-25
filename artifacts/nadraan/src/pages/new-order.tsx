@@ -8,6 +8,8 @@ import {
   getListOrdersQueryKey,
   getListProductsQueryKey,
   getListCustomersQueryKey,
+  getListVisitsQueryKey,
+  getGetVisitsSummaryQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -85,11 +87,15 @@ export default function NewOrderPage() {
   const products: Product[] = Array.isArray(productsRaw) ? productsRaw : [];
   const customers: Customer[] = Array.isArray(customersRaw) ? customersRaw : [];
 
+  const urlParams = useMemo(() => new URLSearchParams(window.location.search), []);
+  const initialCustomerId = urlParams.get("customerId") ? Number(urlParams.get("customerId")) : null;
+  const activeVisitId = urlParams.get("visitId") ? Number(urlParams.get("visitId")) : undefined;
+
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("همه");
   const [cart, setCart] = useState<CartItem[]>([]);
   const cartMap = useMemo(() => new Map(cart.map((c) => [c.productId, c])), [cart]);
-  const [customerId, setCustomerId] = useState<number | null>(null);
+  const [customerId, setCustomerId] = useState<number | null>(initialCustomerId);
   const [customerSearch, setCustomerSearch] = useState("");
   const [customerDropdownOpen, setCustomerDropdownOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false); // Mobile cart drawer
@@ -263,17 +269,26 @@ export default function NewOrderPage() {
       toast({ title: "سبد خرید خالی است", variant: "destructive" });
       return;
     }
-    createOrder.mutate({
-      data: {
-        customerId,
-        items: cart.map((c) => ({
-          productId: c.productId,
-          productName: c.productName,
-          qty: c.qty,
-          price: c.price,
-        })),
+    createOrder.mutate(
+      {
+        data: {
+          customerId,
+          ...(activeVisitId ? { visitId: activeVisitId } : {}),
+          items: cart.map((c) => ({
+            productId: c.productId,
+            productName: c.productName,
+            qty: c.qty,
+            price: c.price,
+          })),
+        },
       },
-    });
+      {
+        onSuccess: () => {
+          void qc.invalidateQueries({ queryKey: getListVisitsQueryKey() });
+          void qc.invalidateQueries({ queryKey: getGetVisitsSummaryQueryKey() });
+        },
+      }
+    );
   }
 
   function submitQuickCustomer() {

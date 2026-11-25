@@ -38,8 +38,8 @@ $$\text{🟡 IN\_PROGRESS} \longrightarrow \text{🟢 READY\_FOR\_REVIEW} \longr
 | `A2-TASK-01` | **سخت‌سازی و تثبیت Schema ویزیت‌ها (`visitsTable`) و اتصال به `orders`** | Antigravity | Codex | 🟢 READY_FOR_REVIEW | اسکیما با پشتیبانی از GPS، کد دترمینستیک و کلید خارجی `order.visitId` روی دیتابیس اعمال شد |
 | `A2-TASK-02` | **قرارداد OpenAPI برای اندپوینت‌های `/visits` و اجرای Codegen** | Antigravity | Codex | 🟢 READY_FOR_REVIEW | هوک‌های کلاینت (`useListVisits`, `useCreateVisit`, `useUpdateVisit`) در `@workspace/api-client-react` تولید و آماده استفاده |
 | `A2-TASK-03` | **پیاده‌سازی روت‌های Express و تست‌های Visits در بک‌اند** | Antigravity | Codex | 🟢 READY_FOR_REVIEW | روت‌های ۵ گانه با ممیزی تراکنشی، ایمنی تقسیم بر صفر و ۵ تست یکپارچه‌سازی پاس‌شده روی کانتینر Kiri |
-| `A2-TASK-04` | **ساخت صفحات و کامپوننت‌های ویزیت در فرانت‌اند** | Codex | Antigravity | 🟢 READY_FOR_REVIEW | صفحه ویزیت، ورود و خروج، دسترسی نقش‌ها و نمایش موبایل پیاده‌سازی شد؛ بررسی نوع‌ها، ساخت و آزمون دسترسی موفق |
-| `A2-TASK-05` | **فرم‌های ثبت نتیجه ویزیت (`ORDERED`, `NO_ORDER`, `FOLLOW_UP`, `CLOSED`)** | Codex | Antigravity | ⏳ PENDING | پس از تکمیل اسکلت صفحات ویزیت |
+| `A2-TASK-04` | **ساخت صفحات و کامپوننت‌های ویزیت در فرانت‌اند** | Codex | Antigravity | ✅ APPROVED | صفحه ویزیت، ورود و خروج، دسترسی نقش‌ها و نمایش موبایل بررسی و تایید شد؛ `typecheck` با کد ۰ موفق |
+| `A2-TASK-05` | **فرم‌های ثبت نتیجه ویزیت (`ORDERED`, `NO_ORDER`, `FOLLOW_UP`, `CLOSED`) و پنل تارگت‌ها** | Antigravity | Codex | 🟢 READY_FOR_REVIEW | اتصال جریان ویزیت به ثبت سفارش (`/new-order?customerId=&visitId=`)، نمایش کد سفارش در ویزیت و ساخت صفحه `/targets` با نمودار تحقق ریالی/تعدادی |
 | `A2-TASK-06` | **اعتبارسنجی سقف اعتبار مشتری و اتصال دوطرفه سفارش به ویزیت (`ORD-F01..F02`)** | Antigravity | Codex | 🟢 READY_FOR_REVIEW | کنترل مانده تعهدات مشتری، درج خودکار orderId در ویزیت و ۱۲ تست پاس‌شده در orders.test.ts |
 | `A2-TASK-07` | **زیرساخت تارگت‌های مقداری و ریالی ویزیتورها (`TAR-F01..F02`)** | Antigravity | Codex | 🟢 READY_FOR_REVIEW | اسکیمای دیتابیس targetsTable، قرارداد OpenAPI، کدجن کلاینت، روت‌های Express با محاسبه ایمن دستاورد زنده و ۷ تست یکپارچه‌سازی پاس‌شده روی Kiri |
 
