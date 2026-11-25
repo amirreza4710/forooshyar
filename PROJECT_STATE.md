@@ -282,6 +282,10 @@ Next action: Proceed to Phase A1 Operational Foundation.
   - تضمین عدم وجود کست‌های `any`، تفکیک نقش‌های ایجنتیک (President, Strategist, Architect, Auditor, Operator, System).
   - تثبیت قانون سقف ۲ راند مناظره سنا (`HYDRA_MAX_DEBATE_ROUNDS = 2`) و ساختار رسیدهای اجرایی قطعی (`HydraExecutionReceipt`).
   - Evidence: اجرای ۱۳ آزمون واحد با Vitest با نتیجه **۱۳ از ۱۳ پاس (۱۰۰٪)** در ۱۹ میلی‌ثانیه، بیلد موفقیت‌آمیز Vite فرانت‌اند با کد 0، و ثبت مستندات رسمی تحویل در `HANDOVER.md`.
+- **TASK-004: Hydra ACP Dispatcher & Senate Debate Engine (Delivered)**:
+  - پیاده‌سازی موتور مناظره ۲ رانده سنا (`senate-engine.ts`) و روت‌های `/api/hydra/health` و `/api/hydra/intents` با ثبت ممیزی و ۵ تست واحد پاس‌شده (`hydra.test.ts`).
+- **A2-TASK-05: Visit-to-Order E2E & Visitor Targets UI (Delivered)**:
+  - اتصال جریان ویزیت به ثبت سفارش (`/new-order?customerId=&visitId=`) و ساخت داشبورد اهداف فروش (`/targets`).
 - **Phase A1 Operational Foundation Completion & Official Freeze (Approved & Frozen)**:
   - حل و اعتبارسنجی ۳ تصمیم باز (D1 تنظیمات پایه، D2 تغییر رمز عبور توسط خود کاربر، D3 ممیزی و Audit Enabler).
   - پیاده‌سازی و سخت‌سازی امنیتی روت `POST /api/auth/change-password` همراه با رد رمزهای تکراری، ابطال توکن‌های فعال، اعتبارسنجی فارسی، لاگ ممیزی و دیالوگ اختصاصی در `profile.tsx`.
