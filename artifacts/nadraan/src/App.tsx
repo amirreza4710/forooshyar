@@ -13,6 +13,7 @@ import OperationalCommandCenter from "@/pages/OperationalCommandCenter";
 import NewOrderPage from "@/pages/new-order";
 import OrdersPage from "@/pages/orders";
 import VisitsPage from "@/pages/visits";
+import TargetsPage from "@/pages/targets";
 import ProductsPage from "@/pages/products";
 import CustomersPage from "@/pages/customers";
 import UsersPage from "@/pages/users";
@@ -81,6 +82,7 @@ function Router() {
         component={() => <ProtectedRoute component={OrdersPage} path="/orders" />}
       />
       <Route path="/visits" component={() => <ProtectedRoute component={VisitsPage} path="/visits" />} />
+      <Route path="/targets" component={() => <ProtectedRoute component={TargetsPage} path="/targets" />} />
       <Route
         path="/products"
         component={() => <ProtectedRoute component={ProductsPage} path="/products" />}

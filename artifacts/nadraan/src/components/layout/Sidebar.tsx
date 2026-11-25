@@ -2,7 +2,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth-context";
 import {
   LayoutDashboard, Plus, ClipboardList, Package, Users,
-  UserCircle, Moon, Sun, LogOut, Building2, Shield, MapPin,
+  UserCircle, Moon, Sun, LogOut, Building2, Shield, MapPin, Target,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { canAccessRoute, getRoleBadgeClass, getRoleDefinition } from "@/lib/permissions";
@@ -15,6 +15,7 @@ const NAV_GROUPS = [
       { href: "/new-order", label: "ثبت سفارش سریع",     icon: Plus },
       { href: "/orders",    label: "لیست فاکتورها",      icon: ClipboardList },
       { href: "/visits", label: "ویزیت‌های میدانی", icon: MapPin },
+      { href: "/targets", label: "اهداف فروش (تارگت)", icon: Target },
     ],
   },
   {
