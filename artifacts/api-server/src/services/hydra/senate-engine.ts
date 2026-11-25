@@ -18,6 +18,11 @@ export interface HydraSenateResult {
 const recentReceipts = new Map<string, HydraSenateResult>();
 const MAX_CACHED_RECEIPTS = 500;
 
+export interface HydraSenateOptions {
+  readonly correlationId?: string;
+  readonly quotaExhausted?: boolean;
+}
+
 /**
  * Runs the bounded 2-round Hydra Senate debate for a proposed intent
  * and produces a deterministic execution receipt.
@@ -26,8 +31,33 @@ const MAX_CACHED_RECEIPTS = 500;
 export function runHydraSenate(
   intent: HydraIntent,
   tenantId: string,
-  correlationId: string = crypto.randomUUID(),
+  correlationIdOrOptions: string | HydraSenateOptions = crypto.randomUUID(),
 ): HydraSenateResult {
+  const opts = typeof correlationIdOrOptions === "string"
+    ? { correlationId: correlationIdOrOptions }
+    : correlationIdOrOptions;
+  const correlationId = opts.correlationId ?? crypto.randomUUID();
+
+  if (opts.quotaExhausted) {
+    const now = new Date().toISOString();
+    return {
+      rounds: [],
+      receipt: {
+        receiptId: crypto.randomUUID(),
+        correlationId,
+        intentId: intent.intentId,
+        tenantId,
+        outcome: "ESCALATED",
+        decidedBy: "hydra-system",
+        decidedByRole: "SYSTEM",
+        roundsCompleted: 0,
+        evidence: [],
+        reason: "سهمیه توکن مدل به اتمام رسیده است؛ ارجاع به مدل جایگزین یا اپراتور انسانی (QUOTA_EXHAUSTED)",
+        recordedAt: now,
+      },
+    };
+  }
+
   const cacheKey = `${tenantId}:${intent.intentId}`;
   const existing = recentReceipts.get(cacheKey);
   if (existing) {

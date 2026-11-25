@@ -32,7 +32,8 @@ router.post("/hydra/intents", requireAuth, async (req, res): Promise<void> => {
     ? req.headers["x-tenant-id"].trim()
     : "forooshyar-default";
 
-  const result = runHydraSenate(parsed.data, tenantId);
+  const quotaExhausted = req.headers["x-hydra-quota-exhausted"] === "true";
+  const result = runHydraSenate(parsed.data, tenantId, { quotaExhausted });
 
   await logAudit(db, {
     userId: user.id,

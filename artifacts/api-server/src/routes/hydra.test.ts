@@ -111,4 +111,25 @@ describe("Hydra ACP Routes (TASK-004)", () => {
     expect(second.body.cached).toBe(true);
     expect(second.body.receipt.receiptId).toBe(first.body.receipt.receiptId);
   });
+
+  it("POST /api/hydra/intents immediately escalates with 0 rounds when quota is exhausted", async () => {
+    const res = await request(app)
+      .post("/api/hydra/intents")
+      .set("Authorization", `Bearer ${token}`)
+      .set("x-hydra-quota-exhausted", "true")
+      .send({
+        intentId: "44444444-4444-4444-8444-444444444444",
+        action: "CHECK_STOCK_ALLOCATION",
+        domain: "inventory",
+        riskLevel: "LOW",
+        requiresHumanApproval: false,
+        rationale: "تست اتمام سهمیه توکن",
+        parameters: {},
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.receipt.outcome).toBe("ESCALATED");
+    expect(res.body.receipt.roundsCompleted).toBe(0);
+    expect(res.body.rounds).toHaveLength(0);
+  });
 });
