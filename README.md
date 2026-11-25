@@ -1,24 +1,28 @@
+<div align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0B0F19,50:0A84FF,100:00F0FF&height=200&section=header&text=Forooshyar%20Plus&fontSize=56&fontColor=ffffff&fontAlignY=38&desc=Sales%20%26%20Distribution%20Operating%20Platform%20%7C%20Powered%20by%20Hydra%20ACP&descAlignY=58&descSize=16" alt="Forooshyar Plus Banner" width="100%" />
+
+  <p>
+    <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-00F0FF.svg?style=flat-square" alt="License: MIT" /></a>
+    <img src="https://img.shields.io/badge/Stack-React%2019%20%7C%20Express%205%20%7C%20Drizzle%20ORM-0A84FF.svg?style=flat-square" alt="Tech Stack" />
+    <a href="https://github.com/amirreza4710/forooshyar-core"><img src="https://img.shields.io/badge/Core-forooshyar--core-00F0FF.svg?style=flat-square" alt="Forooshyar Core" /></a>
+  </p>
+</div>
+
 # فروشیار پلاس — پلتفرم عملیات فروش و توزیع
 
 فروشیار پلاس یک **Sales & Distribution Operating Platform** برای مدیریت عملیات میدانی، مشتریان، محصولات، سفارش‌ها، وصول و کنترل مدیریتی شرکت‌های پخش است. قابلیت‌های بازارک در لایه‌های Field Operations و Automation این محصول ادغام شده‌اند. چشم‌انداز داخلی محصول، تبدیل تدریجی به **Domain-Driven Business Operating Platform** است؛ این چشم‌انداز مجوز افزودن قابلیت‌های خارج از MVP نیست.
-
-> ⚠️ مخزن خصوصی و داخلی است. عمومی‌سازی فقط با مجوز صریح.
 
 ## وضعیت فعلی
 
 | مورد | وضعیت |
 |---|---|
-| Checkpoint رسمی | **1.7 — Engineering Foundation Ready (Frozen)** |
-| Checkpoint بعدی | **A1 — Operational Foundation** |
+| Checkpoint رسمی | **A1 — Operational Foundation (Approved & Frozen)** |
+| Checkpoint فعال | **A2 — Sales & Field Core (Visits, Orders Credit Link, Targets)** |
 | MVP Scope | Frozen |
 | MVP Backlog فعال | 14 Epic و 41 Feature |
 | Frozen baseline | v2.4: 11 Epic و 32 Feature |
-| معماری اجرایی | Modular Monolith با Bounded Contextهای روشن |
-| کار جاری | Phase A1 — Operational Foundation |
-| Backend validation | Drizzle ORM migration & schema push, 9/9 Vitest test suite passing |
-| MVP Development | A1 در حال اجرا؛ Field Operations از A2 آغاز می‌شود |
-
-Checkpoint 1.7 is FROZEN. Phase A1 (Operational Foundation) is the active workstream.
+| معماری اجرایی | Modular Monolith با Bounded Contextهای روشن + Hydra ACP (`forooshyar-core`) |
+| کار جاری | Phase A2 (Sales & Field Core) + `TASK-004` (Hydra Senate Engine) |
 
 ## مرجعیت اسناد (Source of Truth) و از کجا شروع کنیم؟
 
