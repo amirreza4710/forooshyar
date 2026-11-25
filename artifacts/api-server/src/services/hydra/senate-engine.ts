@@ -10,17 +10,29 @@ import {
 export interface HydraSenateResult {
   readonly rounds: HydraDebateRound[];
   readonly receipt: HydraExecutionReceipt;
+  readonly cached?: boolean;
 }
+
+// Anti-loop / anti-token-burn circuit breaker: bounded in-memory deduplication
+// so repeated retries of the same intentId never trigger redundant debate rounds.
+const recentReceipts = new Map<string, HydraSenateResult>();
+const MAX_CACHED_RECEIPTS = 500;
 
 /**
  * Runs the bounded 2-round Hydra Senate debate for a proposed intent
  * and produces a deterministic execution receipt.
+ * Guaranteed O(1) bounded execution: max 2 rounds, no while/retry loops.
  */
 export function runHydraSenate(
   intent: HydraIntent,
   tenantId: string,
   correlationId: string = crypto.randomUUID(),
 ): HydraSenateResult {
+  const cacheKey = `${tenantId}:${intent.intentId}`;
+  const existing = recentReceipts.get(cacheKey);
+  if (existing) {
+    return { ...existing, cached: true };
+  }
   const now = new Date().toISOString();
   const rounds: HydraDebateRound[] = [];
 
@@ -108,5 +120,11 @@ export function runHydraSenate(
     recordedAt: now,
   };
 
-  return { rounds, receipt };
+  const result: HydraSenateResult = { rounds, receipt };
+  if (recentReceipts.size >= MAX_CACHED_RECEIPTS) {
+    const oldestKey = recentReceipts.keys().next().value;
+    if (oldestKey) recentReceipts.delete(oldestKey);
+  }
+  recentReceipts.set(cacheKey, result);
+  return result;
 }

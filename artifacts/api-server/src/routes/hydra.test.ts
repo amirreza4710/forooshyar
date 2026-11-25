@@ -85,4 +85,30 @@ describe("Hydra ACP Routes (TASK-004)", () => {
     expect(res.body.receipt.roundsCompleted).toBe(HYDRA_MAX_DEBATE_ROUNDS);
     expect(res.body.rounds).toHaveLength(HYDRA_MAX_DEBATE_ROUNDS);
   });
+
+  it("POST /api/hydra/intents deduplicates repeated intentId to prevent token-burning loops", async () => {
+    const payload = {
+      intentId: "33333333-3333-4333-8333-333333333333",
+      action: "CHECK_STOCK_ALLOCATION",
+      domain: "inventory",
+      riskLevel: "LOW",
+      requiresHumanApproval: false,
+      rationale: "تست جلوگیری از لوپ تکراری",
+      parameters: {},
+    };
+
+    const first = await request(app)
+      .post("/api/hydra/intents")
+      .set("Authorization", `Bearer ${token}`)
+      .send(payload);
+    const second = await request(app)
+      .post("/api/hydra/intents")
+      .set("Authorization", `Bearer ${token}`)
+      .send(payload);
+
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    expect(second.body.cached).toBe(true);
+    expect(second.body.receipt.receiptId).toBe(first.body.receipt.receiptId);
+  });
 });
