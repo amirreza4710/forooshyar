@@ -1,7 +1,7 @@
 import { Router } from "express";
 import crypto from "crypto";
 import { db, ordersTable, visitsTable, customersTable, collectionsTable, deliveriesTable } from "@workspace/db";
-import { eq, sql, and, isNull, ne } from "drizzle-orm";
+import { eq, sql, and, isNull, ne, inArray } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
 import {
   CreateOrderBody,
@@ -31,6 +31,7 @@ interface OrderItemShape {
 function serializeOrder(
   o: typeof ordersTable.$inferSelect,
   delivery?: { returnedAmount?: number | null; returnedItems?: unknown } | null,
+  customer?: { phone?: string | null; address?: string | null } | null,
 ) {
   const rawItems = Array.isArray(o.items) ? (o.items as OrderItemShape[]) : [];
   const rawReturnedItems = Array.isArray(delivery?.returnedItems)
@@ -45,6 +46,8 @@ function serializeOrder(
 
   return {
     ...o,
+    customerPhone: customer?.phone ?? null,
+    customerAddress: customer?.address ?? null,
     items: rawItems.map((item) => ({
       ...item,
       isBonus: Boolean(item.isBonus),
@@ -89,7 +92,29 @@ router.get("/orders", requireAuth, async (req, res): Promise<void> => {
     // حفظ سازگاری با تست‌های mock بدون deliveriesTable
   }
 
-  res.json(orders.map((o) => serializeOrder(o, deliveryMap.get(o.id))));
+  // بازیابی اطلاعات تلفن و نشانی مشتریان جهت صدور فاکتور
+  const customerMap = new Map<number, { phone?: string | null; address?: string | null }>();
+  try {
+    const customerIds = Array.from(new Set(orders.map((o) => o.customerId)));
+    if (customerIds.length > 0) {
+      const customers = await db
+        .select({
+          id: customersTable.id,
+          phone: customersTable.phone,
+          address: customersTable.address,
+        })
+        .from(customersTable)
+        .where(inArray(customersTable.id, customerIds));
+
+      for (const c of customers) {
+        customerMap.set(c.id, c);
+      }
+    }
+  } catch {
+    // حفظ سازگاری با تست‌های mock
+  }
+
+  res.json(orders.map((o) => serializeOrder(o, deliveryMap.get(o.id), customerMap.get(o.customerId))));
 });
 
 router.post("/orders", requireAuth, async (req, res): Promise<void> => {
@@ -358,7 +383,23 @@ router.get("/orders/:id", requireAuth, async (req, res): Promise<void> => {
     // برای سازگاری با تست‌های mock بدون جدول deliveries
   }
 
-  res.json(serializeOrder(order, delivery));
+  // بازیابی اطلاعات تلفن و آدرس مشتری جهت چاپ فاکتور
+  let customer: { phone?: string | null; address?: string | null } | null = null;
+  try {
+    const [cust] = await db
+      .select({
+        phone: customersTable.phone,
+        address: customersTable.address,
+      })
+      .from(customersTable)
+      .where(eq(customersTable.id, order.customerId))
+      .limit(1);
+    customer = cust || null;
+  } catch {
+    // برای سازگاری با تست‌های mock
+  }
+
+  res.json(serializeOrder(order, delivery, customer));
 });
 
 router.patch("/orders/:id", requireAuth, async (req, res): Promise<void> => {

@@ -399,7 +399,10 @@ router.patch("/deliveries/:id", requireAuth, async (req, res): Promise<void> => 
       );
     }
 
-    // بررسی سقف تعداد سفارش و محاسبه مبلغ بستانکاری بر اساس تفکیک فروشی و اشانتیون
+    // ضریب تخفیف سفارش جهت تخصیص عادلانه تخفیف به اقلام مرجوعی
+    const discountFactor = order.subtotal > 0 ? order.total / order.subtotal : 1;
+
+    // بررسی سقف تعداد سفارش و محاسبه مبلغ بستانکاری بر اساس تفکیک فروشی، اشانتیون و تسهیم تخفیف
     let totalCalculatedReturnAmount = 0;
     for (const [productId, totalReturnedQty] of returnedQtyByProduct.entries()) {
       const orderProd = orderProductMap.get(productId);
@@ -418,31 +421,27 @@ router.patch("/deliveries/:id", requireAuth, async (req, res): Promise<void> => 
         );
       }
 
-      // محاسبه بستانکاری مالی: حداکثر تا سقف اقلام فروشی با قیمت واحد اصلی، اقلام اشانتیون قیمت صفر دارند
+      // محاسبه بستانکاری مالی: اقلام اشانتیون قیمت صفر دارند و اقلام فروشی قیمت مؤثر پس از کسر سهم تخفیف را می‌گیرند
       const creditedPaidUnits = Math.min(totalReturnedQty, orderProd.paidQty);
-      totalCalculatedReturnAmount += creditedPaidUnits * orderProd.paidUnitPrice;
+      const effectiveUnitPrice = Math.max(0, Math.round(orderProd.paidUnitPrice * discountFactor));
+      totalCalculatedReturnAmount += creditedPaidUnits * effectiveUnitPrice;
     }
 
-    // تنظیم قیمت و نام اقلام بر اساس داده‌های قطعی سفارش اصلی (رد قیمت دستکاری‌شده کاربر)
+    // تنظیم قیمت و نام اقلام بر اساس داده‌های قطعی سفارش اصلی (با احتساب سهم تخفیف)
     const normalizedReturns: ReturnedItemShape[] = rawReturns.map((item) => {
       const orderProd = orderProductMap.get(item.productId);
+      const effectiveUnitPrice = Math.max(0, Math.round((orderProd?.paidUnitPrice ?? 0) * discountFactor));
       return {
         productId: item.productId,
         productName: orderProd?.productName || item.productName,
         qty: item.qty,
-        price: orderProd?.paidUnitPrice ?? 0,
+        price: effectiveUnitPrice,
         restock: item.restock ?? true,
       };
     });
 
-    const returnedAmount = totalCalculatedReturnAmount;
-
-    if (returnedAmount > order.total) {
-      throw Object.assign(
-        new Error("مبلغ مرجوعی نمی‌تواند بیشتر از مبلغ کل سفارش باشد"),
-        { status: 400 },
-      );
-    }
+    // سقف مبلغ مرجوعی هرگز نمی‌تواند از مبلغ کل پرداخت‌شده سفارش بیشتر شود
+    const returnedAmount = Math.min(totalCalculatedReturnAmount, order.total);
 
     if (status === "PARTIAL_RETURN") {
       const restockItems = normalizedReturns.filter((item) => item.restock !== false);

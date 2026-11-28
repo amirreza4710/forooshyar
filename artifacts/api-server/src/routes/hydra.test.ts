@@ -183,15 +183,88 @@ describe("Hydra ACP Routes (TASK-004)", () => {
     expect(checkRes.body.receipt.outcome).toBe("APPROVED");
   });
 
-  it("POST /api/hydra/intents/:intentId/escalate returns 400 on invalid decision", async () => {
-    const res = await request(app)
-      .post("/api/hydra/intents/some-intent/escalate")
+  it("POST /api/hydra/intents rejects intent tampering with 409 when payload changes for same intentId", async () => {
+    const fixedId = "66666666-6666-4666-8666-666666666666";
+    const res1 = await request(app)
+      .post("/api/hydra/intents")
       .set("Authorization", `Bearer ${token}`)
       .send({
-        decision: "MAYBE",
-        notes: "نامعتبر",
+        intentId: fixedId,
+        action: "CHECK_BALANCE",
+        domain: "ledger",
+        riskLevel: "LOW",
+        requiresHumanApproval: false,
+        rationale: "بررسی موجودی",
+      });
+    expect(res1.status).toBe(200);
+
+    // ارسال مجدد با همان intentId اما ریسک بحرانی و اکشن متفاوت
+    const res2 = await request(app)
+      .post("/api/hydra/intents")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        intentId: fixedId,
+        action: "WIPE_LEDGER",
+        domain: "ledger",
+        riskLevel: "CRITICAL",
+        requiresHumanApproval: true,
+        rationale: "تلاش برای سوءاستفاده از کش نیت قبلی",
+      });
+    expect(res2.status).toBe(409);
+    expect(res2.body.error).toContain("Intent Tampering Detected");
+  });
+
+  it("POST /api/hydra/intents/:intentId/escalate returns 404 for non-existent intent", async () => {
+    const res = await request(app)
+      .post("/api/hydra/intents/non-existent-intent-uuid/escalate")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        decision: "APPROVED",
+        notes: "تایید بدون وجود نیت",
+      });
+    expect(res.status).toBe(404);
+    expect(res.body.error).toContain("یافت نشد");
+  });
+
+  it("GET /api/hydra/receipts isolates receipts by tenant", async () => {
+    const tenantA = "tenant-alpha";
+    const tenantB = "tenant-beta";
+
+    await request(app)
+      .post("/api/hydra/intents")
+      .set("Authorization", `Bearer ${token}`)
+      .set("x-tenant-id", tenantA)
+      .send({
+        intentId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        action: "ACTION_A",
+        domain: "general",
+        riskLevel: "LOW",
+        requiresHumanApproval: false,
+        rationale: "نیت سازمان آلفا",
       });
 
-    expect(res.status).toBe(400);
+    await request(app)
+      .post("/api/hydra/intents")
+      .set("Authorization", `Bearer ${token}`)
+      .set("x-tenant-id", tenantB)
+      .send({
+        intentId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+        action: "ACTION_B",
+        domain: "general",
+        riskLevel: "LOW",
+        requiresHumanApproval: false,
+        rationale: "نیت سازمان بتا",
+      });
+
+    const resA = await request(app)
+      .get("/api/hydra/receipts")
+      .set("Authorization", `Bearer ${token}`)
+      .set("x-tenant-id", tenantA);
+
+    expect(resA.status).toBe(200);
+    const tenantIdsA = resA.body.map((r: any) => r.receipt.tenantId);
+    expect(tenantIdsA.every((t: string) => t === tenantA)).toBe(true);
+    expect(tenantIdsA).toContain(tenantA);
+    expect(tenantIdsA).not.toContain(tenantB);
   });
 });

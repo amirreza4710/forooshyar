@@ -34,7 +34,10 @@ router.get("/hydra/health", requireAuth, requireHydraAdmin, (_req, res): void =>
 
 router.get("/hydra/receipts", requireAuth, requireHydraAdmin, (req, res): void => {
   const limit = req.query.limit ? Math.min(100, Math.max(1, Number(req.query.limit))) : 50;
-  const receipts = getRecentHydraReceipts(limit);
+  const tenantId = typeof req.headers["x-tenant-id"] === "string" && req.headers["x-tenant-id"].trim()
+    ? req.headers["x-tenant-id"].trim()
+    : "forooshyar-default";
+  const receipts = getRecentHydraReceipts(limit, tenantId);
   res.json(receipts);
 });
 
@@ -76,7 +79,16 @@ router.post("/hydra/intents", requireAuth, requireHydraAdmin, async (req, res): 
     : "forooshyar-default";
 
   const quotaExhausted = req.headers["x-hydra-quota-exhausted"] === "true";
-  const result = runHydraSenate(parsed.data, tenantId, { quotaExhausted });
+  let result;
+  try {
+    result = runHydraSenate(parsed.data, tenantId, { quotaExhausted });
+  } catch (err: any) {
+    if (err.status === 409) {
+      res.status(409).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
 
   try {
     await logAudit(db, {
@@ -114,19 +126,28 @@ router.post("/hydra/intents/:intentId/escalate", requireAuth, requireHydraAdmin,
   const intentId = String(req.params.intentId);
 
   const cached = getHydraReceiptByIntentId(tenantId, intentId);
+  if (!cached) {
+    res.status(404).json({ error: "نیت مورد نظر برای ارجاع انسانی یافت نشد" });
+    return;
+  }
+  if (cached.receipt.outcome !== "ESCALATED") {
+    res.status(400).json({ error: "این نیت در وضعیت ارجاع انسانی (ESCALATED) قرار ندارد" });
+    return;
+  }
+
   const now = new Date().toISOString();
 
   const updatedReceipt = {
     receiptId: crypto.randomUUID(),
-    correlationId: cached?.receipt.correlationId || crypto.randomUUID(),
+    correlationId: cached.receipt.correlationId || crypto.randomUUID(),
     intentId,
     tenantId,
     outcome: decision as "APPROVED" | "REJECTED",
     decidedBy: `human-${user.id}`,
     decidedByRole: "PRESIDENT" as const,
-    roundsCompleted: cached?.receipt.roundsCompleted ?? 2,
+    roundsCompleted: cached.receipt.roundsCompleted ?? 2,
     evidence: [
-      ...(cached?.receipt.evidence || []),
+      ...(cached.receipt.evidence || []),
       {
         evidenceId: crypto.randomUUID(),
         kind: "AUDIT" as const,
@@ -137,8 +158,6 @@ router.post("/hydra/intents/:intentId/escalate", requireAuth, requireHydraAdmin,
     reason: notes ? `تصمیم ریاست: ${notes}` : `تصمیم نهایی ریاست (${decision})`,
     recordedAt: now,
   };
-
-  updateHydraReceipt(tenantId, intentId, updatedReceipt);
 
   try {
     await logAudit(db, {
@@ -156,8 +175,11 @@ router.post("/hydra/intents/:intentId/escalate", requireAuth, requireHydraAdmin,
     });
   } catch (err) {
     console.error("[Hydra] Failed to write escalation audit log:", err);
+    res.status(500).json({ error: "خطا در ثبت تراکنش ممیزی تصمیم انسانی" });
+    return;
   }
 
+  updateHydraReceipt(tenantId, intentId, updatedReceipt);
   res.json(updatedReceipt);
 });
 

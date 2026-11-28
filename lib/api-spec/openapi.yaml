@@ -1496,6 +1496,12 @@ components:
           type: integer
         customerName:
           type: string
+        customerPhone:
+          type: ["string", "null"]
+          description: شماره تماس مشتری جهت چاپ فاکتور تحویل
+        customerAddress:
+          type: ["string", "null"]
+          description: نشانی مشتری جهت چاپ فاکتور تحویل
         userId:
           type: ["integer", "null"]
         repName:

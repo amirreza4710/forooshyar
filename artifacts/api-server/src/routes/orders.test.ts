@@ -584,6 +584,16 @@ describe("POST /api/orders", () => {
     expect(getRes.body.returnedItems).toHaveLength(1);
     expect(getRes.body.returnedItems[0].productId).toBe(prod.id);
     expect(getRes.body.returnedItems[0].qty).toBe(1);
+    expect(getRes.body.customerPhone).toBe(customer.phone);
+    expect(getRes.body.customerAddress).toBe(customer.address);
+
+    // بررسی حضور شماره و نشانی در لیست فاکتورها
+    const listRes = await request(app)
+      .get("/api/orders")
+      .set("Authorization", `Bearer ${token}`);
+    expect(listRes.status).toBe(200);
+    const listed = listRes.body.find((o: any) => o.id === orderRes.body.id);
+    expect(listed?.customerPhone).toBe(customer.phone);
 
     // پاک‌سازی رکورد موقت حواله
     await db.delete(deliveriesTable).where(eq(deliveriesTable.id, deliv.id));

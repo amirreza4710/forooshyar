@@ -11,6 +11,19 @@ export interface HydraSenateResult {
   readonly rounds: HydraDebateRound[];
   readonly receipt: HydraExecutionReceipt;
   readonly cached?: boolean;
+  readonly intentHash?: string;
+}
+
+function computeIntentHash(intent: HydraIntent): string {
+  const payload = JSON.stringify({
+    action: intent.action,
+    domain: intent.domain,
+    riskLevel: intent.riskLevel,
+    requiresHumanApproval: Boolean(intent.requiresHumanApproval),
+    rationale: intent.rationale || "",
+    parameters: intent.parameters || {},
+  });
+  return crypto.createHash("sha256").update(payload).digest("hex").slice(0, 16);
 }
 
 // Anti-loop / anti-token-burn circuit breaker: bounded in-memory deduplication
@@ -59,8 +72,15 @@ export function runHydraSenate(
   }
 
   const cacheKey = `${tenantId}:${intent.intentId}`;
+  const intentHash = computeIntentHash(intent);
   const existing = recentReceipts.get(cacheKey);
   if (existing) {
+    if (existing.intentHash && existing.intentHash !== intentHash) {
+      throw Object.assign(
+        new Error(`شناسه نیت ${intent.intentId} قبلاً با محتوا یا سطح ریسک متفاوتی ارزیابی شده است (Intent Tampering Detected)`),
+        { status: 409 },
+      );
+    }
     return { ...existing, cached: true };
   }
   const now = new Date().toISOString();
@@ -150,7 +170,7 @@ export function runHydraSenate(
     recordedAt: now,
   };
 
-  const result: HydraSenateResult = { rounds, receipt };
+  const result: HydraSenateResult = { rounds, receipt, intentHash };
   if (recentReceipts.size >= MAX_CACHED_RECEIPTS) {
     const oldestKey = recentReceipts.keys().next().value;
     if (oldestKey) recentReceipts.delete(oldestKey);
@@ -159,8 +179,10 @@ export function runHydraSenate(
   return result;
 }
 
-export function getRecentHydraReceipts(limit = 50): HydraSenateResult[] {
-  return Array.from(recentReceipts.values()).slice(-limit).reverse();
+export function getRecentHydraReceipts(limit = 50, tenantId?: string): HydraSenateResult[] {
+  const all = Array.from(recentReceipts.values());
+  const filtered = tenantId ? all.filter((r) => r.receipt.tenantId === tenantId) : all;
+  return filtered.slice(-limit).reverse();
 }
 
 export function getHydraReceiptByIntentId(tenantId: string, intentId: string): HydraSenateResult | undefined {

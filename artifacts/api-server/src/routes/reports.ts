@@ -267,7 +267,7 @@ router.get("/reports/performance", requireAuth, async (req: Request, res): Promi
 
   const repConditions = [
     isNull(usersTable.deletedAt),
-    sql`${usersTable.role} IN ('ویزیتور', 'نماینده فروش', 'بازاریاب', 'نماینده', 'موزع')`,
+    sql`(${usersTable.role} IN ('ویزیتور', 'نماینده فروش', 'ویزیتور / نماینده فروش', 'بازاریاب', 'نماینده', 'موزع', 'موزع / راننده') OR ${usersTable.role} LIKE '%ویزیتور%' OR ${usersTable.role} LIKE '%نماینده%')`,
   ];
 
   if (!isManager) {
@@ -284,8 +284,8 @@ router.get("/reports/performance", requireAuth, async (req: Request, res): Promi
     .where(and(...repConditions));
 
   const targetConditions = [isNull(targetsTable.deletedAt)];
-  if (from) targetConditions.push(gte(targetsTable.startDate, new Date(from)));
-  if (to) targetConditions.push(lte(targetsTable.endDate, new Date(to)));
+  if (from) targetConditions.push(gte(targetsTable.endDate, new Date(from)));
+  if (to) targetConditions.push(lte(targetsTable.startDate, new Date(to)));
 
   const targets = await db
     .select()
@@ -336,8 +336,9 @@ router.get("/reports/performance", requireAuth, async (req: Request, res): Promi
 
     const achievementRate = targetAmount > 0
       ? Math.round((achievedAmount / targetAmount) * 1000) / 10
-      : achievedAmount > 0 ? 100 : 0;
+      : 0;
 
+    // تطبیق با منطق پلکان پورسانت در commissions.ts: پایه ۲٪، و در صورت تحقق ۱۰۰٪، ارتقا به ۳٪
     const commissionRate = achievementRate >= 100 ? 0.03 : 0.02;
     const commissionEarned = Math.round(totalCollected * commissionRate);
 

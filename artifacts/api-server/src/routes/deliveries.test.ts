@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import request from "supertest";
 import { eq } from "drizzle-orm";
-import { db, customersTable, ordersTable, productsTable } from "@workspace/db";
+import { db, customersTable, ordersTable, productsTable, deliveriesTable } from "@workspace/db";
 import app from "../app";
 import {
   createTestUser,
@@ -340,5 +340,66 @@ describe("deliveries routes", () => {
 
     expect(patchRes.status).toBe(403);
     expect(patchRes.body.error).toContain("شما مجاز به تغییر وضعیت این حواله ارسال نیستید");
+  });
+
+  it("مرجوعی سفارش دارای تخفیف، سهم تخفیف را تسهیم کرده و مبلغ واقعی پرداختی را مسترد می‌کند", async () => {
+    // کالای ۱۰۰۰ ریالی
+    const product = await createTestProduct(50, 1000);
+    createdProductIds.push(product.id);
+
+    // ثبت سفارش با تخفیف: ۱ عدد کالا به قیمت ۱۰۰۰ با تخفیف ۲۰۰ ریال -> مبلغ کل ۸۰۰ ریال
+    const [order] = await db
+      .insert(ordersTable)
+      .values({
+        code: `ORD-DISC-${Date.now()}`,
+        customerId,
+        customerName: "مشتری تخفیف‌دار",
+        userId: driverId,
+        repName: "راننده تستی",
+        subtotal: 1000,
+        discount: 200,
+        total: 800,
+        status: "تایید شده",
+        items: [{ productId: product.id, productName: product.name, qty: 1, price: 1000 }],
+      })
+      .returning();
+    createdOrderIds.push(order!.id);
+
+    // ایجاد حواله تحویل
+    const [delivery] = await db
+      .insert(deliveriesTable)
+      .values({
+        code: `DLV-DISC-${Date.now()}`,
+        orderId: order!.id,
+        orderCode: order!.code,
+        customerId,
+        customerName: "مشتری تخفیف‌دار",
+        driverId,
+        driverName: "راننده تستی",
+        status: "ASSIGNED",
+      })
+      .returning();
+    createdDeliveryIds.push(delivery!.id);
+
+    // مرجوعی کامل ۱ عدد کالا
+    const patchRes = await request(app)
+      .patch(`/api/deliveries/${delivery!.id}`)
+      .set("Authorization", `Bearer ${managerToken}`)
+      .send({
+        status: "PARTIAL_RETURN",
+        returnedItems: [{ productId: product.id, productName: product.name, qty: 1, price: 1000, restock: true }],
+      });
+
+    // باید با موفقیت ۲۰۰ تایید شود و مبلغ مرجوعی دقیقا ۸۰۰ ریال (نه ۱۰۰۰ ریال) باشد
+    expect(patchRes.status).toBe(200);
+    expect(patchRes.body.returnedAmount).toBe(800);
+    expect(patchRes.body.returnedItems[0].price).toBe(800);
+
+    // بررسی سفارش مرتبط در دیتابیس: مبلغ کل پس از مرجوعی صفر شده است
+    const [freshOrder] = await db
+      .select({ total: ordersTable.total })
+      .from(ordersTable)
+      .where(eq(ordersTable.id, order!.id));
+    expect(freshOrder?.total).toBe(0);
   });
 });

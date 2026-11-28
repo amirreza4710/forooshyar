@@ -2,8 +2,8 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const jwt = require("../artifacts/api-server/node_modules/jsonwebtoken");
 
-const SESSION_SECRET = "local-preview-2026-strong-session-secret-9db743c1";
-const BASE_URL = "http://127.0.0.1:3300";
+const SESSION_SECRET = process.env.SESSION_SECRET || "rehearsal-runtime-ephemeral-secret";
+const BASE_URL = process.env.BASE_URL || "http://127.0.0.1:3300";
 
 // ساخت توکن‌های معتبر برای مانور بار
 const managerToken = jwt.sign(
@@ -43,18 +43,13 @@ async function measureRequest(name, fn) {
 }
 
 async function runScenario(scenarioName, requestFns, concurrency = 5) {
-  console.log(`\n⏳ اجرای سناریو: ${scenarioName} (با هم‌زمانی ${concurrency})...`);
+  console.log(`\n⏳ اجرای سناریو: ${scenarioName} (با سقف هم‌زمانی پله‌ای ${concurrency})...`);
   const results = [];
-  const batches = [];
 
   for (let i = 0; i < requestFns.length; i += concurrency) {
     const slice = requestFns.slice(i, i + concurrency);
-    batches.push(Promise.all(slice.map(({ name, fn }) => measureRequest(name, fn))));
-  }
-
-  const batchResults = await Promise.all(batches);
-  for (const b of batchResults) {
-    results.push(...b);
+    const chunkResults = await Promise.all(slice.map(({ name, fn }) => measureRequest(name, fn)));
+    results.push(...chunkResults);
   }
 
   const durations = results.map(r => r.duration).sort((a, b) => a - b);

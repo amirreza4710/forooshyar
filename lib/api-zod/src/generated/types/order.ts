@@ -15,6 +15,16 @@ export interface Order {
   code?: string;
   customerId: number;
   customerName: string;
+  /**
+     * شماره تماس مشتری جهت چاپ فاکتور تحویل
+     * @nullable
+     */
+  customerPhone?: string | null;
+  /**
+     * نشانی مشتری جهت چاپ فاکتور تحویل
+     * @nullable
+     */
+  customerAddress?: string | null;
   /** @nullable */
   userId?: number | null;
   repName: string;
