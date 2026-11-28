@@ -1264,32 +1264,189 @@ export const GetHydraHealthResponse = zod.object({
 export const PostHydraIntentBody = zod.object({
   "intentId": zod.string().optional(),
   "action": zod.string(),
-  "domain": zod.enum(['orders', 'deliveries', 'ledger', 'catalog', 'users', 'security', 'generic']),
+  "domain": zod.string(),
   "riskLevel": zod.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).optional(),
-  "payload": zod.record(zod.string(), zod.unknown())
+  "requiresHumanApproval": zod.boolean().optional(),
+  "rationale": zod.string().optional(),
+  "parameters": zod.record(zod.string(), zod.unknown()).optional()
 })
 
 export const PostHydraIntentResponse = zod.object({
   "rounds": zod.array(zod.object({
+  "intentId": zod.string(),
   "roundNumber": zod.int(),
-  "speakerRole": zod.string(),
-  "stance": zod.enum(['AGREE', 'DISAGREE', 'ABSTAIN']),
-  "arguments": zod.array(zod.string())
+  "topic": zod.string(),
+  "contributions": zod.array(zod.object({
+  "actorId": zod.string(),
+  "role": zod.string(),
+  "stance": zod.enum(['SUPPORT', 'OPPOSE', 'AMEND', 'ABSTAIN']),
+  "argument": zod.string(),
+  "evidence": zod.array(zod.object({
+  "evidenceId": zod.string(),
+  "kind": zod.enum(['LOG', 'METRIC', 'DIFF', 'AUDIT', 'DOCUMENT', 'SIMULATION']),
+  "uri": zod.string(),
+  "summary": zod.string(),
+  "sha256": zod.string().optional()
+})).optional()
+})),
+  "consensusReached": zod.boolean(),
+  "startedAt": zod.string(),
+  "concludedAt": zod.string().optional()
 })),
   "receipt": zod.object({
   "receiptId": zod.string(),
-  "correlationId": zod.string().optional(),
+  "correlationId": zod.string(),
   "intentId": zod.string(),
-  "tenantId": zod.string().optional(),
+  "tenantId": zod.string(),
   "outcome": zod.enum(['APPROVED', 'REJECTED', 'ESCALATED']),
   "decidedBy": zod.string(),
   "decidedByRole": zod.string(),
   "roundsCompleted": zod.int(),
-  "evidence": zod.array(zod.string()).optional(),
-  "reason": zod.string(),
+  "evidence": zod.array(zod.object({
+  "evidenceId": zod.string(),
+  "kind": zod.enum(['LOG', 'METRIC', 'DIFF', 'AUDIT', 'DOCUMENT', 'SIMULATION']),
+  "uri": zod.string(),
+  "summary": zod.string(),
+  "sha256": zod.string().optional()
+})),
+  "reason": zod.string().optional(),
   "recordedAt": zod.string()
 }),
   "cached": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Get recent execution receipts from the Hydra Senate engine
+ */
+export const GetHydraReceiptsResponseItem = zod.object({
+  "rounds": zod.array(zod.object({
+  "intentId": zod.string(),
+  "roundNumber": zod.int(),
+  "topic": zod.string(),
+  "contributions": zod.array(zod.object({
+  "actorId": zod.string(),
+  "role": zod.string(),
+  "stance": zod.enum(['SUPPORT', 'OPPOSE', 'AMEND', 'ABSTAIN']),
+  "argument": zod.string(),
+  "evidence": zod.array(zod.object({
+  "evidenceId": zod.string(),
+  "kind": zod.enum(['LOG', 'METRIC', 'DIFF', 'AUDIT', 'DOCUMENT', 'SIMULATION']),
+  "uri": zod.string(),
+  "summary": zod.string(),
+  "sha256": zod.string().optional()
+})).optional()
+})),
+  "consensusReached": zod.boolean(),
+  "startedAt": zod.string(),
+  "concludedAt": zod.string().optional()
+})),
+  "receipt": zod.object({
+  "receiptId": zod.string(),
+  "correlationId": zod.string(),
+  "intentId": zod.string(),
+  "tenantId": zod.string(),
+  "outcome": zod.enum(['APPROVED', 'REJECTED', 'ESCALATED']),
+  "decidedBy": zod.string(),
+  "decidedByRole": zod.string(),
+  "roundsCompleted": zod.int(),
+  "evidence": zod.array(zod.object({
+  "evidenceId": zod.string(),
+  "kind": zod.enum(['LOG', 'METRIC', 'DIFF', 'AUDIT', 'DOCUMENT', 'SIMULATION']),
+  "uri": zod.string(),
+  "summary": zod.string(),
+  "sha256": zod.string().optional()
+})),
+  "reason": zod.string().optional(),
+  "recordedAt": zod.string()
+}),
+  "cached": zod.boolean().optional()
+})
+export const GetHydraReceiptsResponse = zod.array(GetHydraReceiptsResponseItem)
+
+
+/**
+ * @summary Get execution receipt for a specific intent
+ */
+export const GetHydraIntentReceiptParams = zod.object({
+  "intentId": zod.coerce.string()
+})
+
+export const GetHydraIntentReceiptResponse = zod.object({
+  "rounds": zod.array(zod.object({
+  "intentId": zod.string(),
+  "roundNumber": zod.int(),
+  "topic": zod.string(),
+  "contributions": zod.array(zod.object({
+  "actorId": zod.string(),
+  "role": zod.string(),
+  "stance": zod.enum(['SUPPORT', 'OPPOSE', 'AMEND', 'ABSTAIN']),
+  "argument": zod.string(),
+  "evidence": zod.array(zod.object({
+  "evidenceId": zod.string(),
+  "kind": zod.enum(['LOG', 'METRIC', 'DIFF', 'AUDIT', 'DOCUMENT', 'SIMULATION']),
+  "uri": zod.string(),
+  "summary": zod.string(),
+  "sha256": zod.string().optional()
+})).optional()
+})),
+  "consensusReached": zod.boolean(),
+  "startedAt": zod.string(),
+  "concludedAt": zod.string().optional()
+})),
+  "receipt": zod.object({
+  "receiptId": zod.string(),
+  "correlationId": zod.string(),
+  "intentId": zod.string(),
+  "tenantId": zod.string(),
+  "outcome": zod.enum(['APPROVED', 'REJECTED', 'ESCALATED']),
+  "decidedBy": zod.string(),
+  "decidedByRole": zod.string(),
+  "roundsCompleted": zod.int(),
+  "evidence": zod.array(zod.object({
+  "evidenceId": zod.string(),
+  "kind": zod.enum(['LOG', 'METRIC', 'DIFF', 'AUDIT', 'DOCUMENT', 'SIMULATION']),
+  "uri": zod.string(),
+  "summary": zod.string(),
+  "sha256": zod.string().optional()
+})),
+  "reason": zod.string().optional(),
+  "recordedAt": zod.string()
+}),
+  "cached": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Record presidential human decision on an escalated intent
+ */
+export const EscalateHydraIntentParams = zod.object({
+  "intentId": zod.coerce.string()
+})
+
+export const EscalateHydraIntentBody = zod.object({
+  "decision": zod.enum(['APPROVED', 'REJECTED']),
+  "notes": zod.string()
+})
+
+export const EscalateHydraIntentResponse = zod.object({
+  "receiptId": zod.string(),
+  "correlationId": zod.string(),
+  "intentId": zod.string(),
+  "tenantId": zod.string(),
+  "outcome": zod.enum(['APPROVED', 'REJECTED', 'ESCALATED']),
+  "decidedBy": zod.string(),
+  "decidedByRole": zod.string(),
+  "roundsCompleted": zod.int(),
+  "evidence": zod.array(zod.object({
+  "evidenceId": zod.string(),
+  "kind": zod.enum(['LOG', 'METRIC', 'DIFF', 'AUDIT', 'DOCUMENT', 'SIMULATION']),
+  "uri": zod.string(),
+  "summary": zod.string(),
+  "sha256": zod.string().optional()
+})),
+  "reason": zod.string().optional(),
+  "recordedAt": zod.string()
 })
 
 

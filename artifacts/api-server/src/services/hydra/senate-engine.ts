@@ -166,3 +166,18 @@ export function getRecentHydraReceipts(limit = 50): HydraSenateResult[] {
 export function getHydraReceiptByIntentId(tenantId: string, intentId: string): HydraSenateResult | undefined {
   return recentReceipts.get(`${tenantId}:${intentId}`);
 }
+
+export function updateHydraReceipt(
+  tenantId: string,
+  intentId: string,
+  updatedReceipt: HydraExecutionReceipt
+): HydraSenateResult {
+  const cacheKey = `${tenantId}:${intentId}`;
+  const existing = recentReceipts.get(cacheKey);
+  const result: HydraSenateResult = {
+    rounds: existing?.rounds || [],
+    receipt: updatedReceipt,
+  };
+  recentReceipts.set(cacheKey, result);
+  return result;
+}

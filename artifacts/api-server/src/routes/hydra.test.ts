@@ -1,26 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import request from "supertest";
 import app from "../app";
-import { db } from "@workspace/db";
 import { signToken } from "../lib/auth";
 import { HYDRA_MAX_DEBATE_ROUNDS } from "@workspace/api-zod";
 
-vi.mock("@workspace/db", () => ({
-  db: {
-    insert: vi.fn(),
-  },
-  auditLogsTable: { id: "id" },
-}));
-
 describe("Hydra ACP Routes (TASK-004)", () => {
   const token = signToken({ id: 1, username: "ceo", name: "مدیر عامل", role: "مدیر عامل" });
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    (db.insert as any).mockReturnValue({
-      values: vi.fn().mockResolvedValue([{ id: 1 }]),
-    });
-  });
 
   it("GET /api/hydra/health rejects unauthenticated requests with 401", async () => {
     const res = await request(app).get("/api/hydra/health");
@@ -148,5 +133,65 @@ describe("Hydra ACP Routes (TASK-004)", () => {
       .set("Authorization", `Bearer ${token}`);
 
     expect(res.status).toBe(404);
+  });
+
+  it("Hydra routes enforce RBAC rejecting non-admin roles with 403", async () => {
+    const visitorToken = signToken({ id: 5, username: "visitor1", name: "ویزیتور ۱", role: "ویزیتور" });
+    const res = await request(app)
+      .get("/api/hydra/health")
+      .set("Authorization", `Bearer ${visitorToken}`);
+
+    expect(res.status).toBe(403);
+    expect(res.body.error).toContain("مدیر عامل و مدیر سیستم");
+  });
+
+  it("POST /api/hydra/intents/:intentId/escalate records presidential decision", async () => {
+    const intentId = "55555555-5555-4555-8555-555555555555";
+    // First create an escalated intent
+    await request(app)
+      .post("/api/hydra/intents")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        intentId,
+        action: "VIP_CREDIT_OVERRIDE",
+        domain: "finance",
+        riskLevel: "CRITICAL",
+        requiresHumanApproval: true,
+        rationale: "افزایش اعتبار نیازمند تایید مدیر عامل",
+        parameters: { customerId: 99 },
+      });
+
+    // Escalate with human approval
+    const res = await request(app)
+      .post(`/api/hydra/intents/${intentId}/escalate`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        decision: "APPROVED",
+        notes: "با نظر مستقیم مهندس جان تایید شد",
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.outcome).toBe("APPROVED");
+    expect(res.body.decidedByRole).toBe("PRESIDENT");
+    expect(res.body.reason).toContain("با نظر مستقیم مهندس جان تایید شد");
+
+    // Verify it is reflected in GET receipt
+    const checkRes = await request(app)
+      .get(`/api/hydra/intents/${intentId}/receipt`)
+      .set("Authorization", `Bearer ${token}`);
+    expect(checkRes.status).toBe(200);
+    expect(checkRes.body.receipt.outcome).toBe("APPROVED");
+  });
+
+  it("POST /api/hydra/intents/:intentId/escalate returns 400 on invalid decision", async () => {
+    const res = await request(app)
+      .post("/api/hydra/intents/some-intent/escalate")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        decision: "MAYBE",
+        notes: "نامعتبر",
+      });
+
+    expect(res.status).toBe(400);
   });
 });

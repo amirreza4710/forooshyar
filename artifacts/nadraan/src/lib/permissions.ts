@@ -110,6 +110,7 @@ export function getRoleBadgeClass(roleName?: string): string {
 export function canAccessRoute(userRole: string | undefined, href: string): boolean {
   if (!userRole) return false;
   const def = getRoleDefinition(userRole);
+  if (href === "/reports") return def.level <= 4;
   // CEO (level 1) can access all routes
   if (def.level === 1) return true;
   return def.allowedNav.includes(href);

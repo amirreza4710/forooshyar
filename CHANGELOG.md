@@ -1,5 +1,26 @@
 # Changelog
 
+## تکمیل و یکپارچه‌سازی پروتکل هیدرا (TASK-004) و لایه تصمیم‌گیری فاز A4 — 2026-11-28
+
+- **ارتقای قراردادهای OpenAPI و تولید هوک‌های کلاینت (`Codegen`):**
+  - `lib/api-spec/openapi.yaml`: تعریف اندپوینت‌های `/hydra/health`، `/hydra/intents`، `/hydra/receipts`، `/hydra/intents/{intentId}/receipt` و `/hydra/intents/{intentId}/escalate` به همراه اسکیماهای Zod و قراردادهای مناظره (`contributions` با آرای `SUPPORT`/`OPPOSE`/`AMEND`/`ABSTAIN`).
+  - تعریف اندپوینت‌های گزارش‌های تحلیلی: `/reports/sales`، `/reports/visits` و `/reports/performance` با قابلیت خروجی استاندارد اکسل (`CSV UTF-8 BOM`).
+  - تولید هوک‌های کلاینت در `@workspace/api-client-react`: `useGetHydraHealth`، `usePostHydraIntent`، `useGetHydraReceipts`، `useGetHydraIntentReceipt`، `useEscalateHydraIntent`، `useGetSalesReport`، `useGetVisitsReport` و `useGetPerformanceReport`.
+- **سخت‌سازی و پیاده‌سازی بک‌اند (`api-server`):**
+  - `artifacts/api-server/src/routes/hydra.ts`: اعمال کنترل دسترسی نقشی `requireHydraAdmin` (محدود به مدیر عامل، مدیر سیستم، admin و manager)، نرمال‌سازی خودکار شناسه‌ها و پارامترها، ذخیره در کش زنده شورا (`updateHydraReceipt`) و مسیر تصمیم قطعی ریاست (`POST /api/hydra/intents/:intentId/escalate`) به همراه ممیزی تراکنشی در جدول `audit_logs`.
+  - `artifacts/api-server/src/routes/reports.ts`: محاسبه دقیق فروش ناخالص و خالص بدون خطر کسر دوباره مرجوعی، فیلتر سخت‌گیرانه منطقه (`zone`) روی کل فاکتورها، دوره‌ها و مشتریان برتر، اعمال فیلتر بازه زمانی (`from`/`to`) روی عملکرد، تطبیق نقش‌های ویزیتور و ایزولاسیون دسترسی غیرمدیران.
+  - تست‌های بک‌اند: ۱۲ تست اختصاصی هیدرا و ۷ تست گزارشات (مجموعاً ۱۹ تست پاس‌شده در `hydra.test.ts` و `reports.test.ts`).
+- **پیاده‌سازی فرانت‌اند توسط Codex (`nadraan`):**
+  - `artifacts/nadraan/src/pages/hydra.tsx`: کنسول عملیاتی هیدرا برای ارزیابی نیت‌ها، نمایش مناظره سنا، آرای اعضا، مدیریت ارجاع انسانی و دانلود رسید با ۲۲ تست موفق.
+  - `artifacts/nadraan/src/pages/reports.tsx`: صفحه جامع تحلیل‌های مدیریتی (فروش، ویزیت، لیدربورد تارگت‌ها) با فیلترهای تقویمی، تب‌های مجزا و دانلود CSV با ۲۶ تست موفق.
+  - ارتقای داشبورد عملیات و سایدبار ناوبری.
+- **شواهد جامع کیفیت:**
+  - فرانت‌اند: ۱۲۳ تست موفق در ۱۷ فایل بدون خطا (`@workspace/nadraan`).
+  - سرور: ۱۹ تست موفق در `hydra.test.ts` و `reports.test.ts` (و ۲۳۸ تست کل سرور).
+  - تایپ‌چک: ۰ خطا در تمام پکیج‌های مونو‌ریپو (`pnpm run typecheck`).
+  - بیلد تولیدی: ساخت ۱۰۰٪ موفق و وریفای‌شده (`nadraan` و `api-server`).
+  - سرور پیش‌نمایش: فعال روی پورت ۳۳۰۰ متصل به پایگاه داده کانتینری.
+
 ## تحویل قرارداد اقلام مرجوعی سفارش و شفاف‌سازی فاکتور چاپی — 2026-11-28
 
 - **ارتقای قرارداد OpenAPI و بک‌اند برای چاپ فاکتور تعدیل‌شده:**

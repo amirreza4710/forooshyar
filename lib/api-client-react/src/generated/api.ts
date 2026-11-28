@@ -46,6 +46,8 @@ import type {
   GetSalesReportParams,
   GetVisitsReportParams,
   HealthStatus,
+  HydraEscalationInput,
+  HydraExecutionReceiptItem,
   HydraHealthResponse,
   HydraIntentInput,
   HydraSenateResultResponse,
@@ -4903,6 +4905,297 @@ export const usePostHydraIntent = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getPostHydraIntentMutationOptions(options), queryClient);
+    }
+
+export const getGetHydraReceiptsUrl = () => {
+
+
+
+
+  return `/api/hydra/receipts`
+}
+
+/**
+ * @summary Get recent execution receipts from the Hydra Senate engine
+ */
+export const getHydraReceipts = async ( options?: Parameters<typeof customFetch>[1]): Promise<HydraSenateResultResponse[]> => {
+
+  return customFetch<HydraSenateResultResponse[]>(getGetHydraReceiptsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetHydraReceiptsQueryKey = () => {
+    return [
+    `/api/hydra/receipts`
+    ] as const;
+    }
+
+
+export const getGetHydraReceiptsQueryOptions = <TData = Awaited<ReturnType<typeof getHydraReceipts>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHydraReceipts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetHydraReceiptsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getHydraReceipts>>> = ({ signal }) => getHydraReceipts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getHydraReceipts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetHydraReceiptsQueryResult = NonNullable<Awaited<ReturnType<typeof getHydraReceipts>>>
+export type GetHydraReceiptsQueryError = ErrorType<unknown>
+
+
+export function useGetHydraReceipts<TData = Awaited<ReturnType<typeof getHydraReceipts>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHydraReceipts>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getHydraReceipts>>,
+          TError,
+          Awaited<ReturnType<typeof getHydraReceipts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetHydraReceipts<TData = Awaited<ReturnType<typeof getHydraReceipts>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHydraReceipts>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getHydraReceipts>>,
+          TError,
+          Awaited<ReturnType<typeof getHydraReceipts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetHydraReceipts<TData = Awaited<ReturnType<typeof getHydraReceipts>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHydraReceipts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get recent execution receipts from the Hydra Senate engine
+ */
+
+export function useGetHydraReceipts<TData = Awaited<ReturnType<typeof getHydraReceipts>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHydraReceipts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetHydraReceiptsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetHydraIntentReceiptUrl = (intentId: string,) => {
+
+
+
+
+  return `/api/hydra/intents/${intentId}/receipt`
+}
+
+/**
+ * @summary Get execution receipt for a specific intent
+ */
+export const getHydraIntentReceipt = async (intentId: string, options?: Parameters<typeof customFetch>[1]): Promise<HydraSenateResultResponse> => {
+
+  return customFetch<HydraSenateResultResponse>(getGetHydraIntentReceiptUrl(intentId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetHydraIntentReceiptQueryKey = (intentId: string,) => {
+    return [
+    `/api/hydra/intents/${intentId}/receipt`
+    ] as const;
+    }
+
+
+export const getGetHydraIntentReceiptQueryOptions = <TData = Awaited<ReturnType<typeof getHydraIntentReceipt>>, TError = ErrorType<ErrorResponse>>(intentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHydraIntentReceipt>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetHydraIntentReceiptQueryKey(intentId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getHydraIntentReceipt>>> = ({ signal }) => getHydraIntentReceipt(intentId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: intentId !== null && intentId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getHydraIntentReceipt>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetHydraIntentReceiptQueryResult = NonNullable<Awaited<ReturnType<typeof getHydraIntentReceipt>>>
+export type GetHydraIntentReceiptQueryError = ErrorType<ErrorResponse>
+
+
+export function useGetHydraIntentReceipt<TData = Awaited<ReturnType<typeof getHydraIntentReceipt>>, TError = ErrorType<ErrorResponse>>(
+ intentId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHydraIntentReceipt>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getHydraIntentReceipt>>,
+          TError,
+          Awaited<ReturnType<typeof getHydraIntentReceipt>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetHydraIntentReceipt<TData = Awaited<ReturnType<typeof getHydraIntentReceipt>>, TError = ErrorType<ErrorResponse>>(
+ intentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHydraIntentReceipt>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getHydraIntentReceipt>>,
+          TError,
+          Awaited<ReturnType<typeof getHydraIntentReceipt>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetHydraIntentReceipt<TData = Awaited<ReturnType<typeof getHydraIntentReceipt>>, TError = ErrorType<ErrorResponse>>(
+ intentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHydraIntentReceipt>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get execution receipt for a specific intent
+ */
+
+export function useGetHydraIntentReceipt<TData = Awaited<ReturnType<typeof getHydraIntentReceipt>>, TError = ErrorType<ErrorResponse>>(
+ intentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHydraIntentReceipt>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetHydraIntentReceiptQueryOptions(intentId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getEscalateHydraIntentUrl = (intentId: string,) => {
+
+
+
+
+  return `/api/hydra/intents/${intentId}/escalate`
+}
+
+/**
+ * @summary Record presidential human decision on an escalated intent
+ */
+export const escalateHydraIntent = async (intentId: string,
+    hydraEscalationInput: HydraEscalationInput, options?: Parameters<typeof customFetch>[1]): Promise<HydraExecutionReceiptItem> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<HydraExecutionReceiptItem>(getEscalateHydraIntentUrl(intentId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(hydraEscalationInput)
+  }
+);}
+
+
+
+
+
+export const getEscalateHydraIntentMutationKey = () => ['escalateHydraIntent'] as const;
+
+export const getEscalateHydraIntentMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof escalateHydraIntent>>, TError,EscalateHydraIntentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof escalateHydraIntent>>, TError,EscalateHydraIntentMutationVariables, TContext> => {
+
+const mutationKey = getEscalateHydraIntentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof escalateHydraIntent>>, EscalateHydraIntentMutationVariables> = (props) => {
+          const {intentId,data} = props ?? {};
+
+          return  escalateHydraIntent(intentId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EscalateHydraIntentMutationResult = NonNullable<Awaited<ReturnType<typeof escalateHydraIntent>>>
+    export type EscalateHydraIntentMutationBody = BodyType<HydraEscalationInput>
+    export type EscalateHydraIntentMutationError = ErrorType<unknown>
+    export type EscalateHydraIntentMutationVariables = {intentId: string;data: BodyType<HydraEscalationInput>}
+
+    /**
+ * @summary Record presidential human decision on an escalated intent
+ */
+export const useEscalateHydraIntent = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof escalateHydraIntent>>, TError,EscalateHydraIntentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof escalateHydraIntent>>,
+        TError,
+        EscalateHydraIntentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getEscalateHydraIntentMutationOptions(options), queryClient);
     }
 
 export const getGetSalesReportUrl = (params?: GetSalesReportParams,) => {

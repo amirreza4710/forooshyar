@@ -709,19 +709,6 @@ export interface HydraHealthResponse {
   senateRoles: string[];
 }
 
-export type HydraIntentInputDomain = typeof HydraIntentInputDomain[keyof typeof HydraIntentInputDomain];
-
-
-export const HydraIntentInputDomain = {
-  orders: 'orders',
-  deliveries: 'deliveries',
-  ledger: 'ledger',
-  catalog: 'catalog',
-  users: 'users',
-  security: 'security',
-  generic: 'generic',
-} as const;
-
 export type HydraIntentInputRiskLevel = typeof HydraIntentInputRiskLevel[keyof typeof HydraIntentInputRiskLevel];
 
 
@@ -732,30 +719,64 @@ export const HydraIntentInputRiskLevel = {
   CRITICAL: 'CRITICAL',
 } as const;
 
-export type HydraIntentInputPayload = { [key: string]: unknown };
+export type HydraIntentInputParameters = { [key: string]: unknown };
 
 export interface HydraIntentInput {
   intentId?: string;
   action: string;
-  domain: HydraIntentInputDomain;
+  domain: string;
   riskLevel?: HydraIntentInputRiskLevel;
-  payload: HydraIntentInputPayload;
+  requiresHumanApproval?: boolean;
+  rationale?: string;
+  parameters?: HydraIntentInputParameters;
 }
 
-export type HydraDebateRoundItemStance = typeof HydraDebateRoundItemStance[keyof typeof HydraDebateRoundItemStance];
+export type HydraEvidencePointerItemKind = typeof HydraEvidencePointerItemKind[keyof typeof HydraEvidencePointerItemKind];
 
 
-export const HydraDebateRoundItemStance = {
-  AGREE: 'AGREE',
-  DISAGREE: 'DISAGREE',
+export const HydraEvidencePointerItemKind = {
+  LOG: 'LOG',
+  METRIC: 'METRIC',
+  DIFF: 'DIFF',
+  AUDIT: 'AUDIT',
+  DOCUMENT: 'DOCUMENT',
+  SIMULATION: 'SIMULATION',
+} as const;
+
+export interface HydraEvidencePointerItem {
+  evidenceId: string;
+  kind: HydraEvidencePointerItemKind;
+  uri: string;
+  summary: string;
+  sha256?: string;
+}
+
+export type HydraDebateContributionItemStance = typeof HydraDebateContributionItemStance[keyof typeof HydraDebateContributionItemStance];
+
+
+export const HydraDebateContributionItemStance = {
+  SUPPORT: 'SUPPORT',
+  OPPOSE: 'OPPOSE',
+  AMEND: 'AMEND',
   ABSTAIN: 'ABSTAIN',
 } as const;
 
+export interface HydraDebateContributionItem {
+  actorId: string;
+  role: string;
+  stance: HydraDebateContributionItemStance;
+  argument: string;
+  evidence?: HydraEvidencePointerItem[];
+}
+
 export interface HydraDebateRoundItem {
+  intentId: string;
   roundNumber: number;
-  speakerRole: string;
-  stance: HydraDebateRoundItemStance;
-  arguments: string[];
+  topic: string;
+  contributions: HydraDebateContributionItem[];
+  consensusReached: boolean;
+  startedAt: string;
+  concludedAt?: string;
 }
 
 export type HydraExecutionReceiptItemOutcome = typeof HydraExecutionReceiptItemOutcome[keyof typeof HydraExecutionReceiptItemOutcome];
@@ -769,15 +790,15 @@ export const HydraExecutionReceiptItemOutcome = {
 
 export interface HydraExecutionReceiptItem {
   receiptId: string;
-  correlationId?: string;
+  correlationId: string;
   intentId: string;
-  tenantId?: string;
+  tenantId: string;
   outcome: HydraExecutionReceiptItemOutcome;
   decidedBy: string;
   decidedByRole: string;
   roundsCompleted: number;
-  evidence?: string[];
-  reason: string;
+  evidence: HydraEvidencePointerItem[];
+  reason?: string;
   recordedAt: string;
 }
 
@@ -785,6 +806,19 @@ export interface HydraSenateResultResponse {
   rounds: HydraDebateRoundItem[];
   receipt: HydraExecutionReceiptItem;
   cached?: boolean;
+}
+
+export type HydraEscalationInputDecision = typeof HydraEscalationInputDecision[keyof typeof HydraEscalationInputDecision];
+
+
+export const HydraEscalationInputDecision = {
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+} as const;
+
+export interface HydraEscalationInput {
+  decision: HydraEscalationInputDecision;
+  notes: string;
 }
 
 export interface SalesReportPeriodItem {

@@ -17,6 +17,8 @@ function useIsMobile() {
 }
 
 const PAGE_TITLES: Record<string, string> = {
+  "/hydra": "کنسول هیدرا",
+  "/reports": "گزارش‌ها و تحلیل‌ها",
   "/":            "داشبورد",
   "/new-order":   "ثبت سفارش",
   "/orders":      "لیست سفارشات",

@@ -2,7 +2,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth-context";
 import {
   LayoutDashboard, Plus, ClipboardList, Package, Users,
-  UserCircle, Moon, Sun, LogOut, Building2, Shield, MapPin,
+  UserCircle, Moon, Sun, LogOut, Building2, Shield, MapPin, Cpu, BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { canAccessRoute, getRoleBadgeClass, getRoleDefinition } from "@/lib/permissions";
@@ -25,6 +25,8 @@ const NAV_GROUPS = [
   {
     label: "مدیریت و انبار",
     items: [
+      { href: "/hydra", label: "کنسول هیدرا", icon: Cpu },
+      { href: "/reports", label: "گزارش‌ها و تحلیل‌ها", icon: BarChart3 },
       { href: "/products",  label: "کاتالوگ محصولات",  icon: Package },
       { href: "/customers", label: "مشتریان",           icon: Users },
       { href: "/users",     label: "مدیریت و تنظیمات",   icon: Building2 },

@@ -5,18 +5,19 @@
  * نادران‌گستر - پلتفرم مدیریت پخش و فروش
  * OpenAPI spec version: 0.1.0
  */
+import type { HydraEvidencePointerItem } from './hydraEvidencePointerItem';
 import type { HydraExecutionReceiptItemOutcome } from './hydraExecutionReceiptItemOutcome';
 
 export interface HydraExecutionReceiptItem {
   receiptId: string;
-  correlationId?: string;
+  correlationId: string;
   intentId: string;
-  tenantId?: string;
+  tenantId: string;
   outcome: HydraExecutionReceiptItemOutcome;
   decidedBy: string;
   decidedByRole: string;
   roundsCompleted: number;
-  evidence?: string[];
-  reason: string;
+  evidence: HydraEvidencePointerItem[];
+  reason?: string;
   recordedAt: string;
 }

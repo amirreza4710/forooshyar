@@ -9,6 +9,8 @@ import { ApiError } from "@workspace/api-client-react";
 import { canAccessRoute } from "@/lib/permissions";
 
 import LoginPage from "@/pages/login";
+import HydraPage from "@/pages/hydra";
+import ReportsPage from "@/pages/reports";
 import DashboardPage from "@/pages/dashboard";
 import TargetsPage from "@/pages/targets";
 import NewOrderPage from "@/pages/new-order";
@@ -85,6 +87,8 @@ function Router() {
       <Route path="/deliveries" component={() => <ProtectedRoute component={DeliveriesPage} path="/deliveries" />} />
       <Route path="/commissions" component={() => <ProtectedRoute component={CommissionsPage} path="/commissions" />} />
       <Route path="/alerts" component={() => <ProtectedRoute component={AlertsPage} path="/alerts" />} />
+      <Route path="/hydra" component={() => <ProtectedRoute component={HydraPage} path="/hydra" />} />
+      <Route path="/reports" component={() => <ProtectedRoute component={ReportsPage} path="/reports" />} />
       <Route path="/targets" component={() => <ProtectedRoute component={TargetsPage} path="/targets" />} />
       <Route path="/visits" component={() => <ProtectedRoute component={VisitsPage} path="/visits" />} />
       <Route

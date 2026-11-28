@@ -20,6 +20,15 @@ router.get("/reports/sales", requireAuth, async (req: Request, res): Promise<voi
 
   const repId = isManager ? reqRepId : user.id;
 
+  // تمام مشتریان برای نگاشت و فیلتر منطقه
+  const allCustomers = await db
+    .select({ id: customersTable.id, name: customersTable.name, zone: customersTable.zone })
+    .from(customersTable)
+    .where(isNull(customersTable.deletedAt));
+
+  const custNameMap = new Map(allCustomers.map(c => [c.id, c.name]));
+  const custZoneMap = new Map(allCustomers.map(c => [c.id, c.zone ?? "نامشخص"]));
+
   const conditions = [
     isNull(ordersTable.deletedAt),
     ne(ordersTable.status, "لغو شده"),
@@ -29,6 +38,15 @@ router.get("/reports/sales", requireAuth, async (req: Request, res): Promise<voi
   if (customerId) conditions.push(eq(ordersTable.customerId, customerId));
   if (from) conditions.push(gte(ordersTable.createdAt, new Date(from)));
   if (to) conditions.push(lte(ordersTable.createdAt, new Date(to)));
+
+  if (zone) {
+    const zoneCustomerIds = allCustomers.filter(c => c.zone === zone).map(c => c.id);
+    if (zoneCustomerIds.length === 0) {
+      conditions.push(sql`1 = 0`);
+    } else {
+      conditions.push(sql`${ordersTable.customerId} IN (${sql.join(zoneCustomerIds, sql`, `)})`);
+    }
+  }
 
   const orders = await db
     .select({
@@ -68,14 +86,16 @@ router.get("/reports/sales", requireAuth, async (req: Request, res): Promise<voi
 
   for (const o of orders) {
     const ret = returnMap.get(o.id) ?? 0;
-    totalSales += o.total;
+    // از آنجا که o.total در هنگام تحویل با کسر مرجوعی به‌روز شده، فروش ناخالص اولیه برابر با total + ret است
+    const grossOrderTotal = o.total + ret;
+    totalSales += grossOrderTotal;
     totalDiscounts += o.discount ?? 0;
     totalReturns += ret;
 
     const periodKey = o.createdAt ? new Date(o.createdAt).toISOString().slice(0, 10) : "نامشخص";
     const existingPeriod = periodMap.get(periodKey) ?? { ordersCount: 0, salesAmount: 0, returnAmount: 0 };
     existingPeriod.ordersCount += 1;
-    existingPeriod.salesAmount += o.total;
+    existingPeriod.salesAmount += grossOrderTotal;
     existingPeriod.returnAmount += ret;
     periodMap.set(periodKey, existingPeriod);
 
@@ -93,14 +113,6 @@ router.get("/reports/sales", requireAuth, async (req: Request, res): Promise<voi
   }));
 
   // مشتریان برتر
-  const allCustomers = await db
-    .select({ id: customersTable.id, name: customersTable.name, zone: customersTable.zone })
-    .from(customersTable)
-    .where(isNull(customersTable.deletedAt));
-
-  const custNameMap = new Map(allCustomers.map(c => [c.id, c.name]));
-  const custZoneMap = new Map(allCustomers.map(c => [c.id, c.zone ?? "نامشخص"]));
-
   const topCustomers = Array.from(customerMap.entries())
     .map(([cId, d]) => ({
       customerId: cId,
@@ -115,7 +127,6 @@ router.get("/reports/sales", requireAuth, async (req: Request, res): Promise<voi
   const zoneMap = new Map<string, { salesAmount: number; ordersCount: number }>();
   for (const o of orders) {
     const custZone = custZoneMap.get(o.customerId) ?? "نامشخص";
-    if (zone && custZone !== zone) continue;
     const existing = zoneMap.get(custZone) ?? { salesAmount: 0, ordersCount: 0 };
     existing.salesAmount += o.total;
     existing.ordersCount += 1;
@@ -248,6 +259,21 @@ router.get("/reports/visits", requireAuth, async (req: Request, res): Promise<vo
 
 // ─── GET /reports/performance ───
 router.get("/reports/performance", requireAuth, async (req: Request, res): Promise<void> => {
+  const user = (req as Request & { user: JwtPayload }).user;
+  const isManager = canViewAllVisits(user.role);
+
+  const from = typeof req.query.from === "string" ? req.query.from : undefined;
+  const to = typeof req.query.to === "string" ? req.query.to : undefined;
+
+  const repConditions = [
+    isNull(usersTable.deletedAt),
+    sql`${usersTable.role} IN ('ویزیتور', 'نماینده فروش', 'بازاریاب', 'نماینده', 'موزع')`,
+  ];
+
+  if (!isManager) {
+    repConditions.push(eq(usersTable.id, user.id));
+  }
+
   const reps = await db
     .select({
       id: usersTable.id,
@@ -255,12 +281,23 @@ router.get("/reports/performance", requireAuth, async (req: Request, res): Promi
       role: usersTable.role,
     })
     .from(usersTable)
-    .where(and(isNull(usersTable.deletedAt), sql`${usersTable.role} IN ('ویزیتور', 'بازاریاب', 'نماینده', 'موزع')`));
+    .where(and(...repConditions));
+
+  const targetConditions = [isNull(targetsTable.deletedAt)];
+  if (from) targetConditions.push(gte(targetsTable.startDate, new Date(from)));
+  if (to) targetConditions.push(lte(targetsTable.endDate, new Date(to)));
 
   const targets = await db
     .select()
     .from(targetsTable)
-    .where(isNull(targetsTable.deletedAt));
+    .where(and(...targetConditions));
+
+  const orderConditions = [
+    isNull(ordersTable.deletedAt),
+    ne(ordersTable.status, "لغو شده"),
+  ];
+  if (from) orderConditions.push(gte(ordersTable.createdAt, new Date(from)));
+  if (to) orderConditions.push(lte(ordersTable.createdAt, new Date(to)));
 
   const orders = await db
     .select({
@@ -268,7 +305,14 @@ router.get("/reports/performance", requireAuth, async (req: Request, res): Promi
       total: ordersTable.total,
     })
     .from(ordersTable)
-    .where(and(isNull(ordersTable.deletedAt), ne(ordersTable.status, "لغو شده")));
+    .where(and(...orderConditions));
+
+  const collectionConditions = [
+    isNull(collectionsTable.deletedAt),
+    eq(collectionsTable.status, "CLEARED"),
+  ];
+  if (from) collectionConditions.push(gte(collectionsTable.createdAt, new Date(from)));
+  if (to) collectionConditions.push(lte(collectionsTable.createdAt, new Date(to)));
 
   const collections = await db
     .select({
@@ -277,7 +321,7 @@ router.get("/reports/performance", requireAuth, async (req: Request, res): Promi
       status: collectionsTable.status,
     })
     .from(collectionsTable)
-    .where(and(isNull(collectionsTable.deletedAt), eq(collectionsTable.status, "CLEARED")));
+    .where(and(...collectionConditions));
 
   const repList = reps.map((rep) => {
     const repTargets = targets.filter(t => t.userId === rep.id);

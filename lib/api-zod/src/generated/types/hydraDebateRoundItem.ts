@@ -5,11 +5,14 @@
  * نادران‌گستر - پلتفرم مدیریت پخش و فروش
  * OpenAPI spec version: 0.1.0
  */
-import type { HydraDebateRoundItemStance } from './hydraDebateRoundItemStance';
+import type { HydraDebateContributionItem } from './hydraDebateContributionItem';
 
 export interface HydraDebateRoundItem {
+  intentId: string;
   roundNumber: number;
-  speakerRole: string;
-  stance: HydraDebateRoundItemStance;
-  arguments: string[];
+  topic: string;
+  contributions: HydraDebateContributionItem[];
+  consensusReached: boolean;
+  startedAt: string;
+  concludedAt?: string;
 }

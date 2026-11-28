@@ -5,14 +5,15 @@
  * نادران‌گستر - پلتفرم مدیریت پخش و فروش
  * OpenAPI spec version: 0.1.0
  */
-import type { HydraIntentInputDomain } from './hydraIntentInputDomain';
-import type { HydraIntentInputPayload } from './hydraIntentInputPayload';
+import type { HydraIntentInputParameters } from './hydraIntentInputParameters';
 import type { HydraIntentInputRiskLevel } from './hydraIntentInputRiskLevel';
 
 export interface HydraIntentInput {
   intentId?: string;
   action: string;
-  domain: HydraIntentInputDomain;
+  domain: string;
   riskLevel?: HydraIntentInputRiskLevel;
-  payload: HydraIntentInputPayload;
+  requiresHumanApproval?: boolean;
+  rationale?: string;
+  parameters?: HydraIntentInputParameters;
 }

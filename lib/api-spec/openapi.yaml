@@ -1044,6 +1044,71 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /hydra/receipts:
+    get:
+      operationId: getHydraReceipts
+      tags: [hydra]
+      summary: Get recent execution receipts from the Hydra Senate engine
+      responses:
+        "200":
+          description: List of recent senate results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HydraSenateResultResponse"
+
+  /hydra/intents/{intentId}/receipt:
+    get:
+      operationId: getHydraIntentReceipt
+      tags: [hydra]
+      summary: Get execution receipt for a specific intent
+      parameters:
+        - name: intentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Senate result for the intent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HydraSenateResultResponse"
+        "404":
+          description: Receipt not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /hydra/intents/{intentId}/escalate:
+    post:
+      operationId: escalateHydraIntent
+      tags: [hydra]
+      summary: Record presidential human decision on an escalated intent
+      parameters:
+        - name: intentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HydraEscalationInput"
+      responses:
+        "200":
+          description: Updated execution receipt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HydraExecutionReceiptItem"
+
   # ─── DECISION LAYER & REPORTS (PHASE A4: DASH-F01..F03, REP-F01..F03) ───
   /reports/sales:
     get:
@@ -2060,7 +2125,7 @@ components:
 
     HydraIntentInput:
       type: object
-      required: [action, domain, payload]
+      required: [action, domain]
       properties:
         intentId:
           type: string
@@ -2068,33 +2133,75 @@ components:
           type: string
         domain:
           type: string
-          enum: [orders, deliveries, ledger, catalog, users, security, generic]
         riskLevel:
           type: string
           enum: [LOW, MEDIUM, HIGH, CRITICAL]
-        payload:
+        requiresHumanApproval:
+          type: boolean
+        rationale:
+          type: string
+        parameters:
           type: object
           additionalProperties: true
 
-    HydraDebateRoundItem:
+    HydraEvidencePointerItem:
       type: object
-      required: [roundNumber, speakerRole, stance, arguments]
+      required: [evidenceId, kind, uri, summary]
       properties:
-        roundNumber:
-          type: integer
-        speakerRole:
+        evidenceId:
+          type: string
+        kind:
+          type: string
+          enum: [LOG, METRIC, DIFF, AUDIT, DOCUMENT, SIMULATION]
+        uri:
+          type: string
+        summary:
+          type: string
+        sha256:
+          type: string
+
+    HydraDebateContributionItem:
+      type: object
+      required: [actorId, role, stance, argument]
+      properties:
+        actorId:
+          type: string
+        role:
           type: string
         stance:
           type: string
-          enum: [AGREE, DISAGREE, ABSTAIN]
-        arguments:
+          enum: [SUPPORT, OPPOSE, AMEND, ABSTAIN]
+        argument:
+          type: string
+        evidence:
           type: array
           items:
-            type: string
+            $ref: "#/components/schemas/HydraEvidencePointerItem"
+
+    HydraDebateRoundItem:
+      type: object
+      required: [intentId, roundNumber, topic, contributions, consensusReached, startedAt]
+      properties:
+        intentId:
+          type: string
+        roundNumber:
+          type: integer
+        topic:
+          type: string
+        contributions:
+          type: array
+          items:
+            $ref: "#/components/schemas/HydraDebateContributionItem"
+        consensusReached:
+          type: boolean
+        startedAt:
+          type: string
+        concludedAt:
+          type: string
 
     HydraExecutionReceiptItem:
       type: object
-      required: [receiptId, intentId, outcome, decidedBy, decidedByRole, roundsCompleted, reason, recordedAt]
+      required: [receiptId, correlationId, intentId, tenantId, outcome, decidedBy, decidedByRole, roundsCompleted, evidence, recordedAt]
       properties:
         receiptId:
           type: string
@@ -2116,7 +2223,7 @@ components:
         evidence:
           type: array
           items:
-            type: string
+            $ref: "#/components/schemas/HydraEvidencePointerItem"
         reason:
           type: string
         recordedAt:
@@ -2134,6 +2241,16 @@ components:
           $ref: "#/components/schemas/HydraExecutionReceiptItem"
         cached:
           type: boolean
+
+    HydraEscalationInput:
+      type: object
+      required: [decision, notes]
+      properties:
+        decision:
+          type: string
+          enum: [APPROVED, REJECTED]
+        notes:
+          type: string
 
     # ─── Decision Layer Reports (Phase A4: DASH-F01..F03, REP-F01..F03) ───
     SalesReportPeriodItem:

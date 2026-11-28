@@ -186,4 +186,24 @@ describe("Reports Routes (Phase A4: DASH-F01..F03, REP-F01..F03)", () => {
     expect(myRep).toBeDefined();
     expect(myRep.achievedAmount).toBe(800_000);
   });
+
+  it("GET /api/reports/sales?zone filters orders strictly to that zone", async () => {
+    const res = await request(app)
+      .get("/api/reports/sales?zone=منطقه_ناموجود_تستی")
+      .set("Authorization", `Bearer ${managerToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.totalOrders).toBe(0);
+    expect(res.body.totalSales).toBe(0);
+  });
+
+  it("GET /api/reports/performance enforces rep RBAC (visitor sees only self)", async () => {
+    const res = await request(app)
+      .get("/api/reports/performance")
+      .set("Authorization", `Bearer ${repToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.reps).toHaveLength(1);
+    expect(res.body.reps[0].userId).toBe(repId);
+  });
 });
