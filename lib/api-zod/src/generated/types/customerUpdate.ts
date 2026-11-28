@@ -11,6 +11,12 @@ export interface CustomerUpdate {
   phone?: string;
   /** @nullable */
   address?: string | null;
+  /** @nullable */
+  zone?: string | null;
+  /** @nullable */
+  latitude?: string | null;
+  /** @nullable */
+  longitude?: string | null;
   creditLimit?: number;
   balance?: number;
 }

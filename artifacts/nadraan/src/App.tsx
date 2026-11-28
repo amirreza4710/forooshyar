@@ -1,3 +1,4 @@
+import { CollectionsPage, DeliveriesPage, CommissionsPage, AlertsPage } from "@/pages/operations";
 import { useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -9,11 +10,10 @@ import { canAccessRoute } from "@/lib/permissions";
 
 import LoginPage from "@/pages/login";
 import DashboardPage from "@/pages/dashboard";
-import OperationalCommandCenter from "@/pages/OperationalCommandCenter";
+import TargetsPage from "@/pages/targets";
 import NewOrderPage from "@/pages/new-order";
 import OrdersPage from "@/pages/orders";
 import VisitsPage from "@/pages/visits";
-import TargetsPage from "@/pages/targets";
 import ProductsPage from "@/pages/products";
 import CustomersPage from "@/pages/customers";
 import UsersPage from "@/pages/users";
@@ -67,7 +67,7 @@ function Router() {
       <Route path="/login" component={LoginPage} />
       <Route
         path="/"
-        component={() => <ProtectedRoute component={OperationalCommandCenter} path="/" />}
+        component={() => <ProtectedRoute component={DashboardPage} path="/" />}
       />
       <Route
         path="/dashboard"
@@ -81,8 +81,12 @@ function Router() {
         path="/orders"
         component={() => <ProtectedRoute component={OrdersPage} path="/orders" />}
       />
-      <Route path="/visits" component={() => <ProtectedRoute component={VisitsPage} path="/visits" />} />
+      <Route path="/collections" component={() => <ProtectedRoute component={CollectionsPage} path="/collections" />} />
+      <Route path="/deliveries" component={() => <ProtectedRoute component={DeliveriesPage} path="/deliveries" />} />
+      <Route path="/commissions" component={() => <ProtectedRoute component={CommissionsPage} path="/commissions" />} />
+      <Route path="/alerts" component={() => <ProtectedRoute component={AlertsPage} path="/alerts" />} />
       <Route path="/targets" component={() => <ProtectedRoute component={TargetsPage} path="/targets" />} />
+      <Route path="/visits" component={() => <ProtectedRoute component={VisitsPage} path="/visits" />} />
       <Route
         path="/products"
         component={() => <ProtectedRoute component={ProductsPage} path="/products" />}

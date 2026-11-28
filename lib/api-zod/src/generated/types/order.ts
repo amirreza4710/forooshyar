@@ -6,7 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { OrderItem } from './orderItem';
+import type { OrderPaymentMethod } from './orderPaymentMethod';
 import type { OrderStatus } from './orderStatus';
+import type { ReturnedItem } from './returnedItem';
 
 export interface Order {
   id: number;
@@ -21,8 +23,17 @@ export interface Order {
      * @nullable
      */
   visitId?: number | null;
+  subtotal?: number;
+  discount?: number;
   total: number;
+  paymentMethod?: OrderPaymentMethod;
   status: OrderStatus;
+  /** @nullable */
+  notes?: string | null;
   items?: OrderItem[];
+  /** مبلغ کل اقلام مرجوعی کسر شده از فاکتور اولیه */
+  returnedAmount?: number;
+  /** اقلام مرجوعی ثبت‌شده در فرآیند توزیع */
+  returnedItems?: ReturnedItem[];
   createdAt: string;
 }

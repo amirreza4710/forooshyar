@@ -1,0 +1,22 @@
+import * as React from "react";
+import { afterEach, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import AppLayout from "./AppLayout";
+vi.stubGlobal("React", React);
+vi.mock("wouter", () => ({ useLocation: () => ["/visits"] }));
+vi.mock("./Sidebar", () => ({ default: ({ onNavClick }: { onNavClick: () => void }) => <a href="/visits" onClick={onNavClick}>پیوند منو</a> }));
+vi.mock("./MobileBottomNav", () => ({ default: () => <nav>ناوبری پایین</nav> }));
+vi.mock("../NotificationBell", () => ({ default: () => null }));
+afterEach(cleanup);
+it("منوی بسته موبایل پیوند نامرئی ندارد و با گریز بسته و تمرکز برمی‌گردد", async () => {
+  Object.defineProperty(window, "innerWidth", { configurable: true, value: 390 });
+  render(<AppLayout><button>محتوای صفحه</button></AppLayout>);
+  expect(screen.queryByRole("link", { name: "پیوند منو" })).toBeNull();
+  const toggle = screen.getByRole("button", { name: "باز کردن منوی اصلی" });
+  toggle.focus(); fireEvent.click(toggle);
+  expect(screen.getByRole("dialog", { name: "منوی اصلی" })).toBeTruthy();
+  expect(screen.getByRole("link", { name: "پیوند منو" })).toBeTruthy();
+  fireEvent.keyDown(document.activeElement!, { key: "Escape" });
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await vi.waitFor(() => expect(document.activeElement).toBe(toggle));
+});

@@ -34,6 +34,17 @@ import { logAudit } from "../lib/audit";
 
 const router = Router();
 
+function serializeAuthUser(user: typeof usersTable.$inferSelect) {
+  return {
+    id: user.id,
+    username: user.username,
+    name: user.name,
+    role: user.role,
+    assignedZone: user.assignedZone ?? null,
+    createdAt: user.createdAt.toISOString(),
+  };
+}
+
 router.post("/auth/login", loginLimiter, async (req, res): Promise<void> => {
   const parsed = LoginBody.safeParse(req.body);
   if (!parsed.success) {
@@ -99,7 +110,7 @@ router.post("/auth/login", loginLimiter, async (req, res): Promise<void> => {
   });
 
   req.log?.info({ ip: req.ip, username, userId: user.id }, "Successful login");
-  res.json({ token, refreshToken: rawRefreshToken, user: { id: user.id, username: user.username, name: user.name, role: user.role, createdAt: user.createdAt.toISOString() } });
+  res.json({ token, refreshToken: rawRefreshToken, user: serializeAuthUser(user) });
 });
 
 router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
@@ -110,7 +121,7 @@ router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
     res.status(404).json({ error: "User not found" });
     return;
   }
-  res.json({ id: dbUser.id, username: dbUser.username, name: dbUser.name, role: dbUser.role, createdAt: dbUser.createdAt.toISOString() });
+  res.json(serializeAuthUser(dbUser));
 });
 
 router.post("/auth/change-password", requireAuth, async (req, res): Promise<void> => {
@@ -233,7 +244,7 @@ router.post("/auth/refresh", async (req, res): Promise<void> => {
     expiresAt,
   });
 
-  res.json({ token, refreshToken: newRawRefreshToken, user: { id: user.id, username: user.username, name: user.name, role: user.role, createdAt: user.createdAt.toISOString() } });
+  res.json({ token, refreshToken: newRawRefreshToken, user: serializeAuthUser(user) });
 });
 
 router.post("/auth/logout", requireAuth, async (req, res): Promise<void> => {

@@ -12,4 +12,6 @@ export interface UserInput {
   name: string;
   phone?: string;
   role: string;
+  /** @nullable */
+  assignedZone?: string | null;
 }

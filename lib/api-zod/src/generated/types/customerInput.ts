@@ -10,6 +10,12 @@ export interface CustomerInput {
   name: string;
   phone: string;
   address?: string;
+  /** @nullable */
+  zone?: string | null;
+  /** @nullable */
+  latitude?: string | null;
+  /** @nullable */
+  longitude?: string | null;
   /** سقف اعتبار مشتری به ریال */
   creditLimit?: number;
 }

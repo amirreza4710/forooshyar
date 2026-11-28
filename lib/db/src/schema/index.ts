@@ -4,5 +4,7 @@ export * from "./products";
 export * from "./orders";
 export * from "./visits";
 export * from "./targets";
+export * from "./collections";
+export * from "./deliveries";
 export * from "./settings";
 export * from "./audit";

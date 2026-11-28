@@ -3,164 +3,1039 @@ name: Agent Microtask Verification Gate
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    branches:
-      - main
+    branches: [main, master]
+  workflow_dispatch:
 
 permissions:
   contents: read
   pull-requests: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   agent-audit:
     name: Audit Agent Changes
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: farakhorasan
+          POSTGRES_PASSWORD: farakhorasan_password
+          POSTGRES_DB: farakhorasan_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U farakhorasan -d farakhorasan_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # Loopback-only credentials for the CI service container — not production values.
+      DATABASE_URL: postgresql://farakhorasan:farakhorasan_password@127.0.0.1:5432/farakhorasan_db
+      SESSION_SECRET: ci-only-session-secret-not-a-production-value
+
     steps:
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      # ۱. مهار شعاع تخریب: مسدودسازی دستکاری فایل‌های سیستمی
-      - name: Check Diff Scope
+      - name: Check Diff Scope and Policy Guardrails
         id: scope_check
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          echo "Checking touched files for scope boundaries..."
-          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
-          echo "Files changed in this PR:"
-          echo "$CHANGED_FILES"
-          
-          FORBIDDEN_FILES=$(echo "$CHANGED_FILES" | grep -E '^(\.github\/|\.env|\.gitignore|poetry\.lock|package-lock\.json)' || true)
-          if [ -n "$FORBIDDEN_FILES" ]; then
-            echo "::error::Agent attempted to modify forbidden system files!"
-            echo "Forbidden changes detected in:"
-            echo "$FORBIDDEN_FILES"
-            exit 1
+          set -euo pipefail
+          if ! git rev-parse --verify "origin/${BASE_REF}" >/dev/null 2>&1; then
+            git fetch --no-tags origin "${BASE_REF}:refs/remotes/origin/${BASE_REF}"
           fi
 
-      # ۲. انجماد تست‌ها: بازگردانی سورس تست‌ها از برنچ مبنا
-      - name: Freeze Tests from Base Branch
-        run: |
-          echo "Freezing tests from base branch to prevent agent tampering..."
-          git checkout origin/${{ github.base_ref }} -- tests/
+          node - <<'EOF'
+          const fs = require('fs');
+          const path = require('path');
+          const { execFileSync } = require('child_process');
 
-      # ۳. ممیزی پکیج‌ها در برابر متوهم‌‌سازی ابزار
-      - name: Audit Dependencies against PyPI
-        id: dep_audit
-        run: |
-          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q 'requirements.txt'; then
-            echo "requirements.txt modified. Checking newly added packages..."
-            NEW_PACKAGES=$(git diff origin/${{ github.base_ref }}...HEAD -- requirements.txt | grep -E '^\+[a-zA-Z0-9]' | sed 's/^\+//' | cut -d'=' -f1 | cut -d'<' -f1 | cut -d'>' -f1 | tr -d ' ' || true)
-            for pkg in $NEW_PACKAGES; do
-              echo "Verifying package on PyPI: $pkg"
-              STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/pypi/${pkg}/json")
-              if [ "$STATUS_CODE" != "200" ]; then
-                echo "::error::Package '$pkg' does not exist on PyPI! Hallucination detected."
-                exit 1
-              fi
-            done
-          fi
+          const baseRef = `origin/${process.env.BASE_REF}`;
+          const runnerTemp = process.env.RUNNER_TEMP || '/tmp';
+          const scopeResultPath = path.join(runnerTemp, 'scope-result.json');
 
-      # ۴. نصب ابزارهای تست و اعتبارسنجی
-      - name: Install Tooling & Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install ruff mypy pytest jq
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          fi
-
-      # ۵. بررسی انطباق تایپ‌ها و تحلیل ایستا
-      - name: Run Type Checking & Linting
-        id: static_analysis
-        continue-on-error: true
-        run: |
-          ruff check . > ruff_errors.txt || true
-          mypy --ignore-missing-imports . > mypy_errors.txt || true
-
-      # ۶. اجرای تست‌های قطعی
-      - name: Run Deterministic Unit Tests
-        id: unit_tests
-        continue-on-error: true
-        run: |
-          pytest -v --tb=short > pytest_errors.txt 2>&1
-          echo "test_exit_code=$?" >> "$GITHUB_OUTPUT"
-
-      # ۷. ساخت بازخورد ساختاریافته JSON
-      - name: Build Structured Feedback JSON
-        if: always()
-        run: |
-          TEST_EXIT="${{ steps.unit_tests.outputs.test_exit_code }}"
-          RUFF_SIZE=$(wc -c < ruff_errors.txt || echo 0)
-          MYPY_SIZE=$(wc -c < mypy_errors.txt || echo 0)
-          
-          STATUS="passed"
-          if [ "$TEST_EXIT" != "0" ] || [ "$RUFF_SIZE" -gt 5 ] || [ "$MYPY_SIZE" -gt 5 ]; then
-            STATUS="failed"
-          fi
-          
-          python - << 'EOF'
-          import json, os
-
-          status = "passed"
-          test_errors = []
-          type_errors = []
-
-          if os.path.exists("pytest_errors.txt"):
-              with open("pytest_errors.txt", "r") as f:
-                  lines = f.readlines()
-                  failures = [l.strip() for l in lines if l.startswith("FAILED ") or "Error:" in l]
-                  test_errors = failures[:5]
-
-          if os.path.exists("mypy_errors.txt"):
-              with open("mypy_errors.txt", "r") as f:
-                  type_errors = [l.strip() for l in f.readlines() if "error:" in l][:5]
-
-          if test_errors or type_errors:
-              status = "failed"
-
-          payload = {
-              "status": status,
-              "gate_summary": {
-                  "tests_passed": len(test_errors) == 0,
-                  "types_passed": len(type_errors) == 0
-              },
-              "failed_tests": test_errors,
-              "type_errors": type_errors,
-              "instruction_for_agent": "Do NOT edit files in tests/. Fix only the implementation logic."
+          function gitDiffNames(extraArgs) {
+            const out = execFileSync(
+              'git',
+              ['diff', '--no-renames', '--name-only', '-z', ...extraArgs, `${baseRef}...HEAD`],
+              { encoding: 'utf8', maxBuffer: 20 * 1024 * 1024 }
+            );
+            return out.split('\0').filter(Boolean).map((f) => f.replace(/\\/g, '/'));
           }
 
-          with open("agent-feedback.json", "w", encoding="utf-8") as f:
-              json.dump(payload, f, indent=2, ensure_ascii=False)
+          function isForbiddenSecret(filePath) {
+            const parts = filePath.split('/');
+            const base = parts[parts.length - 1];
+            for (let i = 0; i < parts.length; i += 1) {
+              const seg = parts[i];
+              const isLeaf = i === parts.length - 1;
+              if (isLeaf && seg === '.env.example') {
+                continue;
+              }
+              if (/(^|\.)env(\.|$)/i.test(seg) || /^\.envrc(\.|$)/i.test(seg)) {
+                return true;
+              }
+            }
+            if (/\.(pem|key|p12|pfx)$/i.test(base)) return true;
+            if (/^(id_rsa|id_ed25519|id_ecdsa|id_dsa)/i.test(base)) return true;
+            return false;
+          }
+
+          const BANNED_DEP_FILES = new Set([
+            'package-lock.json',
+            'yarn.lock',
+            'npm-shrinkwrap.json',
+            'bun.lockb',
+            'bun.lock',
+            'poetry.lock',
+            'pipfile.lock',
+            'requirements.txt',
+            'pyproject.toml',
+          ]);
+
+          function isBannedDepFile(filePath) {
+            const base = path.posix.basename(filePath).toLowerCase();
+            return BANNED_DEP_FILES.has(base);
+          }
+
+          function isPathIgnored(testPath) {
+            try {
+              execFileSync('git', ['check-ignore', '-q', '--no-index', testPath], { stdio: 'ignore' });
+              return true;
+            } catch (err) {
+              if (err && typeof err.status === 'number' && err.status === 1) {
+                return false;
+              }
+              throw err;
+            }
+          }
+
+          function stripYamlComment(raw) {
+            let inSingle = false;
+            let inDouble = false;
+            for (let i = 0; i < raw.length; i += 1) {
+              const ch = raw[i];
+              if (ch === "'" && !inDouble) {
+                if (inSingle && raw[i + 1] === "'") {
+                  i += 1;
+                  continue;
+                }
+                inSingle = !inSingle;
+              } else if (ch === '"' && !inSingle) {
+                inDouble = !inDouble;
+              } else if (inDouble && ch === '\\') {
+                i += 1;
+                continue;
+              } else if (ch === '#' && !inSingle && !inDouble) {
+                if (i === 0 || /\s/.test(raw[i - 1])) {
+                  return raw.slice(0, i);
+                }
+              }
+            }
+            return raw;
+          }
+
+          function decodeDoubleQuotedYaml(inner) {
+            let out = '';
+            for (let i = 0; i < inner.length; i += 1) {
+              const ch = inner[i];
+              if (ch === '"') {
+                return { ok: false, error: 'Unescaped double quote inside double-quoted YAML scalar' };
+              }
+              if (ch !== '\\') {
+                out += ch;
+                continue;
+              }
+              if (i + 1 >= inner.length) {
+                return { ok: false, error: 'Trailing backslash in double-quoted YAML scalar' };
+              }
+              const esc = inner[i + 1];
+              i += 1;
+              switch (esc) {
+                case '0': out += '\0'; break;
+                case 'a': out += '\u0007'; break;
+                case 'b': out += '\b'; break;
+                case 't':
+                case '\t': out += '\t'; break;
+                case 'n': out += '\n'; break;
+                case 'v': out += '\v'; break;
+                case 'f': out += '\f'; break;
+                case 'r': out += '\r'; break;
+                case 'e': out += '\u001b'; break;
+                case ' ': out += ' '; break;
+                case '"': out += '"'; break;
+                case '/': out += '/'; break;
+                case '\\': out += '\\'; break;
+                case 'N': out += '\u0085'; break;
+                case '_': out += '\u00a0'; break;
+                case 'L': out += '\u2028'; break;
+                case 'P': out += '\u2029'; break;
+                case 'x': {
+                  const hex = inner.slice(i + 1, i + 3);
+                  if (!/^[0-9a-fA-F]{2}$/.test(hex)) {
+                    return { ok: false, error: 'Invalid \\x escape in double-quoted YAML scalar' };
+                  }
+                  out += String.fromCharCode(parseInt(hex, 16));
+                  i += 2;
+                  break;
+                }
+                case 'u': {
+                  const hex = inner.slice(i + 1, i + 5);
+                  if (!/^[0-9a-fA-F]{4}$/.test(hex)) {
+                    return { ok: false, error: 'Invalid \\u escape in double-quoted YAML scalar' };
+                  }
+                  out += String.fromCharCode(parseInt(hex, 16));
+                  i += 4;
+                  break;
+                }
+                case 'U': {
+                  const hex = inner.slice(i + 1, i + 9);
+                  if (!/^[0-9a-fA-F]{8}$/.test(hex)) {
+                    return { ok: false, error: 'Invalid \\U escape in double-quoted YAML scalar' };
+                  }
+                  const cp = parseInt(hex, 16);
+                  if (cp > 0x10ffff) {
+                    return { ok: false, error: 'Out-of-range \\U codepoint in double-quoted YAML scalar' };
+                  }
+                  out += String.fromCodePoint(cp);
+                  i += 8;
+                  break;
+                }
+                case '\r':
+                  if (inner[i + 1] === '\n') i += 1;
+                  while (i + 1 < inner.length && (inner[i + 1] === ' ' || inner[i + 1] === '\t')) i += 1;
+                  break;
+                case '\n':
+                  while (i + 1 < inner.length && (inner[i + 1] === ' ' || inner[i + 1] === '\t')) i += 1;
+                  break;
+                default:
+                  return { ok: false, error: `Unsupported YAML escape \\${esc}` };
+              }
+            }
+            return { ok: true, value: out };
+          }
+
+          function parseYamlScalar(val) {
+            const t = val.trim();
+            if (!t) return { ok: true, value: '', quoted: false };
+            if (t.startsWith("'")) {
+              if (t.length < 2 || !t.endsWith("'")) {
+                return { ok: false, error: `Unclosed single-quoted YAML scalar: ${t}` };
+              }
+              const inner = t.slice(1, -1);
+              for (let i = 0; i < inner.length; i += 1) {
+                if (inner[i] === "'") {
+                  if (inner[i + 1] === "'") {
+                    i += 1;
+                  } else {
+                    return { ok: false, error: `Invalid single-quoted YAML scalar: ${t}` };
+                  }
+                }
+              }
+              return { ok: true, value: inner.replace(/''/g, "'").trim(), quoted: true };
+            }
+            if (t.startsWith('"')) {
+              if (t.length < 2 || !t.endsWith('"')) {
+                return { ok: false, error: `Unclosed double-quoted YAML scalar: ${t}` };
+              }
+              const decoded = decodeDoubleQuotedYaml(t.slice(1, -1));
+              if (!decoded.ok) return decoded;
+              return { ok: true, value: decoded.value.trim(), quoted: true };
+            }
+            if (/^[&*!|>{[]/.test(t)) {
+              return { ok: false, error: `Unsupported YAML token in scalar: ${t}` };
+            }
+            return { ok: true, value: t, quoted: false };
+          }
+
+          function isWildcardExcludeValue(cleaned) {
+            if (!cleaned) return true;
+            if (!/[a-z0-9]/i.test(cleaned)) return true;
+            return /^[@/*?]+$/.test(cleaned);
+          }
+
+          function hasYamlAnchorOrAlias(stripped) {
+            let inSingle = false;
+            let inDouble = false;
+            for (let i = 0; i < stripped.length; i += 1) {
+              const ch = stripped[i];
+              if (ch === "'" && !inDouble) {
+                if (inSingle && stripped[i + 1] === "'") {
+                  i += 1;
+                  continue;
+                }
+                inSingle = !inSingle;
+              } else if (ch === '"' && !inSingle) {
+                inDouble = !inDouble;
+              } else if (inDouble && ch === '\\') {
+                i += 1;
+                continue;
+              } else if (!inSingle && !inDouble) {
+                if ((ch === '&' || ch === '*') && (i === 0 || /[\s:\-\[,{]/.test(stripped[i - 1]))) {
+                  return true;
+                }
+              }
+            }
+            return false;
+          }
+
+          function parseYamlMappingLine(stripped) {
+            const m = stripped.match(/^([ \t]*)(.*)$/);
+            const indent = m[1];
+            const restLine = m[2];
+            if (!restLine) return null;
+            if (restLine.startsWith("'")) {
+              let i = 1;
+              while (i < restLine.length) {
+                if (restLine[i] === "'") {
+                  if (restLine[i + 1] === "'") {
+                    i += 2;
+                    continue;
+                  }
+                  break;
+                }
+                i += 1;
+              }
+              if (i >= restLine.length) return null;
+              const rawKey = restLine.slice(0, i + 1);
+              const afterKey = restLine.slice(i + 1);
+              const colonMatch = afterKey.match(/^[ \t]*:(.*)$/);
+              if (!colonMatch) return null;
+              const parsedKey = parseYamlScalar(rawKey);
+              return {
+                indent,
+                rawKey,
+                key: parsedKey.ok ? parsedKey.value : null,
+                quoted: true,
+                rhs: colonMatch[1].trim(),
+                keyError: parsedKey.ok ? null : parsedKey.error,
+              };
+            }
+            if (restLine.startsWith('"')) {
+              let i = 1;
+              while (i < restLine.length) {
+                if (restLine[i] === '\\') {
+                  i += 2;
+                  continue;
+                }
+                if (restLine[i] === '"') {
+                  break;
+                }
+                i += 1;
+              }
+              if (i >= restLine.length) return null;
+              const rawKey = restLine.slice(0, i + 1);
+              const afterKey = restLine.slice(i + 1);
+              const colonMatch = afterKey.match(/^[ \t]*:(.*)$/);
+              if (!colonMatch) return null;
+              const parsedKey = parseYamlScalar(rawKey);
+              return {
+                indent,
+                rawKey,
+                key: parsedKey.ok ? parsedKey.value : null,
+                quoted: true,
+                rhs: colonMatch[1].trim(),
+                keyError: parsedKey.ok ? null : parsedKey.error,
+              };
+            }
+            const unquotedMatch = restLine.match(/^([^\s:]+)[ \t]*:(.*)$/);
+            if (!unquotedMatch) return null;
+            return {
+              indent,
+              rawKey: unquotedMatch[1],
+              key: unquotedMatch[1],
+              quoted: false,
+              rhs: unquotedMatch[2].trim(),
+              keyError: null,
+            };
+          }
+
+          function scanFlowBuffer(flowBuffer) {
+            let inSingle = false;
+            let inDouble = false;
+            for (let i = 0; i < flowBuffer.length; i += 1) {
+              const ch = flowBuffer[i];
+              if (ch === "'" && !inDouble) {
+                if (inSingle && flowBuffer[i + 1] === "'") {
+                  i += 1;
+                  continue;
+                }
+                inSingle = !inSingle;
+              } else if (ch === '"' && !inSingle) {
+                inDouble = !inDouble;
+              } else if (inDouble && ch === '\\') {
+                i += 1;
+                continue;
+              } else if (!inSingle && !inDouble) {
+                if (ch === '[' || ch === '{') {
+                  return { status: 'error', error: 'Nested flow collection in minimumReleaseAgeExclude is not allowed.' };
+                }
+                if (ch === ']') {
+                  const trailing = flowBuffer.slice(i + 1).trim();
+                  if (trailing) {
+                    return {
+                      status: 'error',
+                      error: `Unexpected trailing content after minimumReleaseAgeExclude flow array: ${trailing}`,
+                    };
+                  }
+                  return { status: 'closed', body: flowBuffer.slice(0, i) };
+                }
+              }
+            }
+            return { status: 'open' };
+          }
+
+          function splitFlowItems(flowBody) {
+            const items = [];
+            let current = '';
+            let inSingle = false;
+            let inDouble = false;
+            for (let i = 0; i < flowBody.length; i += 1) {
+              const ch = flowBody[i];
+              if (ch === "'" && !inDouble) {
+                if (inSingle && flowBody[i + 1] === "'") {
+                  current += "''";
+                  i += 1;
+                  continue;
+                }
+                inSingle = !inSingle;
+                current += ch;
+              } else if (ch === '"' && !inSingle) {
+                inDouble = !inDouble;
+                current += ch;
+              } else if (inDouble && ch === '\\') {
+                current += ch + (flowBody[i + 1] || '');
+                i += 1;
+              } else if (ch === ',' && !inSingle && !inDouble) {
+                if (current.trim()) items.push(current.trim());
+                current = '';
+              } else {
+                current += ch;
+              }
+            }
+            if (current.trim()) items.push(current.trim());
+            return items;
+          }
+
+          const amrcFiles = gitDiffNames(['--diff-filter=AMRC']);
+          const allFiles = gitDiffNames([]);
+          const violations = [];
+          const warnings = [];
+
+          const secretHits = amrcFiles.filter(isForbiddenSecret);
+          if (secretHits.length > 0) {
+            violations.push(`Forbidden secret or private key file(s) modified/added: ${secretHits.join(', ')}`);
+          }
+
+          const bannedDepHits = amrcFiles.filter(isBannedDepFile);
+          if (bannedDepHits.length > 0) {
+            violations.push(
+              `Banned lockfile or Python dependency file(s) added/modified (pnpm-only per AGENTS.md §4; deletions allowed): ${bannedDepHits.join(', ')}`
+            );
+          }
+
+          const amrcSet = new Set(amrcFiles);
+          const symlinkHits = [];
+          const nestedGitignores = new Set(
+            amrcFiles.filter((f) => f !== '.gitignore' && path.posix.basename(f) === '.gitignore')
+          );
+          const treeOut = execFileSync(
+            'git',
+            ['ls-tree', '-r', '-z', 'HEAD'],
+            { encoding: 'utf8', maxBuffer: 20 * 1024 * 1024 }
+          );
+          for (const entry of treeOut.split('\0')) {
+            if (!entry) continue;
+            const tabIdx = entry.indexOf('\t');
+            if (tabIdx === -1) continue;
+            const meta = entry.slice(0, tabIdx);
+            const treePath = entry.slice(tabIdx + 1).replace(/\\/g, '/');
+            const mode = meta.split(' ')[0];
+            if (mode === '120000' && amrcSet.has(treePath)) {
+              symlinkHits.push(treePath);
+            }
+            if (treePath !== '.gitignore' && path.posix.basename(treePath) === '.gitignore') {
+              nestedGitignores.add(treePath);
+            }
+          }
+
+          if (symlinkHits.length > 0) {
+            violations.push(`Symlink(s) (git mode 120000) added/modified: ${symlinkHits.join(', ')}`);
+          }
+          if (nestedGitignores.size > 0) {
+            violations.push(`Nested .gitignore file(s) are not allowed: ${Array.from(nestedGitignores).join(', ')}`);
+          }
+
+          const requiredGitignoreEntries = [
+            '.env',
+            '.env.*',
+            '!.env.example',
+            'package-lock.json',
+            'yarn.lock',
+          ];
+          if (!fs.existsSync('.gitignore')) {
+            violations.push('.gitignore is missing.');
+          } else {
+            const rawGitignoreLines = fs.readFileSync('.gitignore', 'utf8')
+              .split(/\r?\n/)
+              .map((line) => line.trim())
+              .filter((line) => line && !line.startsWith('#'));
+            const gitignoreLines = new Set(rawGitignoreLines);
+            const missingEntries = requiredGitignoreEntries.filter((entry) => !gitignoreLines.has(entry));
+            if (missingEntries.length > 0) {
+              violations.push(`.gitignore must retain required exclusions: ${missingEntries.join(', ')}`);
+            }
+
+            const ALLOWED_GITIGNORE_NEGATIONS = new Set([
+              '!.env.example',
+              '!.vscode/settings.json',
+              '!.vscode/tasks.json',
+              '!.vscode/launch.json',
+              '!.vscode/extensions.json',
+            ]);
+            const forbiddenNegations = rawGitignoreLines.filter(
+              (line) => line.startsWith('!') && !ALLOWED_GITIGNORE_NEGATIONS.has(line)
+            );
+            if (forbiddenNegations.length > 0) {
+              violations.push(`.gitignore contains disallowed negation rule(s): ${forbiddenNegations.join(', ')}`);
+            }
+
+            const mustBeIgnored = [
+              '.env',
+              '.env.local',
+              '.env.production',
+              'artifacts/api-server/.env',
+              'artifacts/api-server/.env.local',
+              'artifacts/nadraan/.env',
+              'package-lock.json',
+              'yarn.lock',
+            ];
+            const unignoredPaths = mustBeIgnored.filter((p) => !isPathIgnored(p));
+            if (unignoredPaths.length > 0) {
+              violations.push(`Git ignore verification failed — path(s) are NOT ignored: ${unignoredPaths.join(', ')}`);
+            }
+            if (isPathIgnored('.env.example')) {
+              violations.push('Git ignore verification failed — .env.example must NOT be ignored.');
+            }
+          }
+
+          if (!fs.existsSync('pnpm-workspace.yaml')) {
+            violations.push('pnpm-workspace.yaml is missing.');
+          } else {
+            const wsContent = fs.readFileSync('pnpm-workspace.yaml', 'utf8');
+            const wsLines = wsContent.replace(/^\uFEFF/, '').split(/\r?\n/);
+            const topMinAges = [];
+            let quotedMinAgeFound = false;
+            let quotedExcludeFound = false;
+            let indentedMinAgeFound = false;
+            let indentedExcludeFound = false;
+            let excludeKeyCount = 0;
+            let inTopExclude = false;
+            let excludeItemMode = null;
+            let inExcludeFlow = false;
+            let flowBuffer = '';
+            const excludeEntries = [];
+            const wsParseErrors = [];
+
+            for (const rawLine of wsLines) {
+              const stripped = stripYamlComment(rawLine);
+              const trimmed = stripped.trim();
+              if (!trimmed || trimmed === '---' || trimmed === '...') {
+                continue;
+              }
+
+              if (hasYamlAnchorOrAlias(stripped)) {
+                wsParseErrors.push('YAML anchors (&) or aliases (*) are not allowed in pnpm-workspace.yaml.');
+              }
+              if (/^[ \t]*\?(?:[ \t]|$)/.test(stripped)) {
+                wsParseErrors.push('Explicit YAML mapping key (?) is not allowed in pnpm-workspace.yaml.');
+              }
+
+              if (inExcludeFlow) {
+                flowBuffer += `\n${stripped}`;
+                const scan = scanFlowBuffer(flowBuffer);
+                if (scan.status === 'error') {
+                  wsParseErrors.push(scan.error);
+                  inExcludeFlow = false;
+                  excludeItemMode = 'closed';
+                  flowBuffer = '';
+                } else if (scan.status === 'closed') {
+                  excludeEntries.push(...splitFlowItems(scan.body));
+                  inExcludeFlow = false;
+                  excludeItemMode = 'closed';
+                  flowBuffer = '';
+                }
+                continue;
+              }
+
+              const mapping = parseYamlMappingLine(stripped);
+              if (mapping && mapping.keyError) {
+                wsParseErrors.push(mapping.keyError);
+              }
+              if (mapping && mapping.key === 'minimumReleaseAge') {
+                if (mapping.quoted) quotedMinAgeFound = true;
+                if (mapping.indent.length > 0) indentedMinAgeFound = true;
+              }
+              if (mapping && mapping.key === 'minimumReleaseAgeExclude') {
+                if (mapping.quoted) quotedExcludeFound = true;
+                if (mapping.indent.length > 0) indentedExcludeFound = true;
+              }
+
+              if (inTopExclude) {
+                if (/^[ \t]*-(?:[ \t]+|$)/.test(stripped)) {
+                  if (excludeItemMode !== null && excludeItemMode !== 'block') {
+                    wsParseErrors.push('Unexpected block list item in minimumReleaseAgeExclude.');
+                    continue;
+                  }
+                  excludeItemMode = 'block';
+                  const itemRhs = trimmed.slice(1).trim();
+                  if (!itemRhs) {
+                    wsParseErrors.push('Empty or multi-line block list item in minimumReleaseAgeExclude is not allowed.');
+                    continue;
+                  }
+                  excludeEntries.push(itemRhs);
+                  continue;
+                }
+                if (/^[ \t]/.test(stripped)) {
+                  if (trimmed.startsWith('[')) {
+                    if (excludeItemMode !== null) {
+                      wsParseErrors.push('Unexpected flow array in minimumReleaseAgeExclude.');
+                      continue;
+                    }
+                    excludeItemMode = 'flow';
+                    flowBuffer = trimmed.slice(1);
+                    const scan = scanFlowBuffer(flowBuffer);
+                    if (scan.status === 'error') {
+                      wsParseErrors.push(scan.error);
+                      excludeItemMode = 'closed';
+                      flowBuffer = '';
+                    } else if (scan.status === 'closed') {
+                      excludeEntries.push(...splitFlowItems(scan.body));
+                      excludeItemMode = 'closed';
+                      flowBuffer = '';
+                    } else {
+                      inExcludeFlow = true;
+                    }
+                    continue;
+                  }
+                  wsParseErrors.push(`Unsupported YAML construct under minimumReleaseAgeExclude: ${trimmed}`);
+                  continue;
+                }
+                inTopExclude = false;
+                excludeItemMode = null;
+              }
+
+              const isTopLevel = !/^[ \t]/.test(stripped);
+              if (isTopLevel) {
+                if (trimmed.startsWith('{')) {
+                  wsParseErrors.push('Top-level YAML flow mapping is not allowed in pnpm-workspace.yaml.');
+                  continue;
+                }
+                if (mapping && mapping.key === 'minimumReleaseAge' && !mapping.quoted) {
+                  topMinAges.push(mapping.rhs);
+                  continue;
+                }
+                if (mapping && mapping.key === 'minimumReleaseAgeExclude' && !mapping.quoted) {
+                  excludeKeyCount += 1;
+                  inTopExclude = true;
+                  excludeItemMode = null;
+                  if (mapping.rhs) {
+                    if (mapping.rhs.startsWith('[')) {
+                      excludeItemMode = 'flow';
+                      flowBuffer = mapping.rhs.slice(1);
+                      const scan = scanFlowBuffer(flowBuffer);
+                      if (scan.status === 'error') {
+                        wsParseErrors.push(scan.error);
+                        excludeItemMode = 'closed';
+                        flowBuffer = '';
+                      } else if (scan.status === 'closed') {
+                        excludeEntries.push(...splitFlowItems(scan.body));
+                        excludeItemMode = 'closed';
+                        flowBuffer = '';
+                      } else {
+                        inExcludeFlow = true;
+                      }
+                    } else {
+                      wsParseErrors.push(`minimumReleaseAgeExclude must be a YAML sequence (got: ${mapping.rhs}).`);
+                      inTopExclude = false;
+                    }
+                  }
+                  continue;
+                }
+              }
+            }
+
+            if (inExcludeFlow) {
+              wsParseErrors.push('Unclosed flow array in minimumReleaseAgeExclude.');
+            }
+            if (quotedMinAgeFound) {
+              violations.push('pnpm-workspace.yaml must not use quoted minimumReleaseAge keys.');
+            }
+            if (quotedExcludeFound) {
+              violations.push('pnpm-workspace.yaml must not use quoted minimumReleaseAgeExclude keys.');
+            }
+            if (indentedMinAgeFound) {
+              violations.push('pnpm-workspace.yaml must not define indented/nested minimumReleaseAge keys.');
+            }
+            if (indentedExcludeFound) {
+              violations.push('pnpm-workspace.yaml must not define indented/nested minimumReleaseAgeExclude keys.');
+            }
+            for (const parseErr of wsParseErrors) {
+              violations.push(`pnpm-workspace.yaml validation failed: ${parseErr}`);
+            }
+            if (topMinAges.length === 0) {
+              violations.push('pnpm-workspace.yaml must retain top-level numeric minimumReleaseAge >= 1440.');
+            } else if (topMinAges.length > 1) {
+              violations.push(`pnpm-workspace.yaml must not contain duplicate minimumReleaseAge keys (${topMinAges.length} found).`);
+            } else if (!/^\d+$/.test(topMinAges[0])) {
+              violations.push(`pnpm-workspace.yaml minimumReleaseAge must be a plain integer >= 1440 (got: ${topMinAges[0] || '<empty>'}).`);
+            } else if (Number(topMinAges[0]) < 1440) {
+              violations.push(`pnpm-workspace.yaml minimumReleaseAge (${topMinAges[0]}) must be >= 1440.`);
+            }
+
+            if (excludeKeyCount > 1) {
+              violations.push(`pnpm-workspace.yaml must not contain duplicate minimumReleaseAgeExclude keys (${excludeKeyCount} found).`);
+            }
+            const wildcardExcludes = [];
+            for (const entry of excludeEntries) {
+              const parsedEntry = parseYamlScalar(entry);
+              if (!parsedEntry.ok) {
+                violations.push(`pnpm-workspace.yaml invalid minimumReleaseAgeExclude entry (${entry}): ${parsedEntry.error}`);
+              } else if (isWildcardExcludeValue(parsedEntry.value)) {
+                wildcardExcludes.push(entry);
+              }
+            }
+            if (wildcardExcludes.length > 0) {
+              violations.push(`pnpm-workspace.yaml minimumReleaseAgeExclude cannot contain wildcard entries: ${wildcardExcludes.join(', ')}`);
+            }
+          }
+
+          const githubFiles = allFiles.filter((f) => f === '.github' || f.startsWith('.github/'));
+          let protectedWorkflowChanged = false;
+          if (githubFiles.length > 0) {
+            protectedWorkflowChanged = true;
+            const appOrPkgPattern = /^(artifacts\/|lib\/|scripts\/|package\.json$|pnpm-lock\.yaml$|pnpm-workspace\.yaml$)/;
+            const isAllowedWithGithub = (f) =>
+              f === '.github' || f.startsWith('.github/') || f.startsWith('docs/') || /\.md$/i.test(f);
+
+            const mixedAppOrPkg = allFiles.filter((f) => appOrPkgPattern.test(f));
+            const otherNonDoc = allFiles.filter((f) => !isAllowedWithGithub(f) && !appOrPkgPattern.test(f));
+
+            if (mixedAppOrPkg.length > 0) {
+              violations.push(
+                `Protected .github/ changes cannot be mixed with app/lib/package files: ${mixedAppOrPkg.join(', ')}`
+              );
+            } else if (otherNonDoc.length > 0) {
+              violations.push(
+                `Protected .github/ changes may only accompany docs (*.md, docs/); disallowed co-changes: ${otherNonDoc.join(', ')}`
+              );
+            } else {
+              warnings.push(
+                `Protected .github/ files modified (${githubFiles.join(', ')}) — human/CODEOWNER review required.`
+              );
+            }
+          }
+
+          const result = {
+            passed: violations.length === 0,
+            protected_workflow_changed: protectedWorkflowChanged,
+            changed_files_count: allFiles.length,
+            amrc_files_count: amrcFiles.length,
+            violations,
+            warnings,
+          };
+
+          fs.mkdirSync(runnerTemp, { recursive: true });
+          fs.writeFileSync(scopeResultPath, JSON.stringify(result, null, 2), 'utf8');
+
+          if (process.env.GITHUB_OUTPUT) {
+            fs.appendFileSync(
+              process.env.GITHUB_OUTPUT,
+              `protected_workflow_changed=${protectedWorkflowChanged}\n`,
+              'utf8'
+            );
+          }
+
+          for (const w of warnings) {
+            console.log(`::warning::${w}`);
+          }
+          for (const v of violations) {
+            console.log(`::error::${v}`);
+          }
+
+          if (!result.passed) {
+            process.exit(1);
+          }
+          console.log(`Scope check passed (${allFiles.length} changed files inspected).`);
           EOF
 
-      # ۸. ارسال کامنت فرمت‌شده روی PR
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.21.0
+          run_install: false
+
+      - name: Set up Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies (frozen lockfile)
+        id: install
+        run: pnpm install --frozen-lockfile
+
+      - name: Push database schema
+        id: db_push
+        run: pnpm --filter @workspace/db run push
+
+      - name: Typecheck workspace
+        id: typecheck
+        continue-on-error: true
+        run: pnpm run typecheck
+
+      - name: Run library unit tests
+        id: test_libs
+        continue-on-error: true
+        run: pnpm run test:libs
+
+      - name: Run API server Vitest suite (sequential)
+        id: test_api
+        continue-on-error: true
+        run: pnpm --filter @workspace/api-server exec vitest run --fileParallelism=false
+
+      - name: Run Nadraan web Vitest suite
+        id: test_web
+        continue-on-error: true
+        run: pnpm --filter @workspace/nadraan test
+
+      - name: Build API server
+        id: build_api
+        continue-on-error: true
+        run: pnpm --filter @workspace/api-server run build
+
+      - name: Build Nadraan web app
+        id: build_web
+        continue-on-error: true
+        env:
+          PORT: '3000'
+          BASE_PATH: '/'
+        run: pnpm --filter @workspace/nadraan run build
+
+      - name: Build Structured Feedback and Step Summary
+        id: feedback
+        if: always()
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          OUTCOME_SCOPE_CHECK: ${{ steps.scope_check.outcome }}
+          OUTCOME_INSTALL: ${{ steps.install.outcome }}
+          OUTCOME_DB_PUSH: ${{ steps.db_push.outcome }}
+          OUTCOME_TYPECHECK: ${{ steps.typecheck.outcome }}
+          OUTCOME_TEST_LIBS: ${{ steps.test_libs.outcome }}
+          OUTCOME_TEST_API: ${{ steps.test_api.outcome }}
+          OUTCOME_TEST_WEB: ${{ steps.test_web.outcome }}
+          OUTCOME_BUILD_API: ${{ steps.build_api.outcome }}
+          OUTCOME_BUILD_WEB: ${{ steps.build_web.outcome }}
+        run: |
+          node - <<'EOF'
+          const fs = require('fs');
+          const path = require('path');
+
+          const runnerTemp = process.env.RUNNER_TEMP || '/tmp';
+          fs.mkdirSync(runnerTemp, { recursive: true });
+          const scopeResultPath = path.join(runnerTemp, 'scope-result.json');
+          const feedbackPath = path.join(runnerTemp, 'agent-feedback.json');
+          const commentPath = path.join(runnerTemp, 'pr-comment.md');
+
+          const eventName = process.env.EVENT_NAME || 'unknown';
+          const outcomes = {
+            scope_check: process.env.OUTCOME_SCOPE_CHECK || 'skipped',
+            install: process.env.OUTCOME_INSTALL || 'skipped',
+            db_push: process.env.OUTCOME_DB_PUSH || 'skipped',
+            typecheck: process.env.OUTCOME_TYPECHECK || 'skipped',
+            test_libs: process.env.OUTCOME_TEST_LIBS || 'skipped',
+            test_api: process.env.OUTCOME_TEST_API || 'skipped',
+            test_web: process.env.OUTCOME_TEST_WEB || 'skipped',
+            build_api: process.env.OUTCOME_BUILD_API || 'skipped',
+            build_web: process.env.OUTCOME_BUILD_WEB || 'skipped',
+          };
+
+          let scopeResult = null;
+          if (fs.existsSync(scopeResultPath)) {
+            try {
+              scopeResult = JSON.parse(fs.readFileSync(scopeResultPath, 'utf8'));
+            } catch (err) {
+              scopeResult = { passed: false, violations: [`Failed to parse scope-result.json: ${err.message}`], warnings: [] };
+            }
+          }
+
+          const scopeValid =
+            eventName === 'pull_request'
+              ? outcomes.scope_check === 'success' && Boolean(scopeResult && scopeResult.passed === true)
+              : outcomes.scope_check === 'success' || outcomes.scope_check === 'skipped';
+
+          const requiredSteps = [
+            'install',
+            'db_push',
+            'typecheck',
+            'test_libs',
+            'test_api',
+            'test_web',
+            'build_api',
+            'build_web',
+          ];
+
+          const failedChecks = [];
+          if (!scopeValid) failedChecks.push('scope_check');
+          for (const stepName of requiredSteps) {
+            if (outcomes[stepName] !== 'success') {
+              failedChecks.push(stepName);
+            }
+          }
+
+          const status = failedChecks.length === 0 ? 'passed' : 'failed';
+          const payload = {
+            status,
+            event: eventName,
+            protected_workflow_changed: Boolean(scopeResult && scopeResult.protected_workflow_changed),
+            checks: outcomes,
+            failed_checks: failedChecks,
+            scope: scopeResult || {
+              passed: eventName !== 'pull_request',
+              protected_workflow_changed: false,
+              violations: eventName === 'pull_request' ? ['scope-result.json missing'] : [],
+              warnings: [],
+            },
+          };
+
+          fs.writeFileSync(feedbackPath, JSON.stringify(payload, null, 2), 'utf8');
+
+          const rows = Object.entries(outcomes)
+            .map(([k, v]) => `| \`${k}\` | \`${v}\` |`)
+            .join('\n');
+
+          const summaryLines = [
+            `### Agent Microtask Verification Gate: \`${status.toUpperCase()}\``,
+            '',
+            '| Check | Outcome |',
+            '|---|---|',
+            rows,
+            '',
+            `- **Protected \`.github/\` changed:** \`${payload.protected_workflow_changed}\``,
+            `- **Failed checks:** ${failedChecks.length > 0 ? failedChecks.map((c) => `\`${c}\``).join(', ') : 'none'}`,
+          ];
+
+          if (payload.scope.warnings && payload.scope.warnings.length > 0) {
+            summaryLines.push('', '**Warnings:**', ...payload.scope.warnings.map((w) => `- ${w}`));
+          }
+          if (payload.scope.violations && payload.scope.violations.length > 0) {
+            summaryLines.push('', '**Scope Violations:**', ...payload.scope.violations.map((v) => `- ${v}`));
+          }
+
+          const markdown = summaryLines.join('\n') + '\n';
+          if (process.env.GITHUB_STEP_SUMMARY) {
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, markdown, 'utf8');
+          }
+
+          const commentBody = [
+            markdown,
+            '<details>',
+            '<summary>Structured Feedback JSON</summary>',
+            '',
+            '```json',
+            JSON.stringify(payload, null, 2),
+            '```',
+            '</details>',
+            '',
+          ].join('\n');
+          fs.writeFileSync(commentPath, commentBody, 'utf8');
+          EOF
+
       - name: Post Feedback Comment to PR
+        id: pr_comment
         if: always() && github.event_name == 'pull_request'
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cat << 'EOF' > temp_comment.txt
-          ### 🤖 Agent Verification Feedback
-          ```json
-          EOF
-          cat agent-feedback.json >> temp_comment.txt
-          echo '' >> temp_comment.txt
-          echo '```' >> temp_comment.txt
-          
-          gh pr comment ${{ github.event.pull_request.number }} --body-file temp_comment.txt || true
+          gh pr comment "${{ github.event.pull_request.number }}" --body-file "${{ runner.temp }}/pr-comment.md"
 
-      # ۹. ارزیابی نهایی برای تعیین وضعیت ادغام
       - name: Final Assertion Check
+        id: final_gate
         if: always()
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          OUTCOME_SCOPE_CHECK: ${{ steps.scope_check.outcome }}
+          OUTCOME_INSTALL: ${{ steps.install.outcome }}
+          OUTCOME_DB_PUSH: ${{ steps.db_push.outcome }}
+          OUTCOME_TYPECHECK: ${{ steps.typecheck.outcome }}
+          OUTCOME_TEST_LIBS: ${{ steps.test_libs.outcome }}
+          OUTCOME_TEST_API: ${{ steps.test_api.outcome }}
+          OUTCOME_TEST_WEB: ${{ steps.test_web.outcome }}
+          OUTCOME_BUILD_API: ${{ steps.build_api.outcome }}
+          OUTCOME_BUILD_WEB: ${{ steps.build_web.outcome }}
         run: |
-          STATUS=$(jq -r '.status' agent-feedback.json)
-          if [ "$STATUS" == "failed" ]; then
-            echo "::error::Microtask verification failed."
-            exit 1
-          fi
+          node - <<'EOF'
+          const fs = require('fs');
+          const path = require('path');
+
+          const runnerTemp = process.env.RUNNER_TEMP || '/tmp';
+          const feedbackPath = path.join(runnerTemp, 'agent-feedback.json');
+
+          const eventName = process.env.EVENT_NAME || 'unknown';
+          const scopeOutcome = process.env.OUTCOME_SCOPE_CHECK || 'skipped';
+          const scopeOk =
+            eventName === 'pull_request'
+              ? scopeOutcome === 'success'
+              : scopeOutcome === 'success' || scopeOutcome === 'skipped';
+
+          const requiredOutcomes = {
+            install: process.env.OUTCOME_INSTALL,
+            db_push: process.env.OUTCOME_DB_PUSH,
+            typecheck: process.env.OUTCOME_TYPECHECK,
+            test_libs: process.env.OUTCOME_TEST_LIBS,
+            test_api: process.env.OUTCOME_TEST_API,
+            test_web: process.env.OUTCOME_TEST_WEB,
+            build_api: process.env.OUTCOME_BUILD_API,
+            build_web: process.env.OUTCOME_BUILD_WEB,
+          };
+
+          const failed = [];
+          if (!scopeOk) failed.push(`scope_check=${scopeOutcome}`);
+          for (const [name, outcome] of Object.entries(requiredOutcomes)) {
+            if (outcome !== 'success') {
+              failed.push(`${name}=${outcome || 'missing'}`);
+            }
+          }
+
+          if (!fs.existsSync(feedbackPath)) {
+            console.log('::error::agent-feedback.json was not generated.');
+            process.exit(1);
+          }
+
+          let feedback;
+          try {
+            feedback = JSON.parse(fs.readFileSync(feedbackPath, 'utf8'));
+          } catch (err) {
+            console.log(`::error::Failed to parse agent-feedback.json: ${err.message}`);
+            process.exit(1);
+          }
+
+          if (feedback.status !== 'passed' || failed.length > 0) {
+            console.log(`::error::Microtask verification failed (status=${feedback.status}, failed=${failed.join(', ')}).`);
+            process.exit(1);
+          }
+
+          console.log('All verification gates passed.');
+          EOF

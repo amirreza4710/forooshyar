@@ -13,8 +13,11 @@ export interface Product {
   category: string;
   /** @nullable */
   pack?: string | null;
+  unitsPerPack?: number;
   price: number;
+  costPrice?: number;
   stock: number;
+  minStock?: number;
   /** @nullable */
   image?: string | null;
   createdAt?: string;

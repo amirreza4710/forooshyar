@@ -142,16 +142,16 @@
   --sidebar: 222 47% 7%;
   --sidebar-foreground: 210 28% 85%;
   --sidebar-border: 215 14% 18%;
-  --sidebar-primary: 220 91% 60%;
-  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-primary: 83.724 77.876% 55.49%;
+  --sidebar-primary-foreground: 222 47% 8%;
   --sidebar-accent: 160 84% 42%;
   --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-ring: 220 91% 60%;
+  --sidebar-ring: 83.724 77.876% 55.49%;
   --popover: 222 40% 11%;
   --popover-foreground: 210 28% 90%;
   --popover-border: 215 14% 22%;
-  --primary: 220 91% 60%;
-  --primary-foreground: 0 0% 100%;
+  --primary: 83.724 77.876% 55.49%;
+  --primary-foreground: 222 47% 8%;
   --secondary: 215 20% 16%;
   --secondary-foreground: 210 28% 90%;
   --muted: 215 20% 16%;
@@ -161,7 +161,7 @@
   --destructive: 0 84% 58%;
   --destructive-foreground: 0 0% 100%;
   --input: 215 14% 24%;
-  --ring: 220 91% 60%;
+  --ring: 83.724 77.876% 55.49%;
   --chart-1: 220 91% 60%;
   --chart-2: 160 84% 42%;
   --chart-3: 270 70% 65%;
@@ -244,4 +244,16 @@
   .border.active-elevate:not(.no-active-interaction-elevate)::after,
   .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,
   .border.active-elevate-2:not(.no-active-interaction-elevate)::after { inset: -1px; }
+}
+
+.dark .bg-card { background-color: hsl(var(--card) / .85); backdrop-filter: blur(16px); }
+.dark .bg-primary.text-white, .dark .bg-primary .text-white { color: hsl(var(--primary-foreground)); }
+@media print {
+  body { overflow: visible !important; }
+  [role="dialog"] { --tw-translate-x: 0 !important; --tw-translate-y: 0 !important; position: static !important; transform: none !important; translate: none !important; transition: none !important; animation: none !important; max-width: none !important; max-height: none !important; overflow: visible !important; border: 0 !important; box-shadow: none !important; }
+  body * { visibility: hidden; }
+  #order-print, #order-print * { visibility: visible; }
+  #order-print { position: absolute; inset: 0; width: 100%; color: black; background: white; padding: 12mm; }
+  #order-print .print-hide { display: none; }
+  [data-radix-popper-content-wrapper] { display: none; }
 }

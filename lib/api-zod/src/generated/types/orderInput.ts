@@ -5,11 +5,16 @@
  * نادران‌گستر - پلتفرم مدیریت پخش و فروش
  * OpenAPI spec version: 0.1.0
  */
+import type { OrderInputPaymentMethod } from './orderInputPaymentMethod';
 import type { OrderItem } from './orderItem';
 
 export interface OrderInput {
   customerId: number;
   /** شناسه ویزیت اختیاری جهت اتصال سفارش به ویزیت جاری */
   visitId?: number;
+  discount?: number;
+  paymentMethod?: OrderInputPaymentMethod;
+  /** @nullable */
+  notes?: string | null;
   items: OrderItem[];
 }

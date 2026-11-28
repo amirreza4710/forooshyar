@@ -1,10 +1,88 @@
 # Changelog
 
+## تحویل قرارداد اقلام مرجوعی سفارش و شفاف‌سازی فاکتور چاپی — 2026-11-28
+
+- **ارتقای قرارداد OpenAPI و بک‌اند برای چاپ فاکتور تعدیل‌شده:**
+  - `lib/api-spec/openapi.yaml`: افزودن فیلدهای `returnedAmount` و `returnedItems` به اسکیمای `Order`.
+  - اجرای Codegen Orval برای به‌روزرسانی اسکیماهای Zod در `@workspace/api-zod` و هوک‌های React Query در `@workspace/api-client-react`.
+  - `artifacts/api-server/src/routes/orders.ts`: اتصال داده‌های مرجوعی `deliveriesTable` به اندپوینت‌های `GET /orders/:id` و `GET /orders`.
+  - افزودن تست در `orders.test.ts` (۱۹ تست موفق در `orders.test.ts` و ۲۳۸ تست موفق در کل سرور).
+  - راه‌اندازی مجدد سرور پیش‌نمایش پورت ۳۳۰۰ و اثبات تجربی دریافت مقادیر مرجوعی برای سفارش ۳.
+
+## تایید متقابل راند ۲ مناظره و ثبت اجماع نهایی فاز A2 و موج‌های توزیع مویرگی — 2026-11-28
+
+- **اتمام رسمی راند دوم مناظره با اجماع دوطرفه بین Antigravity و Codex:**
+  - اجرای موفق آزمون سرتاسری رابط توسط Codex روی سرور پیش‌نمایش (پورت ۳۳۰۰) و دیتابیس کانتینری (پورت ۵۵۴۳۲) در هر ۴ مسیر اصلی (وصولی، حواله توزیع، پورسانت و هشدارها).
+  - تایید رفتار سرور در رد خطای ۴۰۹ تخصیص هم‌زمان و رد مرجوعی مازاد بر سفارش.
+  - تایید اصلاح رابط کاربری در `OrderDetail.tsx` (توقف چاپ فاکتور در زمان تعدیل ناشی از مرجوعی و نمایش هشدار صریح) با ۷۱ تست پاس‌شده در فرانت‌اند.
+  - ثبت نیازمندی تفکیک اقلام مرجوعی در قرارداد `GET /orders/{id}` در بک‌لاگ فنی.
+- **شواهد جامع کیفیت مونو‌ریپو:**
+  - فرانت‌اند: ۷۱ تست موفق در ۱۵ فایل (`@workspace/nadraan`).
+  - سرور: ۲۳۷ تست موفق در ۲۶ فایل (`@workspace/api-server`).
+  - کتابخانه‌ها: ۳۵ تست موفق در ۴ فایل (`lib/*`).
+  - تایپ‌چک: صفر خطا در کل ۸ پکیج مونو‌ریپو (`pnpm run typecheck`).
+  - بیلد کامل: ۱۰۰٪ موفق و وریفای‌شده (`pnpm run build`).
+
+## رفع موانع سرور، سخت‌سازی مرجوعی و اعتبار، و اثبات محیط پیش‌نمایش جهت آزمون عملی رابط — 2026-11-28
+
+- **سخت‌سازی بک‌اند و اعمال گاردریل‌های مالی و عملیاتی:**
+  - `deliveries.ts`: استخراج قیمت مرجوعی از سفارش اصلی، تجمیع اقلام مرجوعی برای ردیف‌های تکراری، تفکیک کالای پولی و اشانتیون، قفل سطری `SELECT ... FOR UPDATE` روی حواله و سفارش برای جلوگیری از بازگشت دوباره موجودی یا کسر بدهی در نهایی‌سازی هم‌زمان، بازگشت اتمیک موجودی و بدهی، و گارد راننده.
+  - `orders.ts`: انطباق قطعی محاسبه سقف اعتبار با قاعده بدهی دفتر کل ($\text{بدهی جاری} = \text{سفارش‌ها} - \text{وصولی‌های تسویه‌شده}$؛ $\text{تعهد جدید} = \text{بدهی جاری} + \text{سفارش جدید}$)، قفل سطری مشتری، آزمون دو سفارش هم‌زمان و آزمون رفتار Fail-Closed در شکست مالی.
+  - `targets.ts`: فیلتر وضعیت بر پایه وضعیت محاسبه‌شده زنده (`metrics.status`)، آزمون اهداف `ACHIEVED` و `MISSED` با وضعیت دیتابیسی قدیمی، و محدودسازی داده‌های غیرمدیران.
+  - `collections.ts`: آزمون رد اتصال سفارش مشتری دیگر با خطای ۴۰۰.
+  - `customers.ts` و `targets.ts`: هماهنگی `canManageCustomerCredit` و `canManageTargets` برای نقش‌های سرپرست و سرپرست فروش.
+- **راه‌اندازی و اثبات محیط پیش‌نمایش مجزا (Preview Environment):**
+  - اجرای پایدار سرور روی پورت ۳۳۰۰ متصل به پایگاه داده کانتینری پیش‌نمایش روی پورت ۵۵۴۳۲ با اعمال اسکیما بدون بازنشانی داده‌ها.
+  - اثبات دریافت پاسخ معتبر `200 OK` منطبق با قرارداد برای ۴ مسیر `/api/collections`، `/api/deliveries`، `/api/commissions/summary` و `/api/alerts/summary`.
+- **شواهد تست و اعتبارسنجی:**
+  - ۲۳۷ آزمون سرور پاس‌شده در ۲۶ فایل (`--fileParallelism=false`).
+  - ۳۵ آزمون کتابخانه‌ها پاس‌شده در ۴ فایل.
+  - ۰ خطای تایپ‌چک در کل ۸ پکیج مونو‌ریپو.
+  - ساخت موفق پروژه با کد خروج ۰.
+  - شواهد ۷۰ آزمون موفق فرانت‌اند در ۲۸ نوامبر متعلق به اجرای مستقل کدکس است؛ تأیید بازبین به جای کدکس ثبت نشده و وضعیت در انتظار آزمون عملی رابط است.
+  - این مأموریت صرفاً رفع موانع سرور و آماده‌سازی پیش‌نمایش است و مجوزی برای ادغام یا انتشار نیست.
+
+## تأیید همگام‌سازی آنلاین درایو — 2026-11-28
+
+- با ورود مهندس جان در مرورگر، مانع دسترسی درایو رفع شد. [سند اصلی انتقال در پوشه مگامن](https://drive.google.com/file/d/1sIzkZYkvUnkhw4XGAI9vq8YNr4t0V0bJ/view) از مسیر مدیریت نسخه‌ها به‌روز شد؛ نسخه موازی ساخته نشد.
+- الحاقیه28نوامبر شامل70آزمون موفق، بررسی نوع/ساخت، وضعیت شاخه، کدهای محلی ثبت‌نشده و موانع مالی است. بازخوانی102خط و7300نویسه دقیقاً با متن آماده برابر بود و تمام متن71خطی پیشین حفظ شد. پیام بارگذاری موفق و نسخه تازه16:16 مشاهده شد.
+- گزارش‌های مسدودبودن درایو در بندهای قدیمی، تاریخچه پیش از ورود هستند؛ اکنون همگام‌سازی محتوای اسناد درایو و سه سند محلی انجام شده است. تأیید بازبین، انتشار کدهای محلی و پذیرش مالی همچنان ادعا نمی‌شوند.
+
+
+## ادامه اجرا و شواهد تازه — 2026-11-28
+
+- وظیفه مستقل بعدی اجرا شد: ثبت سفارش اکنون ردیف تهی یا فیلد نامعتبر کالا/مشتری را پیش از نمایش و محاسبه رد می‌کند؛ پیام دریافت ناموفق و توقف ثبت حفظ می‌شود. فقط هوک‌ها و انواع تولیدشده مصرف شدند؛ سرور/قرارداد تغییر نکرد.
+- پیش از اصلاح، چهار آزمون تازه با خرابی ردیف تهی یا نبود خطای مورد انتظار شکست خوردند. پس از اصلاح، آزمون مستقل ثبت سفارش11/11 موفق، سپس آزمون کامل70/70 در15فایل با خروج0، شروع16:10:51 و مدت204.54ثانیه گذشت. بررسی نوع خروج0؛ ساخت با حالت نمایشی خاموش خروج0 و45.64ثانیه؛ دو هشدار توضیحات وابستگی قبلی باقی است.
+- ساخت محلی تازه index-Bgjo1AkN.js و index-pPqoWZeP.css است؛ اثر انگشت ورودی9c2966f47ea00f2121ee96dcb446817677264cd0ddf48a466fc3f845e2ec4e62. موتور کانتینر Kiri در دسترس نبود؛ این ساخت در پیش‌نمایش بارگذاری/بررسی عملی نشده است.
+- همگام‌سازی آنلاین اسناد شاخه جاری انجام می‌شود؛ کدهای محلی تغییرکرده همه مالکان همچنان ثبت/منتشر نشده‌اند. پذیرش بازبین و رفع موانع مالی قبلی ادعا نمی‌شود.
+- درایو: اتصال مستقیم نیازمند احراز هویت؛ اتصال جایگزین منابعی دارد ولی پوشه مگامن/سند انتقال پروژه یافت نشد؛ مرورگر صفحه ورود نشان داد. همگام‌سازی درایو مسدود دسترسی مقصد باقی است. اقدام لازم: ورود معتبر یا نشانی/دسترسی سند اصلی؛ نسخه موازی ساخته نشد.
+
+
+## همگام‌سازی مستندات — 2026-11-28
+
+- رابط موج‌های مصوب A2، A2.5 و A3 پیاده‌سازی و در وضعیت READY_FOR_REVIEW (آماده بازبینی) تحویل شده است؛ تأیید بازبین یا پذیرش کامل مالی ثبت نشده است.
+- تغییرات شامل ویزیت مقاوم، اتصال سفارش، اعتبار مشتری، اهداف، جزئیات و چاپ، ورودی ریال، داشبورد واقعی، وصولی، ناوگان، پورسانت و هشدار است. جزئیات و تاریخچه در [سند هماهنگی](docs/09_Development/AGENT_HANDOFF.md) محفوظ است.
+- آخرین شواهد اجرای مشاهده‌شده مربوط به 2026-11-25 است: 66 آزمون در15فایل موفق، بررسی نوع و ساخت خروج0. این اعداد اجرای مجدد در28نوامبر محسوب نمی‌شوند. شواهد250آزمون سرور/کتابخانه‌ها در بخش‌های قدیمی گزارش مالک سرور است و در این همگام‌سازی دوباره تأیید نشده است.
+- آخرین پیش‌نمایش بررسی‌شده http://localhost:8088 با بسته index-Dbj26h-C.js و index-pPqoWZeP.css بود؛ اثر انگشت ورودی 0e2e516c4823f8e703434b5b7e465297cddbf34b81ac9cb247236e6887b2054a. وضعیت اجرای فعلی پیش‌نمایش دوباره بررسی نشده است.
+- پذیرش عملی وصول/ناوگان/پورسانت/هشدار باز است: آخرین سرور پیش‌نمایش برای چهار مسیر404 داشت. کنترل اعتبار اتمیک، تطبیق مشتری وصولی/سفارش، مرجوعی نسبت به سفارش اصلی و یکسان‌سازی نقش‌ها نیازمند رسیدگی مالک سرور است؛ کنترل رابط جایگزین امنیت سرور نیست.
+- درایو: اتصال نخست احراز هویت می‌خواهد؛ اتصال جایگزین در جست‌وجوی سند انتقال و پوشه مگامن نتیجه نداد. نسخه HANDOVER_SYSTEM_TRANSFER.md به‌روز/همگام اعلام نمی‌شود.
+- اقدام بعدی: بازبینی مالک، رفع نیازهای سرور و همگام‌سازی پیش‌نمایش بدون بازنشانی داده، آزمون سرتاسری مالی و سپس تکمیل نسخه درایو پس از دسترسی معتبر. همگام‌سازی اسناد به معنی تأیید یا انتشار محصول نیست.
+
+
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
 ### Added
+- **Wave 1 (`Phase A2.5`) & Wave 2 (`Phase A3`) Complete Capillary Distribution Backend + OpenAPI Contracts:**
+  - Accepted [`ADR-012`](docs/ADR/ADR-012.md) defining architectural contracts for cost accounting, cartoning, zone assignment, invoice discounts/bonus items, Sayyad cheque collections ledger, delivery partial returns, tiered commissions, and live executive alerts.
+  - **Wave 1 (`A2.5`) Schema, OpenAPI & Route Upgrades:** Added `unitsPerPack`, `costPrice`, `minStock` on `products`; `zone`, `latitude`, `longitude` on `customers`; `assignedZone` on `users`; `subtotal`, `discount`, `paymentMethod`, `notes`, and item `isBonus` on `orders`. Added atomic stock restoration on order cancellation (`PATCH`) and soft-delete (`DELETE`), rep data isolation across orders and visits, customer zone filtering, `visit.customerId` validation, strict RBAC (`403`) on `creditLimit`/`balance` mutations, bounced-cheque order blocking, and live `grossProfit`, `pendingOrdersCount`, `lowStockCount`, `bouncedChequesCount` KPIs on `/api/dashboard/summary` with cache invalidation (`invalidateDashboardCache`).
+  - **Wave 2 (`A3`) Modules:** Created `collectionsTable` and `deliveriesTable` schemas (`lib/db/src/schema/collections.ts`, `deliveries.ts`), pushed to PostgreSQL, extended `lib/api-spec/openapi.yaml` and regenerated `@workspace/api-zod` and `@workspace/api-client-react` (fixed `orval.config.ts` with `query.version: 5`). Implemented `/api/collections*` (cash/card immediate settlement, Sayyad cheques lifecycle `PENDING`/`CLEARED`/`BOUNCED`, deterministic transactional `customers.balance` ledger sync), `/api/deliveries*` (driver assignment, cartoned loading sheet `packsCount` + `remainderUnits`, transactional `PARTIAL_RETURN` with selective `restock` and balance settlement), `/api/commissions/summary` (tiered 2%/3% commission computed strictly on `CLEARED` collections), and `/api/alerts/summary` (4 live DB-fact alert categories).
+  - Updated `lib/api-client-react/src/demo-mock.ts` and `demo-mock.test.ts` (14 passing client-lib tests) and authored comprehensive backend integration tests in `orders.test.ts` (15 tests), `collections.test.ts` (2 tests), `deliveries.test.ts` (1 test), `commissions.test.ts` (1 test), and `alerts.test.ts` (1 test) — totaling **250 passing tests across 41 test files** (`180` api-server, `35` nadraan, `21` api-zod, `14` api-client-react) with `pnpm run typecheck` passing with 0 errors.
+
+- **Shared Client Demo Mock Alignment (`@workspace/api-client-react`):**
+  - Updated `lib/api-client-react/src/demo-mock.ts` to cover `/api/visits`, `/api/visits/stats/summary`, `/api/targets`, `/api/targets/stats/summary`, `/api/settings`, `/api/audit-logs`, `/api/dashboard/sales-chart`, and match OpenAPI schemas (`DashboardSummary`, `Order`, `Customer`, `Product`, `User`) with currency set to `ریال` and brand `فروشیار پلاس`.
+  - Added 3 unit tests in `lib/api-client-react/src/demo-mock.test.ts` (13 passing tests in `@workspace/api-client-react`, 34 total across `lib/`).
 - **TASK-004-PRE: Merit-Based Model Selector Contract for Hydra ACP:**
   - Designed runtime model discovery and dispatch contracts in `@workspace/api-zod` (`model-routing.schema.ts`).
   - Added `DiscoveredModelSchema`, `HydraModelSelectionRequestSchema`, `HydraModelDispatchPlanSchema`, and `MeritFeedbackEventSchema`.

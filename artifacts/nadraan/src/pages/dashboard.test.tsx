@@ -1,0 +1,10 @@
+import * as React from "react";
+import { it, expect, vi, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
+import Dashboard from "./dashboard";
+vi.stubGlobal("React", React);
+const state = vi.hoisted(() => ({ data: undefined as unknown, isError: true, isLoading: false, refetch: vi.fn() }));
+vi.mock("@workspace/api-client-react", () => ({ useGetDashboardSummary: () => state, useGetSalesChart: () => ({ data: [], isLoading: false }) }));
+afterEach(cleanup);
+it("خطای دریافت را صفر فروش معرفی نمی‌کند", () => { render(<Dashboard />); expect(screen.getByRole("alert")).toBeTruthy(); expect(screen.queryByText("۰ ریال")).toBeNull(); });
+it("خلاصه واقعی و سفارش خالی را نمایش می‌دهد", () => { state.isError = false; state.data = { totalSales: 12345, orderCount: 0, customerCount: 2, productCount: 3, recentOrders: [] }; render(<Dashboard />); expect(screen.getByText("۱۲٬۳۴۵ ریال")).toBeTruthy(); expect(screen.getByText("سفارشی ثبت نشده است.")).toBeTruthy(); });

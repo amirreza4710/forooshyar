@@ -16,7 +16,7 @@ export const ROLE_HIERARCHY: RoleDefinition[] = [
     enTitle: "Managing Director / CEO",
     color: "bg-amber-500/15 text-amber-300 border-amber-500/30",
     description: "بالاترین مقام پلتفرم؛ دسترسی کامل و نامحدود به تمامی بخش‌ها، تنظیمات زیرساختی، لاگ‌های امنیتی و مدیریت کاربران.",
-    allowedNav: ["/", "/new-order", "/orders", "/visits", "/targets", "/products", "/customers", "/users", "/profile"],
+    allowedNav: ["/", "/dashboard", "/alerts", "/deliveries", "/new-order", "/orders", "/visits", "/targets", "/collections", "/commissions", "/products", "/customers", "/users", "/profile"],
   },
   {
     id: "مدیر فروش",
@@ -25,7 +25,7 @@ export const ROLE_HIERARCHY: RoleDefinition[] = [
     enTitle: "Sales Director",
     color: "bg-blue-500/15 text-blue-400 border-blue-500/30",
     description: "مدیریت کل فرآیند فروش و کاتالوگ، نظارت بر سرپرستان و ویزیتورها، قیمت‌گذاری و تایید سفارشات.",
-    allowedNav: ["/", "/new-order", "/orders", "/visits", "/targets", "/products", "/customers", "/users", "/profile"],
+    allowedNav: ["/", "/dashboard", "/alerts", "/deliveries", "/new-order", "/orders", "/visits", "/targets", "/collections", "/commissions", "/products", "/customers", "/users", "/profile"],
   },
   {
     id: "سرپرست فروش",
@@ -34,7 +34,7 @@ export const ROLE_HIERARCHY: RoleDefinition[] = [
     enTitle: "Sales Supervisor",
     color: "bg-purple-500/15 text-purple-400 border-purple-500/30",
     description: "نظارت بر ویزیتورهای منطقه، تایید سفارشات میدانی، کنترل سقف اعتبار و مطالبات مشتریان.",
-    allowedNav: ["/", "/new-order", "/orders", "/visits", "/targets", "/products", "/customers", "/profile"],
+    allowedNav: ["/", "/dashboard", "/alerts", "/deliveries", "/new-order", "/orders", "/visits", "/targets", "/collections", "/commissions", "/products", "/customers", "/profile"],
   },
   {
     id: "حسابدار / مدیر مالی",
@@ -43,7 +43,7 @@ export const ROLE_HIERARCHY: RoleDefinition[] = [
     enTitle: "Financial Officer / Accountant",
     color: "bg-cyan-500/15 text-cyan-400 border-cyan-500/30",
     description: "تایید مالی فاکتورها، پایش سقف اعتبار و مانده چک‌های مشتریان، تسویه حساب موزعین و گزارشات مالی.",
-    allowedNav: ["/", "/orders", "/customers", "/profile"],
+    allowedNav: ["/", "/dashboard", "/alerts", "/collections", "/commissions", "/orders", "/customers", "/profile"],
   },
   {
     id: "انباردار",
@@ -52,7 +52,7 @@ export const ROLE_HIERARCHY: RoleDefinition[] = [
     enTitle: "Warehouse Manager",
     color: "bg-orange-500/15 text-orange-400 border-orange-500/30",
     description: "مدیریت موجودی فیزیکی، آماده‌سازی حواله‌های خروج کالا و تحویل بسته‌بندی‌ها به ناوگان موزعین.",
-    allowedNav: ["/products", "/orders", "/profile"],
+    allowedNav: ["/deliveries", "/products", "/orders", "/profile"],
   },
   {
     id: "ویزیتور / نماینده فروش",
@@ -61,7 +61,7 @@ export const ROLE_HIERARCHY: RoleDefinition[] = [
     enTitle: "Field Sales Rep / Visitor",
     color: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
     description: "ویزیت میدانی فروشگاه‌ها، ثبت سفارش‌های سریع، تعریف مشتریان جدید و استعلام آنلاین موجودی انبار.",
-    allowedNav: ["/new-order", "/orders", "/visits", "/targets", "/products", "/customers", "/profile"],
+    allowedNav: ["/new-order", "/orders", "/visits", "/targets", "/collections", "/commissions", "/products", "/customers", "/profile"],
   },
   {
     id: "موزع / راننده",
@@ -70,12 +70,14 @@ export const ROLE_HIERARCHY: RoleDefinition[] = [
     enTitle: "Logistics / Delivery Driver",
     color: "bg-slate-400/15 text-slate-300 border-slate-400/30",
     description: "تحویل فیزیکی سفارشات در مسیرهای پخش مویرگی، ثبت امضای تحویل و دریافت تسویه پای بار.",
-    allowedNav: ["/orders", "/profile"],
+    allowedNav: ["/deliveries", "/collections", "/orders", "/profile"],
   },
 ];
 
 // Mapping for legacy or alternative role names in DB/tests
 export const ROLE_ALIASES: Record<string, string> = {
+  "manager": "مدیر فروش",
+  "سرپرست": "سرپرست فروش",
   "مدیر فروش / نماینده": "مدیر فروش",
   "نماینده فروش": "ویزیتور / نماینده فروش",
   "مدیر سیستم": "مدیر عامل",

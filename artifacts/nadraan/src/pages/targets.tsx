@@ -1,297 +1,53 @@
 import { useState } from "react";
+import { useListTargets, useCreateTarget, useUpdateTarget, useListUsers, getListTargetsQueryKey, getGetTargetsSummaryQueryKey } from "@workspace/api-client-react";
+import type { Target, TargetInput } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  useListTargets,
-  useGetTargetsSummary,
-  useCreateTarget,
-  useListUsers,
-  getListTargetsQueryKey,
-  getGetTargetsSummaryQueryKey,
-} from "@workspace/api-client-react";
-import type { Target, TargetInputTargetType } from "@workspace/api-client-react";
-import { Target as TargetIcon, Plus, Search } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import { CurrencyInput } from "@/components/CurrencyInput";
+import { parseRial } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/lib/auth-context";
-import { normalizeRole } from "@/lib/permissions";
-
-const STATUS_STYLE: Record<string, { label: string; color: string }> = {
-  ACTIVE: { label: "فعال", color: "bg-blue-500/15 text-blue-400" },
-  COMPLETED: { label: "محقق شده", color: "bg-emerald-500/15 text-emerald-400" },
-  EXPIRED: { label: "منقضی", color: "bg-rose-500/15 text-rose-400" },
-};
-
-const TYPE_LABEL: Record<string, string> = {
-  AMOUNT: "ریالی",
-  QUANTITY: "تعدادی",
-  BOTH: "ترکیبی (ریالی و تعدادی)",
-};
-
-const MANAGER_ROLES = new Set(["مدیر عامل", "مدیر فروش", "سرپرست فروش"]);
-const control = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
-
-function n(v: number) {
-  return v.toLocaleString("fa-IR");
-}
-
-export default function TargetsPage() {
-  const { user } = useAuth();
-  const isManager = MANAGER_ROLES.has(normalizeRole(user?.role));
-  const [status, setStatus] = useState("");
-  const [search, setSearch] = useState("");
-  const [open, setOpen] = useState(false);
-
-  const [userId, setUserId] = useState("");
-  const [title, setTitle] = useState("");
-  const [targetType, setTargetType] = useState<TargetInputTargetType>("AMOUNT");
-  const [targetAmount, setTargetAmount] = useState("");
-  const [targetQuantity, setTargetQuantity] = useState("");
-  const [startDate, setStartDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [endDate, setEndDate] = useState(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 30);
-    return d.toISOString().slice(0, 10);
-  });
-  const [notes, setNotes] = useState("");
-
-  const targets = useListTargets(status ? { status } : undefined);
-  const summary = useGetTargetsSummary();
-  const users = useListUsers();
-  const create = useCreateTarget();
-  const qc = useQueryClient();
-  const { toast } = useToast();
-
-  const refresh = () => {
-    void qc.invalidateQueries({ queryKey: getListTargetsQueryKey() });
-    void qc.invalidateQueries({ queryKey: getGetTargetsSummaryQueryKey() });
-  };
-
-  const list: Target[] = Array.isArray(targets.data) ? targets.data : [];
-  const filtered = list.filter((t) =>
-    `${t.title} ${t.repName} ${t.code}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
-  );
-
-  const metrics = [
-    ["کل تارگت‌ها", summary.data?.totalTargets],
-    ["محقق شده", summary.data?.achievedTargets],
-    ["میانگین تحقق", summary.data ? `${n(Math.round(summary.data.overallAchievementRate))}٪` : undefined],
-  ] as const;
-
-  function handleCreate(e: React.FormEvent) {
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+const managers = ["مدیر عامل", "مدیر فروش", "مدیر سیستم", "سرپرست", "مدیر فروش / نماینده", "admin", "manager"];
+const statuses: Record<string, string> = { IN_PROGRESS: "در حال انجام", ACHIEVED: "محقق شده", MISSED: "محقق نشده", CANCELLED: "لغو شده" };
+const types = { AMOUNT: "ریالی", QUANTITY: "مقداری", HYBRID: "ترکیبی" };
+const empty = { title: "", userId: "", targetType: "AMOUNT" as NonNullable<TargetInput["targetType"]>, amount: "", quantity: "", startDate: "", endDate: "" };
+function TargetForm({ target, close, refresh }: { target: Target | null; close: () => void; refresh: () => void }) {
+  const [form, setForm] = useState(target ? { title: target.title, userId: String(target.userId), targetType: target.targetType, amount: String(target.targetAmount), quantity: String(target.targetQuantity), startDate: target.startDate.slice(0,10), endDate: target.endDate.slice(0,10) } : empty);
+  const [error, setError] = useState("");
+  const users = useListUsers(); const create = useCreateTarget(); const update = useUpdateTarget();
+  const set = (key: keyof typeof form, value: string) => setForm(prev => ({ ...prev, [key]: value }));
+  function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!userId || !title.trim()) return;
-    create.mutate(
-      {
-        data: {
-          userId: Number(userId),
-          title: title.trim(),
-          targetType,
-          targetAmount: targetAmount ? Number(targetAmount) : 0,
-          targetQuantity: targetQuantity ? Number(targetQuantity) : 0,
-          startDate: new Date(startDate).toISOString(),
-          endDate: new Date(endDate).toISOString(),
-          notes: notes.trim() || null,
-        },
-      },
-      {
-        onSuccess: () => {
-          refresh();
-          setOpen(false);
-          setTitle("");
-          setTargetAmount("");
-          setTargetQuantity("");
-          setNotes("");
-          toast({ title: "تارگت جدید ثبت شد" });
-        },
-        onError: () => toast({ title: "ثبت تارگت ناموفق بود", variant: "destructive" }),
-      }
-    );
+    const amount = form.targetType === "QUANTITY" ? 0 : parseRial(form.amount);
+    const quantity = form.targetType === "AMOUNT" ? 0 : parseRial(form.quantity);
+    if (!form.title.trim() || !Number.isSafeInteger(Number(form.userId)) || Number(form.userId) <= 0 || amount === null || quantity === null || (form.targetType !== "QUANTITY" && amount <= 0) || (form.targetType !== "AMOUNT" && quantity <= 0) || !form.startDate || form.endDate < form.startDate) { setError("عنوان، ویزیتور، دوره و مقدار مثبت معتبر الزامی است."); return; }
+    const data: TargetInput = { title: form.title.trim(), userId: Number(form.userId), targetType: form.targetType, targetAmount: amount, targetQuantity: quantity, startDate: form.startDate, endDate: form.endDate };
+    const options = { onSuccess: () => { refresh(); close(); }, onError: (err: Error) => setError(err.message || "ثبت هدف ناموفق بود.") };
+    if (target) { const { userId, ...changes } = data; update.mutate({ id: target.id, data: changes }, options); } else create.mutate({ data }, options);
   }
-
-  return (
-    <div dir="rtl" className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <TargetIcon className="h-6 w-6 text-primary" />
-            اهداف فروش (تارگت ویزیتورها)
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">پایش بلادرنگ تحقق اهداف ریالی و تعدادی تیم فروش</p>
-        </div>
-        {isManager && (
-          <Button onClick={() => setOpen(true)}>
-            <Plus className="ml-2 h-4 w-4" />
-            تعریف تارگت جدید
-          </Button>
-        )}
-      </div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {metrics.map(([label, value]) => (
-          <div key={label} className="rounded-xl border bg-card p-4">
-            <p className="text-sm text-muted-foreground">{label}</p>
-            <p className="text-2xl font-bold mt-2">
-              {summary.isError ? "خطا" : value === undefined ? "…" : typeof value === "number" ? n(value) : value}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      <div className="rounded-xl border bg-card p-4 space-y-4">
-        <div className="relative">
-          <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            aria-label="جستجوی تارگت"
-            className="pr-9"
-            placeholder="جستجو بر اساس عنوان، نام ویزیتور یا کد تارگت"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {[["", "همه"], ...Object.entries(STATUS_STYLE).map(([k, v]) => [k, v.label])].map(([key, label]) => (
-            <button
-              key={key}
-              type="button"
-              aria-pressed={status === key}
-              onClick={() => setStatus(key)}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium border ${
-                status === key
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : `${STATUS_STYLE[key]?.color ?? "bg-muted"} border-transparent`
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {targets.isLoading ? (
-        <div className="rounded-xl border bg-card p-8 text-center text-muted-foreground">در حال دریافت تارگت‌ها...</div>
-      ) : targets.isError ? (
-        <div className="rounded-xl border bg-card p-8 text-center text-destructive">
-          دریافت تارگت‌ها ناموفق بود.{" "}
-          <Button variant="link" onClick={() => targets.refetch()}>
-            تلاش مجدد
-          </Button>
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="rounded-xl border bg-card p-8 text-center text-muted-foreground">تارگتی یافت نشد.</div>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {filtered.map((t) => {
-            const pct = Math.min(100, Math.round(t.targetType === "QUANTITY" ? t.quantityAchievementRate : t.achievementRate));
-            return (
-              <div key={t.id} className="rounded-xl border bg-card p-4 space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold">{t.title}</h3>
-                      <span className="text-xs text-muted-foreground" dir="ltr">
-                        {t.code}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      ویزیتور: {t.repName} · نوع: {TYPE_LABEL[t.targetType] ?? t.targetType}
-                    </p>
-                  </div>
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLE[t.status]?.color ?? "bg-muted"}`}>
-                    {STATUS_STYLE[t.status]?.label ?? t.status}
-                  </span>
-                </div>
-
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs">
-                    <span>درصد تحقق</span>
-                    <span className="font-bold">{n(pct)}٪</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-muted overflow-hidden">
-                    <div className="h-full bg-primary transition-all" style={{ width: `${pct}%` }} />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground pt-1">
-                  {t.targetAmount > 0 && (
-                    <div>
-                      فروش ریالی: {n(t.achievedAmount)} / {n(t.targetAmount)}
-                    </div>
-                  )}
-                  {t.targetQuantity > 0 && (
-                    <div>
-                      تعداد: {n(t.achievedQuantity)} / {n(t.targetQuantity)}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent dir="rtl">
-          <DialogHeader>
-            <DialogTitle>تعریف تارگت جدید</DialogTitle>
-            <DialogDescription>هدف فروش دوره جدید را برای ویزیتور ثبت کنید.</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleCreate} className="space-y-4">
-            <label className="block space-y-1.5 text-sm">
-              ویزیتور
-              <select className={control} value={userId} onChange={(e) => setUserId(e.target.value)} required>
-                <option value="">انتخاب کاربر</option>
-                {(Array.isArray(users.data) ? users.data : []).map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.role})
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block space-y-1.5 text-sm">
-              عنوان تارگت
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="مثلاً هدف فروش آذرماه" required />
-            </label>
-            <label className="block space-y-1.5 text-sm">
-              نوع تارگت
-              <select className={control} value={targetType} onChange={(e) => setTargetType(e.target.value as TargetInputTargetType)}>
-                <option value="AMOUNT">ریالی</option>
-                <option value="QUANTITY">تعدادی</option>
-                <option value="BOTH">ترکیبی</option>
-              </select>
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <label className="block space-y-1.5 text-sm">
-                هدف ریالی (تومان)
-                <Input type="number" min={0} value={targetAmount} onChange={(e) => setTargetAmount(e.target.value)} />
-              </label>
-              <label className="block space-y-1.5 text-sm">
-                هدف تعدادی
-                <Input type="number" min={0} value={targetQuantity} onChange={(e) => setTargetQuantity(e.target.value)} />
-              </label>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <label className="block space-y-1.5 text-sm">
-                تاریخ شروع
-                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
-              </label>
-              <label className="block space-y-1.5 text-sm">
-                تاریخ پایان
-                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
-              </label>
-            </div>
-            <label className="block space-y-1.5 text-sm">
-              توضیحات
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
-            </label>
-            <Button type="submit" disabled={!userId || !title.trim() || create.isPending}>
-              {create.isPending ? "در حال ثبت..." : "ثبت تارگت"}
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+  return <form onSubmit={submit} className="space-y-3">
+    <label className="block">عنوان<Input value={form.title} onChange={e => set("title", e.target.value)} required /></label>
+    <label className="block">ویزیتور<select className="w-full border rounded bg-background p-2" value={form.userId} disabled={!!target || users.isLoading || users.isError} onChange={e => set("userId", e.target.value)} required><option value="">انتخاب ویزیتور</option>{Array.isArray(users.data) && users.data.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}</select></label>
+    {(users.isError || (users.data !== undefined && !Array.isArray(users.data))) && <p role="alert">دریافت کاربران ناموفق بود. <Button type="button" variant="link" onClick={() => users.refetch()}>تلاش مجدد</Button></p>}
+    <label className="block">نوع هدف<select className="w-full border rounded bg-background p-2" value={form.targetType} onChange={e => set("targetType", e.target.value)}>{Object.entries(types).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
+    {form.targetType !== "QUANTITY" && <label className="block">مبلغ هدف<CurrencyInput aria-label="مبلغ هدف" value={form.amount} onChange={v => set("amount", v)} /></label>}
+    {form.targetType !== "AMOUNT" && <label className="block">تعداد هدف<Input inputMode="numeric" value={form.quantity} onChange={e => set("quantity", e.target.value)} /></label>}
+    <label className="block">شروع دوره<Input type="date" value={form.startDate} onChange={e => set("startDate", e.target.value)} required /></label>
+    <label className="block">پایان دوره<Input type="date" min={form.startDate} value={form.endDate} onChange={e => set("endDate", e.target.value)} required /></label>
+    {error && <p role="alert" className="text-destructive">{error}</p>}<Button disabled={create.isPending || update.isPending}>ذخیره هدف</Button>
+  </form>;
+}
+export default function TargetsPage() {
+  const { user } = useAuth(); const canManage = !!user && managers.includes(user.role);
+  const [search, setSearch] = useState(""); const [status, setStatus] = useState(""); const [open, setOpen] = useState(false); const [editing, setEditing] = useState<Target | null>(null);
+  const targets = useListTargets(); const qc = useQueryClient();
+  const refresh = () => { void qc.invalidateQueries({ queryKey: getListTargetsQueryKey() }); void qc.invalidateQueries({ queryKey: getGetTargetsSummaryQueryKey() }); };
+  const rows = (Array.isArray(targets.data) ? targets.data : []).filter(t => (!status || t.status === status) && `${t.title} ${t.repName} ${t.code}`.includes(search));
+  return <div dir="rtl" className="p-4 sm:p-6 pb-24 lg:pb-8 max-w-7xl mx-auto space-y-5"><div className="flex justify-between gap-3"><h1 className="text-2xl font-bold">اهداف فروش</h1>{canManage && <Button onClick={() => { setEditing(null); setOpen(true); }}>ایجاد هدف</Button>}</div>
+    <p className="text-sm text-muted-foreground">تحقق و وضعیت عیناً از سرور دریافت می‌شوند؛ فیلتر این صفحه بر وضعیت پاسخ اعمال می‌شود. نقص گزارش‌شده فیلتر و محاسبه سرور هنوز نیازمند بازبینی است.</p>
+    <Input aria-label="جستجوی اهداف" placeholder="عنوان، کد یا ویزیتور" value={search} onChange={e => setSearch(e.target.value)} /><label>وضعیت<select className="border rounded bg-background p-2 mx-2" value={status} onChange={e => setStatus(e.target.value)}><option value="">همه</option>{Object.entries(statuses).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
+    {targets.isLoading ? <p role="status">در حال دریافت اهداف...</p> : targets.isError || !Array.isArray(targets.data) ? <p role="alert">دریافت اهداف ناموفق بود. <Button variant="link" onClick={() => targets.refetch()}>تلاش مجدد</Button></p> : rows.length === 0 ? <p>هدفی یافت نشد.</p> : <div className="grid md:grid-cols-2 gap-3">{rows.map(t => <article key={t.id} className="rounded-xl border bg-card p-4 space-y-2"><h2 className="font-bold">{t.title} — {t.code}</h2><p>{t.repName} — {types[t.targetType]}</p><p>{t.startDate.slice(0,10)} تا {t.endDate.slice(0,10)}</p>{t.targetType !== "QUANTITY" && <p>تحقق ریالی: {t.achievedAmount.toLocaleString("fa-IR")} از {t.targetAmount.toLocaleString("fa-IR")} ریال ({t.achievementRate.toLocaleString("fa-IR")}٪)</p>}{t.targetType !== "AMOUNT" && <p>تحقق مقداری: {t.achievedQuantity.toLocaleString("fa-IR")} از {t.targetQuantity.toLocaleString("fa-IR")} ({t.quantityAchievementRate.toLocaleString("fa-IR")}٪)</p>}<p>{statuses[t.status]}</p>{canManage && <Button variant="outline" onClick={() => { setEditing(t); setOpen(true); }}>ویرایش هدف</Button>}</article>)}</div>}
+    <Dialog open={open} onOpenChange={setOpen}><DialogContent dir="rtl" className="max-h-[90dvh] overflow-y-auto"><DialogHeader><DialogTitle>{editing ? "ویرایش هدف" : "ایجاد هدف"}</DialogTitle><DialogDescription>دوره و مقادیر هدف فروش را مشخص کنید.</DialogDescription></DialogHeader>{open && <TargetForm target={editing} close={() => setOpen(false)} refresh={refresh} />}</DialogContent></Dialog>
+  </div>;
 }

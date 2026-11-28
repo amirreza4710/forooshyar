@@ -4,7 +4,7 @@
  * غیرقابل‌اشتباه با داده‌ی واقعی باشه (پیشوند TEST-) و در پایان هر تست
  * دقیقاً با همون id حذف بشه. هرگز کل جدول یا رکوردهای بدون فیلتر پاک نشه.
  */
-import { db, usersTable, customersTable, productsTable, ordersTable, visitsTable, targetsTable } from "@workspace/db";
+import { db, usersTable, refreshTokensTable, customersTable, productsTable, ordersTable, visitsTable, targetsTable, collectionsTable, deliveriesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { signToken } from "../lib/auth";
 import crypto from "crypto";
@@ -24,12 +24,12 @@ export async function createTestUser(role = "نماینده فروش") {
   return user!;
 }
 
-export async function createTestCustomer() {
+export async function createTestCustomer(name = "مشتری تستی") {
   const [customer] = await db
     .insert(customersTable)
     .values({
-      code: `TEST-CUST-${RUN_TAG}`,
-      name: "مشتری تستی",
+      code: `TEST-CUST-${RUN_TAG}-${crypto.randomBytes(2).toString("hex")}`,
+      name,
       phone: "0000000000",
     })
     .returning();
@@ -56,6 +56,8 @@ export function tokenFor(user: { id: number; username: string; name: string; rol
 
 /** فقط رکوردهایی که با id دقیق مشخص شدن رو پاک می‌کنه — هیچ‌وقت با شرط باز/like نه. */
 export async function cleanup(opts: {
+  collectionIds?: number[];
+  deliveryIds?: number[];
   targetIds?: number[];
   visitIds?: number[];
   orderIds?: number[];
@@ -64,6 +66,12 @@ export async function cleanup(opts: {
   userIds?: number[];
 }) {
   // ابتدا پیوندهای متقابل ویزیت و سفارش را پاک می‌کنیم تا قفل کلید خارجی باز شود
+  for (const id of opts.deliveryIds ?? []) {
+    await db.delete(deliveriesTable).where(eq(deliveriesTable.id, id));
+  }
+  for (const id of opts.collectionIds ?? []) {
+    await db.delete(collectionsTable).where(eq(collectionsTable.id, id));
+  }
   for (const id of opts.targetIds ?? []) {
     await db.delete(targetsTable).where(eq(targetsTable.id, id));
   }
@@ -83,6 +91,7 @@ export async function cleanup(opts: {
     await db.delete(customersTable).where(eq(customersTable.id, id));
   }
   for (const id of opts.userIds ?? []) {
+    await db.delete(refreshTokensTable).where(eq(refreshTokensTable.userId, id));
     await db.delete(usersTable).where(eq(usersTable.id, id));
   }
 }

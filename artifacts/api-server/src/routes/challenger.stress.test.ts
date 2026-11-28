@@ -92,6 +92,20 @@ vi.mock("@workspace/db", () => {
       code: "code",
       deletedAt: "deleted_at",
     },
+    collectionsTable: {
+      id: "id",
+      customerId: "customer_id",
+      status: "status",
+      amount: "amount",
+      deletedAt: "deleted_at",
+    },
+    visitsTable: {
+      id: "id",
+      customerId: "customer_id",
+      orderId: "order_id",
+      status: "status",
+      deletedAt: "deleted_at",
+    },
   };
 });
 
@@ -179,6 +193,9 @@ describe("Empirical Challenger Stress Suite — Milestone 1 (D1, D2, D3)", () =>
       };
       const settingsSelect = {
         from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([]),
+          }),
           limit: vi.fn().mockResolvedValue([customSettings]),
         }),
       };
@@ -254,6 +271,9 @@ describe("Empirical Challenger Stress Suite — Milestone 1 (D1, D2, D3)", () =>
       };
       const settingsSelect = {
         from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([]),
+          }),
           limit: vi.fn().mockResolvedValue([emptySettings]),
         }),
       };

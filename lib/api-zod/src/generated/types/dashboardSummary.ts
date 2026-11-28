@@ -9,8 +9,12 @@ import type { Order } from './order';
 
 export interface DashboardSummary {
   totalSales: number;
+  grossProfit?: number;
   orderCount: number;
+  pendingOrdersCount?: number;
   customerCount: number;
   productCount: number;
+  lowStockCount?: number;
+  bouncedChequesCount?: number;
   recentOrders: Order[];
 }

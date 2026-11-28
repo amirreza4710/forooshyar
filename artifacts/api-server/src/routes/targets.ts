@@ -10,18 +10,11 @@ import {
   ListTargetsQueryParams,
 } from "@workspace/api-zod";
 import { logAudit } from "../lib/audit";
+import { canManageTargets, TARGET_MANAGER_ROLES } from "../lib/ledger";
 
 const router = Router();
 
-const ADMIN_ROLES = [
-  "مدیر عامل",
-  "مدیر فروش",
-  "مدیر سیستم",
-  "سرپرست",
-  "مدیر فروش / نماینده",
-  "admin",
-  "manager",
-];
+const ADMIN_ROLES = TARGET_MANAGER_ROLES;
 
 async function calculateMetricsForTarget(t: typeof targetsTable.$inferSelect) {
   const orders = await db
@@ -128,7 +121,7 @@ function serializeTarget(
 router.get("/targets", requireAuth, async (req, res): Promise<void> => {
   const queryParsed = ListTargetsQueryParams.safeParse(req.query);
   const user = (req as Request & { user: JwtPayload }).user;
-  const isManager = ADMIN_ROLES.includes(user.role);
+  const isManager = canManageTargets(user.role);
 
   const conditions = [isNull(targetsTable.deletedAt)];
 
@@ -137,10 +130,6 @@ router.get("/targets", requireAuth, async (req, res): Promise<void> => {
     conditions.push(eq(targetsTable.userId, user.id));
   } else if (queryParsed.success && queryParsed.data.userId) {
     conditions.push(eq(targetsTable.userId, queryParsed.data.userId));
-  }
-
-  if (queryParsed.success && queryParsed.data.status) {
-    conditions.push(eq(targetsTable.status, queryParsed.data.status));
   }
 
   if (queryParsed.success && queryParsed.data.targetType) {
@@ -153,22 +142,34 @@ router.get("/targets", requireAuth, async (req, res): Promise<void> => {
     .where(and(...conditions))
     .orderBy(desc(targetsTable.createdAt));
 
-  const serializedList = await Promise.all(
+  let serializedList = await Promise.all(
     targets.map(async (t) => {
       const metrics = await calculateMetricsForTarget(t);
       return serializeTarget(t, metrics);
     }),
   );
 
+  if (queryParsed.success && queryParsed.data.status) {
+    serializedList = serializedList.filter((item) => item.status === queryParsed.data.status);
+  }
+
   res.json(serializedList);
 });
 
 // ─── GET /targets/stats/summary (Overall targets achievement metrics) ───
-router.get("/targets/stats/summary", requireAuth, async (_req, res): Promise<void> => {
+router.get("/targets/stats/summary", requireAuth, async (req, res): Promise<void> => {
+  const user = (req as Request & { user: JwtPayload }).user;
+  const isManager = canManageTargets(user.role);
+
+  const conditions = [isNull(targetsTable.deletedAt)];
+  if (!isManager) {
+    conditions.push(eq(targetsTable.userId, user.id));
+  }
+
   const targets = await db
     .select()
     .from(targetsTable)
-    .where(isNull(targetsTable.deletedAt));
+    .where(and(...conditions));
 
   let totalTargetAmount = 0;
   let totalAchievedAmount = 0;
@@ -288,7 +289,7 @@ router.get("/targets/:id", requireAuth, async (req, res): Promise<void> => {
   }
 
   const user = (req as Request & { user: JwtPayload }).user;
-  const isManager = ADMIN_ROLES.includes(user.role);
+  const isManager = canManageTargets(user.role);
 
   const [target] = await db
     .select()

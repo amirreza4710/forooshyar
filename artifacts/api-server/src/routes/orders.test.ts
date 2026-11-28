@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import request from "supertest";
 import app from "../app";
-import { db, ordersTable, productsTable, customersTable, visitsTable } from "@workspace/db";
+import { db, ordersTable, productsTable, customersTable, visitsTable, deliveriesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { createTestUser, createTestCustomer, createTestProduct, tokenFor, cleanup } from "../test/fixtures";
 
@@ -12,6 +12,8 @@ describe("POST /api/orders", () => {
   const createdOrderIds: number[] = [];
   const createdProductIds: number[] = [];
   const createdVisitIds: number[] = [];
+  const createdCollectionIds: number[] = [];
+  const extraUserIds: number[] = [];
 
   beforeEach(async () => {
     user = await createTestUser();
@@ -21,11 +23,12 @@ describe("POST /api/orders", () => {
 
   afterEach(async () => {
     await cleanup({
+      collectionIds: createdCollectionIds.splice(0),
       visitIds: createdVisitIds.splice(0),
       orderIds: createdOrderIds.splice(0),
       productIds: createdProductIds.splice(0),
       customerIds: [customer.id],
-      userIds: [user.id],
+      userIds: [user.id, ...extraUserIds.splice(0)],
     });
   });
 
@@ -280,5 +283,309 @@ describe("POST /api/orders", () => {
 
     expect(updatedVisit?.orderId).toBe(res.body.id);
     expect(updatedVisit?.result).toBe("ORDERED");
+  });
+
+  it("تخفیف فاکتور و اشانتیون (isBonus) را دقیق محاسبه کرده و موجودی اشانتیون را هم کم می‌کند", async () => {
+    const product = await createTestProduct(20, 10_000);
+    createdProductIds.push(product.id);
+
+    const res = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: customer.id,
+        discount: 5_000,
+        paymentMethod: "CREDIT",
+        notes: "سفارش اعتباری با اشانتیون",
+        items: [
+          { productId: product.id, productName: product.name, qty: 3, price: 10_000, isBonus: false },
+          { productId: product.id, productName: product.name, qty: 2, price: 10_000, isBonus: true },
+        ],
+      });
+
+    expect(res.status).toBe(201);
+    createdOrderIds.push(res.body.id);
+    expect(res.body.subtotal).toBe(30_000);
+    expect(res.body.discount).toBe(5_000);
+    expect(res.body.total).toBe(25_000);
+    expect(res.body.paymentMethod).toBe("CREDIT");
+    expect(res.body.items[1].price).toBe(0);
+    expect(res.body.items[1].isBonus).toBe(true);
+
+    const [updatedProd] = await db
+      .select()
+      .from(productsTable)
+      .where(eq(productsTable.id, product.id));
+    expect(updatedProd?.stock).toBe(15);
+  });
+
+  it("هنگام لغو (PATCH) و حذف (DELETE) سفارش، موجودی کالا به انبار برمی‌گردد", async () => {
+    const prod = await createTestProduct(10, 4_000);
+    createdProductIds.push(prod.id);
+
+    const orderA = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: customer.id,
+        items: [{ productId: prod.id, productName: prod.name, qty: 4, price: 4_000 }],
+      });
+    expect(orderA.status).toBe(201);
+    createdOrderIds.push(orderA.body.id);
+
+    const cancelRes = await request(app)
+      .patch(`/api/orders/${orderA.body.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ status: "لغو شده" });
+    expect(cancelRes.status).toBe(200);
+
+    // تکرار لغو نباید موجودی را دوبار برگرداند
+    const cancelTwice = await request(app)
+      .patch(`/api/orders/${orderA.body.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ status: "لغو شده" });
+    expect(cancelTwice.status).toBe(200);
+
+    const [afterCancel] = await db
+      .select()
+      .from(productsTable)
+      .where(eq(productsTable.id, prod.id));
+    expect(afterCancel?.stock).toBe(10);
+
+    const orderB = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: customer.id,
+        items: [{ productId: prod.id, productName: prod.name, qty: 3, price: 4_000 }],
+      });
+    createdOrderIds.push(orderB.body.id);
+
+    const deleteRes = await request(app)
+      .delete(`/api/orders/${orderB.body.id}`)
+      .set("Authorization", `Bearer ${token}`);
+    expect(deleteRes.status).toBe(204);
+
+    const [afterDelete] = await db
+      .select()
+      .from(productsTable)
+      .where(eq(productsTable.id, prod.id));
+    expect(afterDelete?.stock).toBe(10);
+  });
+
+  it("ویزیتور صرفاً سفارش‌های خود را می‌بیند و مشتری دارای چک برگشتی مسدود می‌شود", async () => {
+    const otherRep = await createTestUser("نماینده فروش");
+    extraUserIds.push(otherRep.id);
+    const otherToken = tokenFor(otherRep);
+
+    const prod = await createTestProduct(10, 5_000);
+    createdProductIds.push(prod.id);
+
+    const ownOrder = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: customer.id,
+        items: [{ productId: prod.id, productName: prod.name, qty: 1, price: 5_000 }],
+      });
+    createdOrderIds.push(ownOrder.body.id);
+
+    const otherList = await request(app)
+      .get("/api/orders")
+      .set("Authorization", `Bearer ${otherToken}`);
+    expect(otherList.status).toBe(200);
+    expect(otherList.body.some((o: any) => o.id === ownOrder.body.id)).toBe(false);
+
+    const otherDetail = await request(app)
+      .get(`/api/orders/${ownOrder.body.id}`)
+      .set("Authorization", `Bearer ${otherToken}`);
+    expect(otherDetail.status).toBe(403);
+
+    // ثبت چک برگشتی و تلاش برای ثبت سفارش جدید
+    const colRes = await request(app)
+      .post("/api/collections")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: customer.id,
+        method: "CHEQUE",
+        amount: 20_000,
+        chequeNumber: "998877",
+      });
+    createdCollectionIds.push(colRes.body.id);
+    await request(app)
+      .patch(`/api/collections/${colRes.body.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ status: "BOUNCED" });
+
+    const blockedOrder = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: customer.id,
+        items: [{ productId: prod.id, productName: prod.name, qty: 1, price: 5_000 }],
+      });
+    expect(blockedOrder.status).toBe(400);
+    expect(blockedOrder.body.error).toContain("چک برگشتی");
+  });
+
+  it("سفارش تکمیل‌شده و وصولی تسویه‌شده را در محاسبه سقف اعتبار با دفتر معین تطبیق می‌دهد", async () => {
+    await db
+      .update(customersTable)
+      .set({ creditLimit: 10_000 })
+      .where(eq(customersTable.id, customer.id));
+
+    const prod = await createTestProduct(50, 1_000);
+    createdProductIds.push(prod.id);
+
+    // ثبت یک سفارش قبلی به مبلغ 7,000 ریال و تغییر وضعیت به «تکمیل شده»
+    const prevOrder = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: customer.id,
+        items: [{ productId: prod.id, productName: prod.name, qty: 7, price: 1_000 }],
+      });
+    expect(prevOrder.status).toBe(201);
+    createdOrderIds.push(prevOrder.body.id);
+
+    await db
+      .update(ordersTable)
+      .set({ status: "تکمیل شده" })
+      .where(eq(ordersTable.id, prevOrder.body.id));
+
+    // تلاش برای ثبت سفارش 4,000 ریال (7,000 قبلی + 4,000 جدید = 11,000 > سقف 10,000 => خطا)
+    const overLimitRes = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: customer.id,
+        items: [{ productId: prod.id, productName: prod.name, qty: 4, price: 1_000 }],
+      });
+    expect(overLimitRes.status).toBe(400);
+    expect(overLimitRes.body.error).toContain("سقف اعتبار");
+
+    // ثبت یک وصولی تسویه‌شده به مبلغ 5,000 ریال
+    const colRes = await request(app)
+      .post("/api/collections")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: customer.id,
+        method: "CASH",
+        amount: 5_000,
+      });
+    expect(colRes.status).toBe(201);
+    createdCollectionIds.push(colRes.body.id);
+
+    // اکنون مانده بدهی 7,000 - 5,000 = 2,000 ریال است؛ سفارش 4,000 ریالی (مجموع 6,000 <= 10,000) باید مجاز باشد
+    const allowedRes = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: customer.id,
+        items: [{ productId: prod.id, productName: prod.name, qty: 4, price: 1_000 }],
+      });
+    expect(allowedRes.status).toBe(201);
+    createdOrderIds.push(allowedRes.body.id);
+  });
+
+  it("دو سفارش همزمان با قفل سطری مشتری اعتبارسنجی شده و از عبور سقف اعتبار جلوگیری می‌کنند", async () => {
+    await db
+      .update(customersTable)
+      .set({ creditLimit: 5_000 })
+      .where(eq(customersTable.id, customer.id));
+
+    const prod = await createTestProduct(50, 3_000);
+    createdProductIds.push(prod.id);
+
+    const [res1, res2] = await Promise.all([
+      request(app)
+        .post("/api/orders")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          customerId: customer.id,
+          items: [{ productId: prod.id, productName: prod.name, qty: 1, price: 3_000 }],
+        }),
+      request(app)
+        .post("/api/orders")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          customerId: customer.id,
+          items: [{ productId: prod.id, productName: prod.name, qty: 1, price: 3_000 }],
+        }),
+    ]);
+
+    const statuses = [res1.status, res2.status].sort();
+    expect(statuses).toEqual([201, 400]);
+    if (res1.status === 201) createdOrderIds.push(res1.body.id);
+    if (res2.status === 201) createdOrderIds.push(res2.body.id);
+  });
+
+  it("شکست در خواندن اطلاعات مالی مشتری خطا داده و ثبت سفارش را متوقف می‌کند (Fail-Closed)", async () => {
+    const prod = await createTestProduct(10, 2_000);
+    createdProductIds.push(prod.id);
+
+    const res = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: 999999,
+        items: [{ productId: prod.id, productName: prod.name, qty: 1, price: 2_000 }],
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain("یافت نشد");
+
+    // اطمینان از کسر نشدن موجودی کالا
+    const [p] = await db
+      .select({ stock: productsTable.stock })
+      .from(productsTable)
+      .where(eq(productsTable.id, prod.id));
+    expect(p?.stock).toBe(10);
+  });
+
+  it("جزئیات سفارش فیلدهای returnedAmount و returnedItems را برای سفارش دارای مرجوعی برمی‌گرداند", async () => {
+    const prod = await createTestProduct(10, 10_000);
+    createdProductIds.push(prod.id);
+
+    const orderRes = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: customer.id,
+        items: [{ productId: prod.id, productName: prod.name, qty: 3, price: 10_000 }],
+      });
+
+    expect(orderRes.status).toBe(201);
+    createdOrderIds.push(orderRes.body.id);
+
+    // افزودن حواله دارای مرجوعی
+    const [deliv] = await db
+      .insert(deliveriesTable)
+      .values({
+        code: `DLV-TEST-${Date.now()}`,
+        orderId: orderRes.body.id,
+        orderCode: orderRes.body.code,
+        customerId: customer.id,
+        customerName: customer.name,
+        driverId: user.id,
+        driverName: user.name,
+        status: "PARTIAL_RETURN",
+        returnedAmount: 10_000,
+        returnedItems: [{ productId: prod.id, productName: prod.name, qty: 1, price: 10_000, restock: true }],
+      })
+      .returning();
+
+    const getRes = await request(app)
+      .get(`/api/orders/${orderRes.body.id}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(getRes.status).toBe(200);
+    expect(getRes.body.returnedAmount).toBe(10_000);
+    expect(getRes.body.returnedItems).toHaveLength(1);
+    expect(getRes.body.returnedItems[0].productId).toBe(prod.id);
+    expect(getRes.body.returnedItems[0].qty).toBe(1);
+
+    // پاک‌سازی رکورد موقت حواله
+    await db.delete(deliveriesTable).where(eq(deliveriesTable.id, deliv.id));
   });
 });
