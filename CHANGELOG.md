@@ -83,7 +83,6 @@ All notable changes to this project will be documented in this file.
 - **Shared Client Demo Mock Alignment (`@workspace/api-client-react`):**
   - Updated `lib/api-client-react/src/demo-mock.ts` to cover `/api/visits`, `/api/visits/stats/summary`, `/api/targets`, `/api/targets/stats/summary`, `/api/settings`, `/api/audit-logs`, `/api/dashboard/sales-chart`, and match OpenAPI schemas (`DashboardSummary`, `Order`, `Customer`, `Product`, `User`) with currency set to `ریال` and brand `فروشیار پلاس`.
   - Added 3 unit tests in `lib/api-client-react/src/demo-mock.test.ts` (13 passing tests in `@workspace/api-client-react`, 34 total across `lib/`).
-
 - **TASK-004-PRE: Merit-Based Model Selector Contract for Hydra ACP:**
   - Designed runtime model discovery and dispatch contracts in `@workspace/api-zod` (`model-routing.schema.ts`).
   - Added `DiscoveredModelSchema`, `HydraModelSelectionRequestSchema`, `HydraModelDispatchPlanSchema`, and `MeritFeedbackEventSchema`.
