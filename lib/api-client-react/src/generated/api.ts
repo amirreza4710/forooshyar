@@ -42,7 +42,13 @@ import type {
   DeliveryUpdate,
   ErrorResponse,
   GetLoadingSheetParams,
+  GetPerformanceReportParams,
+  GetSalesReportParams,
+  GetVisitsReportParams,
   HealthStatus,
+  HydraHealthResponse,
+  HydraIntentInput,
+  HydraSenateResultResponse,
   ListAuditLogsParams,
   ListCollectionsParams,
   ListDeliveriesParams,
@@ -53,6 +59,7 @@ import type {
   Order,
   OrderInput,
   OrderUpdate,
+  PerformanceReportResponse,
   Product,
   ProductInput,
   ProductUpdate,
@@ -60,6 +67,7 @@ import type {
   RefreshResponse,
   RepCommissionSummary,
   SalesChartPoint,
+  SalesReportResponse,
   Settings,
   SettingsUpdate,
   SuccessResponse,
@@ -73,6 +81,7 @@ import type {
   Visit,
   VisitInput,
   VisitUpdate,
+  VisitsReportResponse,
   VisitsSummary
 } from './api.schemas';
 
@@ -4695,6 +4704,519 @@ export function useListAuditLogs<TData = Awaited<ReturnType<typeof listAuditLogs
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getListAuditLogsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetHydraHealthUrl = () => {
+
+
+
+
+  return `/api/hydra/health`
+}
+
+/**
+ * @summary Check Hydra ACP protocol status and active senate configuration
+ */
+export const getHydraHealth = async ( options?: Parameters<typeof customFetch>[1]): Promise<HydraHealthResponse> => {
+
+  return customFetch<HydraHealthResponse>(getGetHydraHealthUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetHydraHealthQueryKey = () => {
+    return [
+    `/api/hydra/health`
+    ] as const;
+    }
+
+
+export const getGetHydraHealthQueryOptions = <TData = Awaited<ReturnType<typeof getHydraHealth>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHydraHealth>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetHydraHealthQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getHydraHealth>>> = ({ signal }) => getHydraHealth({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getHydraHealth>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetHydraHealthQueryResult = NonNullable<Awaited<ReturnType<typeof getHydraHealth>>>
+export type GetHydraHealthQueryError = ErrorType<unknown>
+
+
+export function useGetHydraHealth<TData = Awaited<ReturnType<typeof getHydraHealth>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHydraHealth>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getHydraHealth>>,
+          TError,
+          Awaited<ReturnType<typeof getHydraHealth>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetHydraHealth<TData = Awaited<ReturnType<typeof getHydraHealth>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHydraHealth>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getHydraHealth>>,
+          TError,
+          Awaited<ReturnType<typeof getHydraHealth>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetHydraHealth<TData = Awaited<ReturnType<typeof getHydraHealth>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHydraHealth>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Check Hydra ACP protocol status and active senate configuration
+ */
+
+export function useGetHydraHealth<TData = Awaited<ReturnType<typeof getHydraHealth>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHydraHealth>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetHydraHealthQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPostHydraIntentUrl = () => {
+
+
+
+
+  return `/api/hydra/intents`
+}
+
+/**
+ * @summary Dispatch an intent to the 2-round bounded Hydra Senate engine
+ */
+export const postHydraIntent = async (hydraIntentInput: HydraIntentInput, options?: Parameters<typeof customFetch>[1]): Promise<HydraSenateResultResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<HydraSenateResultResponse>(getPostHydraIntentUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(hydraIntentInput)
+  }
+);}
+
+
+
+
+
+export const getPostHydraIntentMutationKey = () => ['postHydraIntent'] as const;
+
+export const getPostHydraIntentMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postHydraIntent>>, TError,PostHydraIntentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof postHydraIntent>>, TError,PostHydraIntentMutationVariables, TContext> => {
+
+const mutationKey = getPostHydraIntentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postHydraIntent>>, PostHydraIntentMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  postHydraIntent(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostHydraIntentMutationResult = NonNullable<Awaited<ReturnType<typeof postHydraIntent>>>
+    export type PostHydraIntentMutationBody = BodyType<HydraIntentInput>
+    export type PostHydraIntentMutationError = ErrorType<ErrorResponse>
+    export type PostHydraIntentMutationVariables = {data: BodyType<HydraIntentInput>}
+
+    /**
+ * @summary Dispatch an intent to the 2-round bounded Hydra Senate engine
+ */
+export const usePostHydraIntent = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postHydraIntent>>, TError,PostHydraIntentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postHydraIntent>>,
+        TError,
+        PostHydraIntentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostHydraIntentMutationOptions(options), queryClient);
+    }
+
+export const getGetSalesReportUrl = (params?: GetSalesReportParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/reports/sales?${stringifiedParams}` : `/api/reports/sales`
+}
+
+/**
+ * @summary Get comprehensive sales analytics report
+ */
+export const getSalesReport = async (params?: GetSalesReportParams, options?: Parameters<typeof customFetch>[1]): Promise<SalesReportResponse> => {
+
+  return customFetch<SalesReportResponse>(getGetSalesReportUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSalesReportQueryKey = (params?: GetSalesReportParams,) => {
+    return [
+    `/api/reports/sales`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetSalesReportQueryOptions = <TData = Awaited<ReturnType<typeof getSalesReport>>, TError = ErrorType<unknown>>(params?: GetSalesReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSalesReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSalesReportQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSalesReport>>> = ({ signal }) => getSalesReport(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSalesReport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetSalesReportQueryResult = NonNullable<Awaited<ReturnType<typeof getSalesReport>>>
+export type GetSalesReportQueryError = ErrorType<unknown>
+
+
+export function useGetSalesReport<TData = Awaited<ReturnType<typeof getSalesReport>>, TError = ErrorType<unknown>>(
+ params: undefined |  GetSalesReportParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSalesReport>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSalesReport>>,
+          TError,
+          Awaited<ReturnType<typeof getSalesReport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSalesReport<TData = Awaited<ReturnType<typeof getSalesReport>>, TError = ErrorType<unknown>>(
+ params?: GetSalesReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSalesReport>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSalesReport>>,
+          TError,
+          Awaited<ReturnType<typeof getSalesReport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSalesReport<TData = Awaited<ReturnType<typeof getSalesReport>>, TError = ErrorType<unknown>>(
+ params?: GetSalesReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSalesReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get comprehensive sales analytics report
+ */
+
+export function useGetSalesReport<TData = Awaited<ReturnType<typeof getSalesReport>>, TError = ErrorType<unknown>>(
+ params?: GetSalesReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSalesReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSalesReportQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetVisitsReportUrl = (params?: GetVisitsReportParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/reports/visits?${stringifiedParams}` : `/api/reports/visits`
+}
+
+/**
+ * @summary Get field visit metrics and conversion rates report
+ */
+export const getVisitsReport = async (params?: GetVisitsReportParams, options?: Parameters<typeof customFetch>[1]): Promise<VisitsReportResponse> => {
+
+  return customFetch<VisitsReportResponse>(getGetVisitsReportUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetVisitsReportQueryKey = (params?: GetVisitsReportParams,) => {
+    return [
+    `/api/reports/visits`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetVisitsReportQueryOptions = <TData = Awaited<ReturnType<typeof getVisitsReport>>, TError = ErrorType<unknown>>(params?: GetVisitsReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVisitsReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetVisitsReportQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getVisitsReport>>> = ({ signal }) => getVisitsReport(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getVisitsReport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetVisitsReportQueryResult = NonNullable<Awaited<ReturnType<typeof getVisitsReport>>>
+export type GetVisitsReportQueryError = ErrorType<unknown>
+
+
+export function useGetVisitsReport<TData = Awaited<ReturnType<typeof getVisitsReport>>, TError = ErrorType<unknown>>(
+ params: undefined |  GetVisitsReportParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVisitsReport>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getVisitsReport>>,
+          TError,
+          Awaited<ReturnType<typeof getVisitsReport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetVisitsReport<TData = Awaited<ReturnType<typeof getVisitsReport>>, TError = ErrorType<unknown>>(
+ params?: GetVisitsReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVisitsReport>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getVisitsReport>>,
+          TError,
+          Awaited<ReturnType<typeof getVisitsReport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetVisitsReport<TData = Awaited<ReturnType<typeof getVisitsReport>>, TError = ErrorType<unknown>>(
+ params?: GetVisitsReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVisitsReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get field visit metrics and conversion rates report
+ */
+
+export function useGetVisitsReport<TData = Awaited<ReturnType<typeof getVisitsReport>>, TError = ErrorType<unknown>>(
+ params?: GetVisitsReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVisitsReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetVisitsReportQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetPerformanceReportUrl = (params?: GetPerformanceReportParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/reports/performance?${stringifiedParams}` : `/api/reports/performance`
+}
+
+/**
+ * @summary Get sales reps leaderboard and targets performance report
+ */
+export const getPerformanceReport = async (params?: GetPerformanceReportParams, options?: Parameters<typeof customFetch>[1]): Promise<PerformanceReportResponse> => {
+
+  return customFetch<PerformanceReportResponse>(getGetPerformanceReportUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPerformanceReportQueryKey = (params?: GetPerformanceReportParams,) => {
+    return [
+    `/api/reports/performance`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetPerformanceReportQueryOptions = <TData = Awaited<ReturnType<typeof getPerformanceReport>>, TError = ErrorType<unknown>>(params?: GetPerformanceReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPerformanceReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPerformanceReportQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPerformanceReport>>> = ({ signal }) => getPerformanceReport(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPerformanceReport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPerformanceReportQueryResult = NonNullable<Awaited<ReturnType<typeof getPerformanceReport>>>
+export type GetPerformanceReportQueryError = ErrorType<unknown>
+
+
+export function useGetPerformanceReport<TData = Awaited<ReturnType<typeof getPerformanceReport>>, TError = ErrorType<unknown>>(
+ params: undefined |  GetPerformanceReportParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPerformanceReport>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPerformanceReport>>,
+          TError,
+          Awaited<ReturnType<typeof getPerformanceReport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPerformanceReport<TData = Awaited<ReturnType<typeof getPerformanceReport>>, TError = ErrorType<unknown>>(
+ params?: GetPerformanceReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPerformanceReport>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPerformanceReport>>,
+          TError,
+          Awaited<ReturnType<typeof getPerformanceReport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPerformanceReport<TData = Awaited<ReturnType<typeof getPerformanceReport>>, TError = ErrorType<unknown>>(
+ params?: GetPerformanceReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPerformanceReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get sales reps leaderboard and targets performance report
+ */
+
+export function useGetPerformanceReport<TData = Awaited<ReturnType<typeof getPerformanceReport>>, TError = ErrorType<unknown>>(
+ params?: GetPerformanceReportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPerformanceReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPerformanceReportQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -702,6 +702,161 @@ export interface AlertsSummary {
   alerts: AlertItem[];
 }
 
+export interface HydraHealthResponse {
+  status: string;
+  protocolVersion: string;
+  maxDebateRounds: number;
+  senateRoles: string[];
+}
+
+export type HydraIntentInputDomain = typeof HydraIntentInputDomain[keyof typeof HydraIntentInputDomain];
+
+
+export const HydraIntentInputDomain = {
+  orders: 'orders',
+  deliveries: 'deliveries',
+  ledger: 'ledger',
+  catalog: 'catalog',
+  users: 'users',
+  security: 'security',
+  generic: 'generic',
+} as const;
+
+export type HydraIntentInputRiskLevel = typeof HydraIntentInputRiskLevel[keyof typeof HydraIntentInputRiskLevel];
+
+
+export const HydraIntentInputRiskLevel = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  CRITICAL: 'CRITICAL',
+} as const;
+
+export type HydraIntentInputPayload = { [key: string]: unknown };
+
+export interface HydraIntentInput {
+  intentId?: string;
+  action: string;
+  domain: HydraIntentInputDomain;
+  riskLevel?: HydraIntentInputRiskLevel;
+  payload: HydraIntentInputPayload;
+}
+
+export type HydraDebateRoundItemStance = typeof HydraDebateRoundItemStance[keyof typeof HydraDebateRoundItemStance];
+
+
+export const HydraDebateRoundItemStance = {
+  AGREE: 'AGREE',
+  DISAGREE: 'DISAGREE',
+  ABSTAIN: 'ABSTAIN',
+} as const;
+
+export interface HydraDebateRoundItem {
+  roundNumber: number;
+  speakerRole: string;
+  stance: HydraDebateRoundItemStance;
+  arguments: string[];
+}
+
+export type HydraExecutionReceiptItemOutcome = typeof HydraExecutionReceiptItemOutcome[keyof typeof HydraExecutionReceiptItemOutcome];
+
+
+export const HydraExecutionReceiptItemOutcome = {
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  ESCALATED: 'ESCALATED',
+} as const;
+
+export interface HydraExecutionReceiptItem {
+  receiptId: string;
+  correlationId?: string;
+  intentId: string;
+  tenantId?: string;
+  outcome: HydraExecutionReceiptItemOutcome;
+  decidedBy: string;
+  decidedByRole: string;
+  roundsCompleted: number;
+  evidence?: string[];
+  reason: string;
+  recordedAt: string;
+}
+
+export interface HydraSenateResultResponse {
+  rounds: HydraDebateRoundItem[];
+  receipt: HydraExecutionReceiptItem;
+  cached?: boolean;
+}
+
+export interface SalesReportPeriodItem {
+  period: string;
+  ordersCount: number;
+  salesAmount: number;
+  netAmount: number;
+}
+
+export interface SalesReportZoneItem {
+  zone: string;
+  salesAmount: number;
+  ordersCount: number;
+}
+
+export interface SalesReportCustomerItem {
+  customerId: number;
+  customerName: string;
+  salesAmount: number;
+  ordersCount: number;
+}
+
+export interface SalesReportResponse {
+  totalSales: number;
+  totalOrders: number;
+  totalDiscounts: number;
+  totalReturns: number;
+  netSales: number;
+  byPeriod: SalesReportPeriodItem[];
+  byZone: SalesReportZoneItem[];
+  topCustomers: SalesReportCustomerItem[];
+}
+
+export interface VisitsReportRepItem {
+  repId: number;
+  repName: string;
+  totalVisits: number;
+  orderedVisits: number;
+  conversionRate: number;
+}
+
+export interface VisitsReportResultItem {
+  result: string;
+  count: number;
+}
+
+export interface VisitsReportResponse {
+  totalVisits: number;
+  completedVisits: number;
+  orderedVisits: number;
+  conversionRate: number;
+  byRep: VisitsReportRepItem[];
+  byResult: VisitsReportResultItem[];
+}
+
+export interface PerformanceRepItem {
+  userId: number;
+  repName: string;
+  targetAmount: number;
+  achievedAmount: number;
+  achievementRate: number;
+  totalOrders: number;
+  totalCollected: number;
+  commissionEarned: number;
+}
+
+export interface PerformanceReportResponse {
+  totalReps: number;
+  averageAchievementRate: number;
+  reps: PerformanceRepItem[];
+}
+
 export type ListVisitsParams = {
 customerId?: number;
 userId?: number;
@@ -733,5 +888,25 @@ driverId?: number;
 export type ListAuditLogsParams = {
 limit?: number;
 offset?: number;
+};
+
+export type GetSalesReportParams = {
+from?: string;
+to?: string;
+zone?: string;
+customerId?: number;
+repId?: number;
+};
+
+export type GetVisitsReportParams = {
+from?: string;
+to?: string;
+repId?: number;
+status?: string;
+};
+
+export type GetPerformanceReportParams = {
+from?: string;
+to?: string;
 };
 

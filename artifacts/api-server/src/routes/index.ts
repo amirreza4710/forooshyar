@@ -16,6 +16,7 @@ import notificationsRouter from "./notifications";
 import settingsRouter from "./settings";
 import auditRouter from "./audit";
 import hydraRouter from "./hydra";
+import reportsRouter from "./reports";
 import devSeedRouter from "./dev-seed";
 
 const router: IRouter = Router();
@@ -37,6 +38,7 @@ router.use(notificationsRouter);
 router.use(settingsRouter);
 router.use(auditRouter);
 router.use(hydraRouter);
+router.use(reportsRouter);
 if (process.env.NODE_ENV !== "production") router.use(devSeedRouter);
 
 export default router;

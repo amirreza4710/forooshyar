@@ -1247,3 +1247,139 @@ export const ListAuditLogsResponseItem = zod.object({
 export const ListAuditLogsResponse = zod.array(ListAuditLogsResponseItem)
 
 
+/**
+ * @summary Check Hydra ACP protocol status and active senate configuration
+ */
+export const GetHydraHealthResponse = zod.object({
+  "status": zod.string(),
+  "protocolVersion": zod.string(),
+  "maxDebateRounds": zod.int(),
+  "senateRoles": zod.array(zod.string())
+})
+
+
+/**
+ * @summary Dispatch an intent to the 2-round bounded Hydra Senate engine
+ */
+export const PostHydraIntentBody = zod.object({
+  "intentId": zod.string().optional(),
+  "action": zod.string(),
+  "domain": zod.enum(['orders', 'deliveries', 'ledger', 'catalog', 'users', 'security', 'generic']),
+  "riskLevel": zod.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).optional(),
+  "payload": zod.record(zod.string(), zod.unknown())
+})
+
+export const PostHydraIntentResponse = zod.object({
+  "rounds": zod.array(zod.object({
+  "roundNumber": zod.int(),
+  "speakerRole": zod.string(),
+  "stance": zod.enum(['AGREE', 'DISAGREE', 'ABSTAIN']),
+  "arguments": zod.array(zod.string())
+})),
+  "receipt": zod.object({
+  "receiptId": zod.string(),
+  "correlationId": zod.string().optional(),
+  "intentId": zod.string(),
+  "tenantId": zod.string().optional(),
+  "outcome": zod.enum(['APPROVED', 'REJECTED', 'ESCALATED']),
+  "decidedBy": zod.string(),
+  "decidedByRole": zod.string(),
+  "roundsCompleted": zod.int(),
+  "evidence": zod.array(zod.string()).optional(),
+  "reason": zod.string(),
+  "recordedAt": zod.string()
+}),
+  "cached": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Get comprehensive sales analytics report
+ */
+export const GetSalesReportQueryParams = zod.object({
+  "from": zod.coerce.string().optional(),
+  "to": zod.coerce.string().optional(),
+  "zone": zod.coerce.string().optional(),
+  "customerId": zod.coerce.number().int().optional(),
+  "repId": zod.coerce.number().int().optional()
+})
+
+export const GetSalesReportResponse = zod.object({
+  "totalSales": zod.int(),
+  "totalOrders": zod.int(),
+  "totalDiscounts": zod.int(),
+  "totalReturns": zod.int(),
+  "netSales": zod.int(),
+  "byPeriod": zod.array(zod.object({
+  "period": zod.string(),
+  "ordersCount": zod.int(),
+  "salesAmount": zod.int(),
+  "netAmount": zod.int()
+})),
+  "byZone": zod.array(zod.object({
+  "zone": zod.string(),
+  "salesAmount": zod.int(),
+  "ordersCount": zod.int()
+})),
+  "topCustomers": zod.array(zod.object({
+  "customerId": zod.int(),
+  "customerName": zod.string(),
+  "salesAmount": zod.int(),
+  "ordersCount": zod.int()
+}))
+})
+
+
+/**
+ * @summary Get field visit metrics and conversion rates report
+ */
+export const GetVisitsReportQueryParams = zod.object({
+  "from": zod.coerce.string().optional(),
+  "to": zod.coerce.string().optional(),
+  "repId": zod.coerce.number().int().optional(),
+  "status": zod.coerce.string().optional()
+})
+
+export const GetVisitsReportResponse = zod.object({
+  "totalVisits": zod.int(),
+  "completedVisits": zod.int(),
+  "orderedVisits": zod.int(),
+  "conversionRate": zod.number(),
+  "byRep": zod.array(zod.object({
+  "repId": zod.int(),
+  "repName": zod.string(),
+  "totalVisits": zod.int(),
+  "orderedVisits": zod.int(),
+  "conversionRate": zod.number()
+})),
+  "byResult": zod.array(zod.object({
+  "result": zod.string(),
+  "count": zod.int()
+}))
+})
+
+
+/**
+ * @summary Get sales reps leaderboard and targets performance report
+ */
+export const GetPerformanceReportQueryParams = zod.object({
+  "from": zod.coerce.string().optional(),
+  "to": zod.coerce.string().optional()
+})
+
+export const GetPerformanceReportResponse = zod.object({
+  "totalReps": zod.int(),
+  "averageAchievementRate": zod.number(),
+  "reps": zod.array(zod.object({
+  "userId": zod.int(),
+  "repName": zod.string(),
+  "targetAmount": zod.int(),
+  "achievedAmount": zod.int(),
+  "achievementRate": zod.number(),
+  "totalOrders": zod.int(),
+  "totalCollected": zod.int(),
+  "commissionEarned": zod.int()
+}))
+})
+
+

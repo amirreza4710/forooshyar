@@ -1005,6 +1005,143 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  # ─── HYDRA ACP PROTOCOL & SENATE ENGINE (TASK-004) ───
+  /hydra/health:
+    get:
+      operationId: getHydraHealth
+      tags: [hydra]
+      summary: Check Hydra ACP protocol status and active senate configuration
+      responses:
+        "200":
+          description: Hydra health and capabilities
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HydraHealthResponse"
+
+  /hydra/intents:
+    post:
+      operationId: postHydraIntent
+      tags: [hydra]
+      summary: Dispatch an intent to the 2-round bounded Hydra Senate engine
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HydraIntentInput"
+      responses:
+        "200":
+          description: Senate debate result and execution receipt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HydraSenateResultResponse"
+        "400":
+          description: Invalid intent payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ─── DECISION LAYER & REPORTS (PHASE A4: DASH-F01..F03, REP-F01..F03) ───
+  /reports/sales:
+    get:
+      operationId: getSalesReport
+      tags: [reports]
+      summary: Get comprehensive sales analytics report
+      parameters:
+        - name: from
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: to
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: zone
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: customerId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: repId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Sales report data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SalesReportResponse"
+
+  /reports/visits:
+    get:
+      operationId: getVisitsReport
+      tags: [reports]
+      summary: Get field visit metrics and conversion rates report
+      parameters:
+        - name: from
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: to
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: repId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Visits report data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VisitsReportResponse"
+
+  /reports/performance:
+    get:
+      operationId: getPerformanceReport
+      tags: [reports]
+      summary: Get sales reps leaderboard and targets performance report
+      parameters:
+        - name: from
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: to
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Performance report data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PerformanceReportResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -1904,6 +2041,244 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AlertItem"
+
+    # ─── Hydra Schemas (TASK-004) ───
+    HydraHealthResponse:
+      type: object
+      required: [status, protocolVersion, maxDebateRounds, senateRoles]
+      properties:
+        status:
+          type: string
+        protocolVersion:
+          type: string
+        maxDebateRounds:
+          type: integer
+        senateRoles:
+          type: array
+          items:
+            type: string
+
+    HydraIntentInput:
+      type: object
+      required: [action, domain, payload]
+      properties:
+        intentId:
+          type: string
+        action:
+          type: string
+        domain:
+          type: string
+          enum: [orders, deliveries, ledger, catalog, users, security, generic]
+        riskLevel:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, CRITICAL]
+        payload:
+          type: object
+          additionalProperties: true
+
+    HydraDebateRoundItem:
+      type: object
+      required: [roundNumber, speakerRole, stance, arguments]
+      properties:
+        roundNumber:
+          type: integer
+        speakerRole:
+          type: string
+        stance:
+          type: string
+          enum: [AGREE, DISAGREE, ABSTAIN]
+        arguments:
+          type: array
+          items:
+            type: string
+
+    HydraExecutionReceiptItem:
+      type: object
+      required: [receiptId, intentId, outcome, decidedBy, decidedByRole, roundsCompleted, reason, recordedAt]
+      properties:
+        receiptId:
+          type: string
+        correlationId:
+          type: string
+        intentId:
+          type: string
+        tenantId:
+          type: string
+        outcome:
+          type: string
+          enum: [APPROVED, REJECTED, ESCALATED]
+        decidedBy:
+          type: string
+        decidedByRole:
+          type: string
+        roundsCompleted:
+          type: integer
+        evidence:
+          type: array
+          items:
+            type: string
+        reason:
+          type: string
+        recordedAt:
+          type: string
+
+    HydraSenateResultResponse:
+      type: object
+      required: [rounds, receipt]
+      properties:
+        rounds:
+          type: array
+          items:
+            $ref: "#/components/schemas/HydraDebateRoundItem"
+        receipt:
+          $ref: "#/components/schemas/HydraExecutionReceiptItem"
+        cached:
+          type: boolean
+
+    # ─── Decision Layer Reports (Phase A4: DASH-F01..F03, REP-F01..F03) ───
+    SalesReportPeriodItem:
+      type: object
+      required: [period, ordersCount, salesAmount, netAmount]
+      properties:
+        period:
+          type: string
+        ordersCount:
+          type: integer
+        salesAmount:
+          type: integer
+        netAmount:
+          type: integer
+
+    SalesReportZoneItem:
+      type: object
+      required: [zone, salesAmount, ordersCount]
+      properties:
+        zone:
+          type: string
+        salesAmount:
+          type: integer
+        ordersCount:
+          type: integer
+
+    SalesReportCustomerItem:
+      type: object
+      required: [customerId, customerName, salesAmount, ordersCount]
+      properties:
+        customerId:
+          type: integer
+        customerName:
+          type: string
+        salesAmount:
+          type: integer
+        ordersCount:
+          type: integer
+
+    SalesReportResponse:
+      type: object
+      required: [totalSales, totalOrders, totalDiscounts, totalReturns, netSales, byPeriod, byZone, topCustomers]
+      properties:
+        totalSales:
+          type: integer
+        totalOrders:
+          type: integer
+        totalDiscounts:
+          type: integer
+        totalReturns:
+          type: integer
+        netSales:
+          type: integer
+        byPeriod:
+          type: array
+          items:
+            $ref: "#/components/schemas/SalesReportPeriodItem"
+        byZone:
+          type: array
+          items:
+            $ref: "#/components/schemas/SalesReportZoneItem"
+        topCustomers:
+          type: array
+          items:
+            $ref: "#/components/schemas/SalesReportCustomerItem"
+
+    VisitsReportRepItem:
+      type: object
+      required: [repId, repName, totalVisits, orderedVisits, conversionRate]
+      properties:
+        repId:
+          type: integer
+        repName:
+          type: string
+        totalVisits:
+          type: integer
+        orderedVisits:
+          type: integer
+        conversionRate:
+          type: number
+
+    VisitsReportResultItem:
+      type: object
+      required: [result, count]
+      properties:
+        result:
+          type: string
+        count:
+          type: integer
+
+    VisitsReportResponse:
+      type: object
+      required: [totalVisits, completedVisits, orderedVisits, conversionRate, byRep, byResult]
+      properties:
+        totalVisits:
+          type: integer
+        completedVisits:
+          type: integer
+        orderedVisits:
+          type: integer
+        conversionRate:
+          type: number
+        byRep:
+          type: array
+          items:
+            $ref: "#/components/schemas/VisitsReportRepItem"
+        byResult:
+          type: array
+          items:
+            $ref: "#/components/schemas/VisitsReportResultItem"
+
+    PerformanceRepItem:
+      type: object
+      required: [userId, repName, targetAmount, achievedAmount, achievementRate, totalOrders, totalCollected, commissionEarned]
+      properties:
+        userId:
+          type: integer
+        repName:
+          type: string
+        targetAmount:
+          type: integer
+        achievedAmount:
+          type: integer
+        achievementRate:
+          type: number
+        totalOrders:
+          type: integer
+        totalCollected:
+          type: integer
+        commissionEarned:
+          type: integer
+
+    PerformanceReportResponse:
+      type: object
+      required: [totalReps, averageAchievementRate, reps]
+      properties:
+        totalReps:
+          type: integer
+        averageAchievementRate:
+          type: number
+        reps:
+          type: array
+          items:
+            $ref: "#/components/schemas/PerformanceRepItem"
+
 
 
 
