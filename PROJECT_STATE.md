@@ -1,5 +1,16 @@
 # PROJECT_STATE.md
 
+## همگام‌سازی مستندات — 2026-11-28
+
+- رابط موج‌های مصوب A2، A2.5 و A3 پیاده‌سازی و در وضعیت READY_FOR_REVIEW (آماده بازبینی) تحویل شده است؛ تأیید بازبین یا پذیرش کامل مالی ثبت نشده است.
+- تغییرات شامل ویزیت مقاوم، اتصال سفارش، اعتبار مشتری، اهداف، جزئیات و چاپ، ورودی ریال، داشبورد واقعی، وصولی، ناوگان، پورسانت و هشدار است. جزئیات و تاریخچه در [سند هماهنگی](docs/09_Development/AGENT_HANDOFF.md) محفوظ است.
+- آخرین شواهد اجرای مشاهده‌شده مربوط به 2026-11-25 است: 66 آزمون در15فایل موفق، بررسی نوع و ساخت خروج0. این اعداد اجرای مجدد در28نوامبر محسوب نمی‌شوند. شواهد250آزمون سرور/کتابخانه‌ها در بخش‌های قدیمی گزارش مالک سرور است و در این همگام‌سازی دوباره تأیید نشده است.
+- آخرین پیش‌نمایش بررسی‌شده http://localhost:8088 با بسته index-Dbj26h-C.js و index-pPqoWZeP.css بود؛ اثر انگشت ورودی 0e2e516c4823f8e703434b5b7e465297cddbf34b81ac9cb247236e6887b2054a. وضعیت اجرای فعلی پیش‌نمایش دوباره بررسی نشده است.
+- پذیرش عملی وصول/ناوگان/پورسانت/هشدار باز است: آخرین سرور پیش‌نمایش برای چهار مسیر404 داشت. کنترل اعتبار اتمیک، تطبیق مشتری وصولی/سفارش، مرجوعی نسبت به سفارش اصلی و یکسان‌سازی نقش‌ها نیازمند رسیدگی مالک سرور است؛ کنترل رابط جایگزین امنیت سرور نیست.
+- درایو: اتصال نخست احراز هویت می‌خواهد؛ اتصال جایگزین در جست‌وجوی سند انتقال و پوشه مگامن نتیجه نداد. نسخه HANDOVER_SYSTEM_TRANSFER.md به‌روز/همگام اعلام نمی‌شود.
+- اقدام بعدی: بازبینی مالک، رفع نیازهای سرور و همگام‌سازی پیش‌نمایش بدون بازنشانی داده، آزمون سرتاسری مالی و سپس تکمیل نسخه درایو پس از دسترسی معتبر. همگام‌سازی اسناد به معنی تأیید یا انتشار محصول نیست.
+
+
 این فایل حافظه کوتاه‌مدت و نقطه شروع مخزن است. هر انسان یا Agent باید پیش از بارگذاری اسناد عمیق‌تر، این فایل را بخواند. این فایل وضعیت اجرایی را نگه می‌دارد، نه صرفاً برنامه آینده را.
 
 ## Current State
@@ -11,11 +22,11 @@
 - **Authoritative Stack:** React 19, Vite, Express 5, PostgreSQL, Drizzle ORM, OpenAPI
 - **Current Official Checkpoint:** **A1 — Operational Foundation (Approved & Frozen)**
 - **Next Checkpoint:** **A2 — Sales & Field Core**
-- **Current Workstream:** Phase A2 — Sales & Field Core (Active: Visits, Orders Credit Link & Visitor Targets Infrastructure Complete) + TASK-004-PRE (Complete)
-- **MVP Scope:** Frozen
-- **MVP Backlog:** 14 Epic و 41 Feature متعهد (ADR-010)
+- **Current Workstream:** Phase A2.5 & Phase A3 Backend Complete + Audited (250/250 Green Tests); Frontend Wave 1/2 READY_FOR_REVIEW; financial runtime acceptance blocked
+- **MVP Scope:** Frozen (Expanded via `ADR-012` for Capillary Distribution Wave 1 & 2)
+- **MVP Backlog:** 14 Epic و 41 Feature متعهد (ADR-010) + Wave 1/2 Capillary Distribution (`ADR-012`)
 - **Frozen v2.4 baseline:** 11 Epic و 32 Feature
-- **Status:** PHASE A2 IN PROGRESS (Visits Backend, Credit Link, Visitor Targets & Hydra Model Selector Delivered)
+- **Status:** PHASE A2.5/A3 BACKEND GREEN (API + DB + Codegen + Demo Mock Verified; UI READY_FOR_REVIEW; runtime financial verification pending)
 - **A1 Acceptance Criteria:** `docs/01_PRD/A1-Acceptance-Criteria.md` (هر ۱۲ فیچر + Audit Enabler کامل، ۱۰۰٪ پاس و فریز شدند)
 
 ## Execution Rule
@@ -289,3 +300,7 @@ Next action: Proceed to Phase A1 Operational Foundation.
   - به‌روزرسانی سند معیار پذیرش `docs/01_PRD/A1-Acceptance-Criteria.md` به وضعیت تایید و فریز کامل (۱۰۰٪ پاس).
   - Evidence: آزمون‌های تایپ‌چک سراسری با کد 0 و بدون خطا، ۱۱ تست احراز هویت پاس‌شده در `auth.test.ts`، ۵ تست تنظیمات پاس‌شده در `settings.test.ts`، ۳ تست ممیزی پاس‌شده در `audit.test.ts`، بیلد کامل فرانت‌اند در ۱۳.۸ ثانیه.
   - وضعیت خروج: گیت A1 با موفقیت عبور کرد و فریز شد؛ فاز بعدی A2 (Sales & Field Core) آماده استارت است.
+- **Wave 1 (`Phase A2.5`) & Wave 2 (`Phase A3`) Backend + OpenAPI + Verification (Completed):**
+  - پذیرش [`ADR-012`](docs/ADR/ADR-012.md) و اجرای کامل ارتقاهای پخش مویرگی در دیتابیس (`products`, `customers`, `users`, `orders`, `collectionsTable`, `deliveriesTable`)، قراردادهای `openapi.yaml` و بازتولید کلاینت با `orval` v5.
+  - پیاده‌سازی روت‌ها و سرویس‌های `collections.ts` (نقد/کارت/چک صیادی + همگام‌سازی دفتر کل `syncCustomerBalance`)، `deliveries.ts` (حواله ناوگان + لیست بارگیری کارتن/عدد + مرجوعی جزئی اتمیک)، `commissions.ts` (پورسانت پلکانی روی وصولی تسویه‌شده)، `alerts.ts` (۴ هشدار زنده)، و سخت‌سازی کامل `orders.ts` (تخفیف، اشانتیون، بازگشت موجودی، چک برگشتی، تطبیق مشتری ویزیت)، `visits.ts` (ایزولاسیون ویرایش/خواندن و تراکنش واحد) و `customers.ts` (RBAC تغییر اعتبار و فیلتر منطقه).
+  - Evidence: `pnpm run typecheck` با کد ۰، `pnpm run test:libs` (۳۵ تست در ۴ فایل)، `artifacts/api-server` (۱۸۰ تست در ۲۶ فایل با `--fileParallelism=false` روی Kiri)، و `artifacts/nadraan` (۳۵ تست در ۱۱ فایل) — مجموعاً **۲۵۰ تست سبز در ۴۱ فایل مونو‌ریپو**.

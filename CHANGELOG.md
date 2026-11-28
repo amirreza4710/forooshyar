@@ -1,10 +1,31 @@
 # Changelog
 
+## همگام‌سازی مستندات — 2026-11-28
+
+- رابط موج‌های مصوب A2، A2.5 و A3 پیاده‌سازی و در وضعیت READY_FOR_REVIEW (آماده بازبینی) تحویل شده است؛ تأیید بازبین یا پذیرش کامل مالی ثبت نشده است.
+- تغییرات شامل ویزیت مقاوم، اتصال سفارش، اعتبار مشتری، اهداف، جزئیات و چاپ، ورودی ریال، داشبورد واقعی، وصولی، ناوگان، پورسانت و هشدار است. جزئیات و تاریخچه در [سند هماهنگی](docs/09_Development/AGENT_HANDOFF.md) محفوظ است.
+- آخرین شواهد اجرای مشاهده‌شده مربوط به 2026-11-25 است: 66 آزمون در15فایل موفق، بررسی نوع و ساخت خروج0. این اعداد اجرای مجدد در28نوامبر محسوب نمی‌شوند. شواهد250آزمون سرور/کتابخانه‌ها در بخش‌های قدیمی گزارش مالک سرور است و در این همگام‌سازی دوباره تأیید نشده است.
+- آخرین پیش‌نمایش بررسی‌شده http://localhost:8088 با بسته index-Dbj26h-C.js و index-pPqoWZeP.css بود؛ اثر انگشت ورودی 0e2e516c4823f8e703434b5b7e465297cddbf34b81ac9cb247236e6887b2054a. وضعیت اجرای فعلی پیش‌نمایش دوباره بررسی نشده است.
+- پذیرش عملی وصول/ناوگان/پورسانت/هشدار باز است: آخرین سرور پیش‌نمایش برای چهار مسیر404 داشت. کنترل اعتبار اتمیک، تطبیق مشتری وصولی/سفارش، مرجوعی نسبت به سفارش اصلی و یکسان‌سازی نقش‌ها نیازمند رسیدگی مالک سرور است؛ کنترل رابط جایگزین امنیت سرور نیست.
+- درایو: اتصال نخست احراز هویت می‌خواهد؛ اتصال جایگزین در جست‌وجوی سند انتقال و پوشه مگامن نتیجه نداد. نسخه HANDOVER_SYSTEM_TRANSFER.md به‌روز/همگام اعلام نمی‌شود.
+- اقدام بعدی: بازبینی مالک، رفع نیازهای سرور و همگام‌سازی پیش‌نمایش بدون بازنشانی داده، آزمون سرتاسری مالی و سپس تکمیل نسخه درایو پس از دسترسی معتبر. همگام‌سازی اسناد به معنی تأیید یا انتشار محصول نیست.
+
+
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
 ### Added
+- **Wave 1 (`Phase A2.5`) & Wave 2 (`Phase A3`) Complete Capillary Distribution Backend + OpenAPI Contracts:**
+  - Accepted [`ADR-012`](docs/ADR/ADR-012.md) defining architectural contracts for cost accounting, cartoning, zone assignment, invoice discounts/bonus items, Sayyad cheque collections ledger, delivery partial returns, tiered commissions, and live executive alerts.
+  - **Wave 1 (`A2.5`) Schema, OpenAPI & Route Upgrades:** Added `unitsPerPack`, `costPrice`, `minStock` on `products`; `zone`, `latitude`, `longitude` on `customers`; `assignedZone` on `users`; `subtotal`, `discount`, `paymentMethod`, `notes`, and item `isBonus` on `orders`. Added atomic stock restoration on order cancellation (`PATCH`) and soft-delete (`DELETE`), rep data isolation across orders and visits, customer zone filtering, `visit.customerId` validation, strict RBAC (`403`) on `creditLimit`/`balance` mutations, bounced-cheque order blocking, and live `grossProfit`, `pendingOrdersCount`, `lowStockCount`, `bouncedChequesCount` KPIs on `/api/dashboard/summary` with cache invalidation (`invalidateDashboardCache`).
+  - **Wave 2 (`A3`) Modules:** Created `collectionsTable` and `deliveriesTable` schemas (`lib/db/src/schema/collections.ts`, `deliveries.ts`), pushed to PostgreSQL, extended `lib/api-spec/openapi.yaml` and regenerated `@workspace/api-zod` and `@workspace/api-client-react` (fixed `orval.config.ts` with `query.version: 5`). Implemented `/api/collections*` (cash/card immediate settlement, Sayyad cheques lifecycle `PENDING`/`CLEARED`/`BOUNCED`, deterministic transactional `customers.balance` ledger sync), `/api/deliveries*` (driver assignment, cartoned loading sheet `packsCount` + `remainderUnits`, transactional `PARTIAL_RETURN` with selective `restock` and balance settlement), `/api/commissions/summary` (tiered 2%/3% commission computed strictly on `CLEARED` collections), and `/api/alerts/summary` (4 live DB-fact alert categories).
+  - Updated `lib/api-client-react/src/demo-mock.ts` and `demo-mock.test.ts` (14 passing client-lib tests) and authored comprehensive backend integration tests in `orders.test.ts` (15 tests), `collections.test.ts` (2 tests), `deliveries.test.ts` (1 test), `commissions.test.ts` (1 test), and `alerts.test.ts` (1 test) — totaling **250 passing tests across 41 test files** (`180` api-server, `35` nadraan, `21` api-zod, `14` api-client-react) with `pnpm run typecheck` passing with 0 errors.
+
+- **Shared Client Demo Mock Alignment (`@workspace/api-client-react`):**
+  - Updated `lib/api-client-react/src/demo-mock.ts` to cover `/api/visits`, `/api/visits/stats/summary`, `/api/targets`, `/api/targets/stats/summary`, `/api/settings`, `/api/audit-logs`, `/api/dashboard/sales-chart`, and match OpenAPI schemas (`DashboardSummary`, `Order`, `Customer`, `Product`, `User`) with currency set to `ریال` and brand `فروشیار پلاس`.
+  - Added 3 unit tests in `lib/api-client-react/src/demo-mock.test.ts` (13 passing tests in `@workspace/api-client-react`, 34 total across `lib/`).
+
 - **TASK-004-PRE: Merit-Based Model Selector Contract for Hydra ACP:**
   - Designed runtime model discovery and dispatch contracts in `@workspace/api-zod` (`model-routing.schema.ts`).
   - Added `DiscoveredModelSchema`, `HydraModelSelectionRequestSchema`, `HydraModelDispatchPlanSchema`, and `MeritFeedbackEventSchema`.
