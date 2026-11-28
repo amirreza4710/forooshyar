@@ -7,7 +7,7 @@ import {
 import { db } from "@workspace/db";
 import { requireAuth, type JwtPayload } from "../lib/auth";
 import { logAudit } from "../lib/audit";
-import { runHydraSenate } from "../services/hydra/senate-engine";
+import { runHydraSenate, getRecentHydraReceipts, getHydraReceiptByIntentId } from "../services/hydra/senate-engine";
 
 const router = Router();
 
@@ -18,6 +18,25 @@ router.get("/hydra/health", requireAuth, (_req, res): void => {
     maxDebateRounds: HYDRA_MAX_DEBATE_ROUNDS,
     senateRoles: ["PRESIDENT", "STRATEGIST", "ARCHITECT", "AUDITOR", "OPERATOR", "SYSTEM"],
   });
+});
+
+router.get("/hydra/receipts", requireAuth, (req, res): void => {
+  const limit = req.query.limit ? Math.min(100, Math.max(1, Number(req.query.limit))) : 50;
+  const receipts = getRecentHydraReceipts(limit);
+  res.json(receipts);
+});
+
+router.get("/hydra/intents/:intentId/receipt", requireAuth, (req, res): void => {
+  const tenantId = typeof req.headers["x-tenant-id"] === "string" && req.headers["x-tenant-id"].trim()
+    ? req.headers["x-tenant-id"].trim()
+    : "forooshyar-default";
+
+  const result = getHydraReceiptByIntentId(tenantId, req.params.intentId);
+  if (!result) {
+    res.status(404).json({ error: "رسید اجرایی برای این نیت یافت نشد" });
+    return;
+  }
+  res.json(result);
 });
 
 router.post("/hydra/intents", requireAuth, async (req, res): Promise<void> => {

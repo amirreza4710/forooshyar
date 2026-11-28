@@ -132,4 +132,21 @@ describe("Hydra ACP Routes (TASK-004)", () => {
     expect(res.body.receipt.roundsCompleted).toBe(0);
     expect(res.body.rounds).toHaveLength(0);
   });
+
+  it("GET /api/hydra/receipts returns array of recent receipts", async () => {
+    const res = await request(app)
+      .get("/api/hydra/receipts")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+  });
+
+  it("GET /api/hydra/intents/:intentId/receipt returns 404 for unknown intent", async () => {
+    const res = await request(app)
+      .get("/api/hydra/intents/unknown-intent-id-1234/receipt")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(404);
+  });
 });

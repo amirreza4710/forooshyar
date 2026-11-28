@@ -90,6 +90,17 @@ describe("Reports Routes (Phase A4: DASH-F01..F03, REP-F01..F03)", () => {
     expect(Array.isArray(res.body.topCustomers)).toBe(true);
   });
 
+  it("GET /api/reports/sales?format=csv returns utf-8 csv attachment", async () => {
+    const res = await request(app)
+      .get("/api/reports/sales?format=csv")
+      .set("Authorization", `Bearer ${managerToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toContain("text/csv");
+    expect(res.headers["content-disposition"]).toContain("attachment; filename=");
+    expect(res.text.startsWith("\uFEFF")).toBe(true);
+  });
+
   it("GET /api/reports/visits computes conversion rate and result grouping", async () => {
     const [visit1] = await db
       .insert(visitsTable)

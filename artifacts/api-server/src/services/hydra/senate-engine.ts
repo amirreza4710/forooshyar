@@ -158,3 +158,11 @@ export function runHydraSenate(
   recentReceipts.set(cacheKey, result);
   return result;
 }
+
+export function getRecentHydraReceipts(limit = 50): HydraSenateResult[] {
+  return Array.from(recentReceipts.values()).slice(-limit).reverse();
+}
+
+export function getHydraReceiptByIntentId(tenantId: string, intentId: string): HydraSenateResult | undefined {
+  return recentReceipts.get(`${tenantId}:${intentId}`);
+}

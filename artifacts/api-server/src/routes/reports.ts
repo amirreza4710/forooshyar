@@ -130,6 +130,26 @@ router.get("/reports/sales", requireAuth, async (req: Request, res): Promise<voi
 
   const netSales = Math.max(0, totalSales - totalReturns);
 
+  if (req.query.format === "csv") {
+    let csv = "\uFEFFدوره,تعداد سفارش,مبلغ فروش (ریال),مبلغ خالص پس از مرجوعی (ریال)\r\n";
+    for (const p of byPeriod) {
+      csv += `"${p.period}",${p.ordersCount},${p.salesAmount},${p.netAmount}\r\n`;
+    }
+    csv += "\r\nمنطقه,مبلغ فروش (ریال),تعداد سفارش\r\n";
+    for (const z of byZone) {
+      csv += `"${z.zone}",${z.salesAmount},${z.ordersCount}\r\n`;
+    }
+    csv += "\r\nشناسه مشتری,نام مشتری,مبلغ خرید (ریال),تعداد سفارش\r\n";
+    for (const c of topCustomers) {
+      csv += `${c.customerId},"${c.customerName.replace(/"/g, '""')}",${c.salesAmount},${c.ordersCount}\r\n`;
+    }
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="sales-report-${new Date().toISOString().slice(0, 10)}.csv"`);
+    res.send(csv);
+    return;
+  }
+
   res.json({
     totalSales,
     totalOrders: orders.length,
@@ -200,6 +220,22 @@ router.get("/reports/visits", requireAuth, async (req: Request, res): Promise<vo
     count,
   }));
 
+  if (req.query.format === "csv") {
+    let csv = "\uFEFFشناسه ویزیتور,نام ویزیتور,تعداد کل ویزیت,ویزیت‌های منجر به سفارش,نرخ تبدیل (درصد)\r\n";
+    for (const r of byRep) {
+      csv += `${r.repId},"${r.repName.replace(/"/g, '""')}",${r.totalVisits},${r.orderedVisits},${r.conversionRate}\r\n`;
+    }
+    csv += "\r\nنتیجه ویزیت,تعداد\r\n";
+    for (const rs of byResult) {
+      csv += `"${rs.result}",${rs.count}\r\n`;
+    }
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="visits-report-${new Date().toISOString().slice(0, 10)}.csv"`);
+    res.send(csv);
+    return;
+  }
+
   res.json({
     totalVisits: visits.length,
     completedVisits,
@@ -211,7 +247,7 @@ router.get("/reports/visits", requireAuth, async (req: Request, res): Promise<vo
 });
 
 // ─── GET /reports/performance ───
-router.get("/reports/performance", requireAuth, async (_req: Request, res): Promise<void> => {
+router.get("/reports/performance", requireAuth, async (req: Request, res): Promise<void> => {
   const reps = await db
     .select({
       id: usersTable.id,
@@ -277,6 +313,18 @@ router.get("/reports/performance", requireAuth, async (_req: Request, res): Prom
   const averageAchievementRate = totalReps > 0
     ? Math.round((repList.reduce((sum, r) => sum + r.achievementRate, 0) / totalReps) * 10) / 10
     : 0;
+
+  if (req.query.format === "csv") {
+    let csv = "\uFEFFشناسه,نام ویزیتور,سهمیه هدف (ریال),فروش محقق‌شده (ریال),درصد تحقق هدف,تعداد سفارش,مجموع وصولی تسویه‌شده (ریال),پورسانت محاسبه‌شده (ریال)\r\n";
+    for (const r of repList) {
+      csv += `${r.userId},"${r.repName.replace(/"/g, '""')}",${r.targetAmount},${r.achievedAmount},${r.achievementRate},${r.totalOrders},${r.totalCollected},${r.commissionEarned}\r\n`;
+    }
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="performance-report-${new Date().toISOString().slice(0, 10)}.csv"`);
+    res.send(csv);
+    return;
+  }
 
   res.json({
     totalReps,
