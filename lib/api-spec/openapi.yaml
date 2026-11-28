@@ -1319,6 +1319,14 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/OrderItem"
+        returnedAmount:
+          type: integer
+          description: مبلغ کل اقلام مرجوعی کسر شده از فاکتور اولیه
+        returnedItems:
+          type: array
+          description: اقلام مرجوعی ثبت‌شده در فرآیند توزیع
+          items:
+            $ref: "#/components/schemas/ReturnedItem"
         createdAt:
           type: string
 

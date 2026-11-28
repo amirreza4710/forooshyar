@@ -195,6 +195,14 @@ export const OrderStatus = {
   لغو_شده: 'لغو شده',
 } as const;
 
+export interface ReturnedItem {
+  productId: number;
+  productName: string;
+  qty: number;
+  price: number;
+  restock?: boolean;
+}
+
 export interface Order {
   id: number;
   code?: string;
@@ -216,6 +224,10 @@ export interface Order {
   /** @nullable */
   notes?: string | null;
   items?: OrderItem[];
+  /** مبلغ کل اقلام مرجوعی کسر شده از فاکتور اولیه */
+  returnedAmount?: number;
+  /** اقلام مرجوعی ثبت‌شده در فرآیند توزیع */
+  returnedItems?: ReturnedItem[];
   createdAt: string;
 }
 
@@ -581,14 +593,6 @@ export interface CollectionsSummary {
   pendingChequesCount: number;
   bouncedChequesAmount: number;
   bouncedChequesCount: number;
-}
-
-export interface ReturnedItem {
-  productId: number;
-  productName: string;
-  qty: number;
-  price: number;
-  restock?: boolean;
 }
 
 export type DeliveryStatus = typeof DeliveryStatus[keyof typeof DeliveryStatus];

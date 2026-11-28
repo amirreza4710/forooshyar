@@ -375,6 +375,7 @@ export const DeleteProductResponse = zod.void()
  * @summary List all orders
  */
 export const listOrdersResponseItemsItemIsBonusDefault = false;
+export const listOrdersResponseReturnedItemsItemRestockDefault = true;
 
 export const ListOrdersResponseItem = zod.object({
   "id": zod.int(),
@@ -397,6 +398,14 @@ export const ListOrdersResponseItem = zod.object({
   "price": zod.int(),
   "isBonus": zod.boolean().default(listOrdersResponseItemsItemIsBonusDefault)
 })).optional(),
+  "returnedAmount": zod.int().optional().describe('مبلغ کل اقلام مرجوعی کسر شده از فاکتور اولیه'),
+  "returnedItems": zod.array(zod.object({
+  "productId": zod.int(),
+  "productName": zod.string(),
+  "qty": zod.int(),
+  "price": zod.int(),
+  "restock": zod.boolean().default(listOrdersResponseReturnedItemsItemRestockDefault)
+})).optional().describe('اقلام مرجوعی ثبت‌شده در فرآیند توزیع'),
   "createdAt": zod.string()
 })
 export const ListOrdersResponse = zod.array(ListOrdersResponseItem)
@@ -425,6 +434,7 @@ export const CreateOrderBody = zod.object({
 })
 
 export const createOrderResponseItemsItemIsBonusDefault = false;
+export const createOrderResponseReturnedItemsItemRestockDefault = true;
 
 export const CreateOrderResponse = zod.object({
   "id": zod.int(),
@@ -447,6 +457,14 @@ export const CreateOrderResponse = zod.object({
   "price": zod.int(),
   "isBonus": zod.boolean().default(createOrderResponseItemsItemIsBonusDefault)
 })).optional(),
+  "returnedAmount": zod.int().optional().describe('مبلغ کل اقلام مرجوعی کسر شده از فاکتور اولیه'),
+  "returnedItems": zod.array(zod.object({
+  "productId": zod.int(),
+  "productName": zod.string(),
+  "qty": zod.int(),
+  "price": zod.int(),
+  "restock": zod.boolean().default(createOrderResponseReturnedItemsItemRestockDefault)
+})).optional().describe('اقلام مرجوعی ثبت‌شده در فرآیند توزیع'),
   "createdAt": zod.string()
 })
 
@@ -459,6 +477,7 @@ export const GetOrderParams = zod.object({
 })
 
 export const getOrderResponseItemsItemIsBonusDefault = false;
+export const getOrderResponseReturnedItemsItemRestockDefault = true;
 
 export const GetOrderResponse = zod.object({
   "id": zod.int(),
@@ -481,6 +500,14 @@ export const GetOrderResponse = zod.object({
   "price": zod.int(),
   "isBonus": zod.boolean().default(getOrderResponseItemsItemIsBonusDefault)
 })).optional(),
+  "returnedAmount": zod.int().optional().describe('مبلغ کل اقلام مرجوعی کسر شده از فاکتور اولیه'),
+  "returnedItems": zod.array(zod.object({
+  "productId": zod.int(),
+  "productName": zod.string(),
+  "qty": zod.int(),
+  "price": zod.int(),
+  "restock": zod.boolean().default(getOrderResponseReturnedItemsItemRestockDefault)
+})).optional().describe('اقلام مرجوعی ثبت‌شده در فرآیند توزیع'),
   "createdAt": zod.string()
 })
 
@@ -497,6 +524,7 @@ export const UpdateOrderBody = zod.object({
 })
 
 export const updateOrderResponseItemsItemIsBonusDefault = false;
+export const updateOrderResponseReturnedItemsItemRestockDefault = true;
 
 export const UpdateOrderResponse = zod.object({
   "id": zod.int(),
@@ -519,6 +547,14 @@ export const UpdateOrderResponse = zod.object({
   "price": zod.int(),
   "isBonus": zod.boolean().default(updateOrderResponseItemsItemIsBonusDefault)
 })).optional(),
+  "returnedAmount": zod.int().optional().describe('مبلغ کل اقلام مرجوعی کسر شده از فاکتور اولیه'),
+  "returnedItems": zod.array(zod.object({
+  "productId": zod.int(),
+  "productName": zod.string(),
+  "qty": zod.int(),
+  "price": zod.int(),
+  "restock": zod.boolean().default(updateOrderResponseReturnedItemsItemRestockDefault)
+})).optional().describe('اقلام مرجوعی ثبت‌شده در فرآیند توزیع'),
   "createdAt": zod.string()
 })
 
@@ -1089,6 +1125,7 @@ export const GetAlertsSummaryResponse = zod.object({
  * @summary Get dashboard KPIs and summary data
  */
 export const getDashboardSummaryResponseRecentOrdersItemItemsItemIsBonusDefault = false;
+export const getDashboardSummaryResponseRecentOrdersItemReturnedItemsItemRestockDefault = true;
 
 export const GetDashboardSummaryResponse = zod.object({
   "totalSales": zod.int(),
@@ -1120,6 +1157,14 @@ export const GetDashboardSummaryResponse = zod.object({
   "price": zod.int(),
   "isBonus": zod.boolean().default(getDashboardSummaryResponseRecentOrdersItemItemsItemIsBonusDefault)
 })).optional(),
+  "returnedAmount": zod.int().optional().describe('مبلغ کل اقلام مرجوعی کسر شده از فاکتور اولیه'),
+  "returnedItems": zod.array(zod.object({
+  "productId": zod.int(),
+  "productName": zod.string(),
+  "qty": zod.int(),
+  "price": zod.int(),
+  "restock": zod.boolean().default(getDashboardSummaryResponseRecentOrdersItemReturnedItemsItemRestockDefault)
+})).optional().describe('اقلام مرجوعی ثبت‌شده در فرآیند توزیع'),
   "createdAt": zod.string()
 }))
 })

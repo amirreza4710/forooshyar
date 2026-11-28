@@ -1,5 +1,15 @@
 # وضعیت پروژه — فروشیار پلاس
 
+## ارسال به گیت‌هاب و تحویل قرارداد اقلام مرجوعی سفارش به Codex — 2026-11-28
+
+- **ارسال تغییرات مأموریت فاز A2 به گیت‌هاب (`git push`):**
+  - شاخه `pr-85-phase-a1` با کامیت `5d51c96` به مخزن گیت‌هاب (`origin/pr-85-phase-a1`) ارسال شد.
+- **تحویل قرارداد فاکتور تعدیل‌شده (Adjusted Order Returned Items):**
+  - فیلدهای `returnedAmount` و `returnedItems` به اسکیمای `Order` در `lib/api-spec/openapi.yaml` اضافه شد و کدجن Orval اجرا گردید.
+  - اندپوینت‌های `GET /orders/:id` و `GET /orders` در `artifacts/api-server/src/routes/orders.ts` به حواله‌های مرجوعی متصل شدند.
+  - سرور پیش‌نمایش پورت ۳۳۰۰ راه‌اندازی مجدد و پاسخ معتبر فیلدهای مرجوعی برای سفارش ۳ به صورت تجربی اثبات شد: `{ id: 3, total: 24, returnedAmount: 12, returnedItems: [{ qty: 1, price: 12, restock: true, productId: 1, productName: 'نستتت' }] }`.
+  - تسک آماده‌سازی چاپ فاکتور تعدیل‌شده به Codex تحویل داده شد.
+
 ## تایید متقابل راند ۲ مناظره و ثبت اجماع نهایی فاز A2 و موج‌های توزیع مویرگی — 2026-11-28
 
 - **اتمام رسمی راند دوم مناظره بین Antigravity و Codex مطابق استاندارد `HYDRA_MAX_DEBATE_ROUNDS = 2`:**

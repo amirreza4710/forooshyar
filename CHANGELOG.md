@@ -1,5 +1,14 @@
 # Changelog
 
+## تحویل قرارداد اقلام مرجوعی سفارش و شفاف‌سازی فاکتور چاپی — 2026-11-28
+
+- **ارتقای قرارداد OpenAPI و بک‌اند برای چاپ فاکتور تعدیل‌شده:**
+  - `lib/api-spec/openapi.yaml`: افزودن فیلدهای `returnedAmount` و `returnedItems` به اسکیمای `Order`.
+  - اجرای Codegen Orval برای به‌روزرسانی اسکیماهای Zod در `@workspace/api-zod` و هوک‌های React Query در `@workspace/api-client-react`.
+  - `artifacts/api-server/src/routes/orders.ts`: اتصال داده‌های مرجوعی `deliveriesTable` به اندپوینت‌های `GET /orders/:id` و `GET /orders`.
+  - افزودن تست در `orders.test.ts` (۱۹ تست موفق در `orders.test.ts` و ۲۳۸ تست موفق در کل سرور).
+  - راه‌اندازی مجدد سرور پیش‌نمایش پورت ۳۳۰۰ و اثبات تجربی دریافت مقادیر مرجوعی برای سفارش ۳.
+
 ## تایید متقابل راند ۲ مناظره و ثبت اجماع نهایی فاز A2 و موج‌های توزیع مویرگی — 2026-11-28
 
 - **اتمام رسمی راند دوم مناظره با اجماع دوطرفه بین Antigravity و Codex:**

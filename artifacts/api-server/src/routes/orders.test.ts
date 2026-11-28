@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import request from "supertest";
 import app from "../app";
-import { db, ordersTable, productsTable, customersTable, visitsTable } from "@workspace/db";
+import { db, ordersTable, productsTable, customersTable, visitsTable, deliveriesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { createTestUser, createTestCustomer, createTestProduct, tokenFor, cleanup } from "../test/fixtures";
 
@@ -541,5 +541,51 @@ describe("POST /api/orders", () => {
       .from(productsTable)
       .where(eq(productsTable.id, prod.id));
     expect(p?.stock).toBe(10);
+  });
+
+  it("جزئیات سفارش فیلدهای returnedAmount و returnedItems را برای سفارش دارای مرجوعی برمی‌گرداند", async () => {
+    const prod = await createTestProduct(10, 10_000);
+    createdProductIds.push(prod.id);
+
+    const orderRes = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: customer.id,
+        items: [{ productId: prod.id, productName: prod.name, qty: 3, price: 10_000 }],
+      });
+
+    expect(orderRes.status).toBe(201);
+    createdOrderIds.push(orderRes.body.id);
+
+    // افزودن حواله دارای مرجوعی
+    const [deliv] = await db
+      .insert(deliveriesTable)
+      .values({
+        code: `DLV-TEST-${Date.now()}`,
+        orderId: orderRes.body.id,
+        orderCode: orderRes.body.code,
+        customerId: customer.id,
+        customerName: customer.name,
+        driverId: user.id,
+        driverName: user.name,
+        status: "PARTIAL_RETURN",
+        returnedAmount: 10_000,
+        returnedItems: [{ productId: prod.id, productName: prod.name, qty: 1, price: 10_000, restock: true }],
+      })
+      .returning();
+
+    const getRes = await request(app)
+      .get(`/api/orders/${orderRes.body.id}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(getRes.status).toBe(200);
+    expect(getRes.body.returnedAmount).toBe(10_000);
+    expect(getRes.body.returnedItems).toHaveLength(1);
+    expect(getRes.body.returnedItems[0].productId).toBe(prod.id);
+    expect(getRes.body.returnedItems[0].qty).toBe(1);
+
+    // پاک‌سازی رکورد موقت حواله
+    await db.delete(deliveriesTable).where(eq(deliveriesTable.id, deliv.id));
   });
 });
