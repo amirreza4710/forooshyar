@@ -7,3 +7,5 @@ describe("دسترسی به ویزیت‌ها", () => {
     for (const role of ["انباردار", "حسابدار / مدیر مالی", "موزع / راننده"]) expect(canAccessRoute(role, "/visits")).toBe(false);
   });
 });
+
+it("نام‌های نقش آماده سرور دسترسی متناظر دارند", () => { expect(canAccessRoute("manager", "/targets")).toBe(true); expect(canAccessRoute("سرپرست", "/deliveries")).toBe(true); });

@@ -13,6 +13,12 @@ export interface Customer {
   phone: string;
   /** @nullable */
   address?: string | null;
+  /** @nullable */
+  zone?: string | null;
+  /** @nullable */
+  latitude?: string | null;
+  /** @nullable */
+  longitude?: string | null;
   /** سقف اعتبار مشتری به ریال */
   creditLimit?: number;
   /** مانده بدهی جاری مشتری به ریال */

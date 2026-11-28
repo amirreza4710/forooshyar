@@ -1,3 +1,5 @@
+import { CurrencyInput } from "@/components/CurrencyInput";
+import { parseRial } from "@/lib/currency";
 import { useState, useMemo, useRef } from "react";
 import {
   useListProducts, useCreateProduct, useUpdateProduct, useDeleteProduct,
@@ -9,7 +11,7 @@ import { Plus, Search, Pencil, Trash2, X, Package, ChevronUp, ChevronDown, Camer
 import type { Product } from "@workspace/api-client-react";
 
 function n(v: number) { return v.toLocaleString("fa-IR"); }
-const EMPTY = { name: "", code: "", category: "", pack: "", price: 0, stock: 0, image: "📦" };
+const EMPTY = { name: "", code: "", category: "", pack: "", price: 0, costPrice: 0, unitsPerPack: 1, minStock: 10, stock: 0, image: "📦" };
 
 // عکس واقعی به‌صورت data-URL شروع می‌شه؛ اگر نباشه یعنی همون کانونشن قدیمی (ایموجی متنی) هست
 const isRealImage = (v?: string) => !!v && (v.startsWith("data:image") || v.startsWith("http"));
@@ -109,7 +111,10 @@ export default function ProductsPage() {
     const errs: Partial<typeof EMPTY> = {};
     if (!form.name.trim()) errs.name = "نام محصول الزامی است";
     if (!form.category.trim()) errs.category = "دسته‌بندی الزامی است";
-    if (Number(form.price) <= 0) errs.price = 0;
+    if (parseRial(String(form.price)) === null || parseRial(String(form.price))! <= 0) errs.price = 0;
+    if (parseRial(String(form.costPrice)) === null) errs.costPrice = 0;
+    if (!Number.isSafeInteger(Number(form.unitsPerPack)) || Number(form.unitsPerPack) < 1) errs.unitsPerPack = 0;
+    if (!Number.isSafeInteger(Number(form.minStock)) || Number(form.minStock) < 0) errs.minStock = 0;
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -129,12 +134,12 @@ export default function ProductsPage() {
 
   function openCreate() { setForm({ ...EMPTY }); setFormErrors({}); setEditing(null); setModal("create"); }
   function openEdit(p: Product) {
-    setForm({ name: p.name, code: p.code ?? "", category: p.category ?? "", pack: p.pack ?? "", price: p.price, stock: p.stock ?? 0, image: p.image ?? "📦" });
+    setForm({ name: p.name, code: p.code ?? "", category: p.category ?? "", pack: p.pack ?? "", price: p.price, costPrice: p.costPrice ?? 0, unitsPerPack: p.unitsPerPack ?? 1, minStock: p.minStock ?? 10, stock: p.stock ?? 0, image: p.image ?? "📦" });
     setFormErrors({}); setEditing(p); setModal("edit");
   }
   function submit() {
     if (!validate()) return;
-    const data = { ...form, price: Number(form.price), stock: Number(form.stock) };
+    const data = { ...form, price: parseRial(String(form.price))!, costPrice: parseRial(String(form.costPrice))!, unitsPerPack: Number(form.unitsPerPack), minStock: Number(form.minStock), stock: Number(form.stock) };
     modal === "create" ? create.mutate({ data }) : editing && update.mutate({ id: editing.id, data });
   }
   const F = (k: keyof typeof form, v: string) => { setForm(f => ({ ...f, [k]: v })); setFormErrors(e => ({ ...e, [k]: undefined })); };
@@ -305,8 +310,11 @@ export default function ProductsPage() {
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="قیمت (ریال) *">
-                <input type="number" min="0" value={form.price} onChange={e => F("price", e.target.value)} className={inp(false)} dir="ltr" />
+                <CurrencyInput aria-label="قیمت محصول" value={form.price} onChange={value => F("price", value)} className={inp(false)} />
               </Field>
+              <Field label="قیمت خرید (ریال)"><CurrencyInput aria-label="قیمت خرید" value={form.costPrice} onChange={v => F("costPrice", v)} /></Field>
+              <Field label="تعداد در کارتن"><input aria-label="تعداد در کارتن" type="number" min="1" step="1" value={form.unitsPerPack} onChange={e => F("unitsPerPack", e.target.value)} className={inp(false)} /></Field>
+              <Field label="حداقل موجودی"><input aria-label="حداقل موجودی" type="number" min="0" step="1" value={form.minStock} onChange={e => F("minStock", e.target.value)} className={inp(false)} /></Field>
               <Field label="موجودی">
                 <input type="number" min="0" value={form.stock} onChange={e => F("stock", e.target.value)} className={inp(false)} dir="ltr" />
               </Field>

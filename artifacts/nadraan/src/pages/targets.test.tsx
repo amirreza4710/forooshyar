@@ -1,0 +1,13 @@
+import * as React from "react";
+import { it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import Targets from "./targets";
+vi.stubGlobal("React", React);
+const m = vi.hoisted(() => ({ role: "ویزیتور / نماینده فروش", list: { data: [] as unknown, isLoading: false, isError: false, refetch: vi.fn() }, create: vi.fn() }));
+vi.mock("@/lib/auth-context", () => ({ useAuth: () => ({ user: { role: m.role } }) }));
+vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast: vi.fn() }) }));
+vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ invalidateQueries: vi.fn() }) }));
+vi.mock("@workspace/api-client-react", () => ({ useListTargets: () => m.list, useListUsers: () => ({ data: [{ id: 1, name: "نماینده" }] }), useCreateTarget: () => ({ mutate: m.create }), useUpdateTarget: () => ({ mutate: vi.fn() }), getListTargetsQueryKey: () => ["targets"], getGetTargetsSummaryQueryKey: () => ["summary"] }));
+afterEach(() => { cleanup(); m.role = "ویزیتور / نماینده فروش"; m.list.data = []; vi.clearAllMocks(); });
+it("نماینده هدف خالی را می‌بیند و امکان ایجاد ندارد", () => { render(<Targets />); expect(screen.getByText("هدفی یافت نشد.")).toBeTruthy(); expect(screen.queryByRole("button", { name: "ایجاد هدف" })).toBeNull(); });
+it("مدیر هدف ریالی معتبر را ارسال می‌کند", () => { m.role = "مدیر فروش"; render(<Targets />); fireEvent.click(screen.getByRole("button", { name: "ایجاد هدف" })); for (const [name, value] of [["عنوان", "هدف ماه"], ["ویزیتور", "1"], ["شروع دوره", "2026-11-01"], ["پایان دوره", "2026-11-30"], ["مبلغ هدف", "۱۲۳۴۵"]]) fireEvent.change(screen.getByLabelText(name), { target: { value } }); fireEvent.click(screen.getByRole("button", { name: "ذخیره هدف" })); expect(m.create.mock.calls[0][0].data).toMatchObject({ userId: 1, targetAmount: 12345, targetType: "AMOUNT" }); });

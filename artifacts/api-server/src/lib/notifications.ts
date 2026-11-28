@@ -6,7 +6,9 @@ export interface AppNotification {
   type:
     | "order_created" | "order_updated" | "order_deleted"
     | "product_created" | "product_updated" | "product_deleted"
-    | "customer_created" | "customer_updated" | "customer_deleted";
+    | "customer_created" | "customer_updated" | "customer_deleted"
+    | "collection_created" | "collection_updated" | "cheque_bounced"
+    | "delivery_assigned" | "delivery_updated";
   message: string;
   actor: string;
   timestamp: string;

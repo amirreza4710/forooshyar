@@ -661,6 +661,225 @@ paths:
               schema:
                 $ref: "#/components/schemas/Target"
 
+  # ─── COLLECTIONS & CASH LEDGER (COL-F01..F03) ───
+  /collections:
+    get:
+      operationId: listCollections
+      tags: [collections]
+      summary: List customer payments and Sayyad cheques
+      parameters:
+        - name: customerId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: method
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of collections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Collection"
+    post:
+      operationId: createCollection
+      tags: [collections]
+      summary: Record cash, card, or Sayyad cheque collection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CollectionInput"
+      responses:
+        "201":
+          description: Recorded collection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Collection"
+
+  /collections/stats/summary:
+    get:
+      operationId: getCollectionsSummary
+      tags: [collections]
+      summary: Get cash and cheques collection summary
+      responses:
+        "200":
+          description: Collections summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectionsSummary"
+
+  /collections/{id}:
+    patch:
+      operationId: updateCollection
+      tags: [collections]
+      summary: Update collection or cheque status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CollectionUpdate"
+      responses:
+        "200":
+          description: Updated collection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Collection"
+    delete:
+      operationId: deleteCollection
+      tags: [collections]
+      summary: Soft-delete a collection record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── DELIVERIES & RETURNS (DEL-F01..F02) ───
+  /deliveries:
+    get:
+      operationId: listDeliveries
+      tags: [deliveries]
+      summary: List delivery dispatches
+      parameters:
+        - name: driverId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of deliveries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Delivery"
+    post:
+      operationId: assignDelivery
+      tags: [deliveries]
+      summary: Assign an approved order to a delivery driver
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeliveryAssignInput"
+      responses:
+        "201":
+          description: Assigned delivery
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delivery"
+
+  /deliveries/loading-sheet:
+    get:
+      operationId: getLoadingSheet
+      tags: [deliveries]
+      summary: Get aggregated product quantities to load onto delivery trucks
+      parameters:
+        - name: driverId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Loading sheet items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LoadingSheetItem"
+
+  /deliveries/{id}:
+    patch:
+      operationId: completeDelivery
+      tags: [deliveries]
+      summary: Update delivery status or record partial returns
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeliveryUpdate"
+      responses:
+        "200":
+          description: Updated delivery
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delivery"
+
+  # ─── COMMISSIONS & MORNING ALERTS (COM-F01..F03, ALT-F01..F03) ───
+  /commissions/summary:
+    get:
+      operationId: getCommissionsSummary
+      tags: [commissions]
+      summary: Get traceable rep sales and collection-based commission metrics
+      responses:
+        "200":
+          description: Commission breakdown per rep
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RepCommissionSummary"
+
+  /alerts/summary:
+    get:
+      operationId: getAlertsSummary
+      tags: [alerts]
+      summary: Get executive morning operational alerts from recorded database facts
+      responses:
+        "200":
+          description: Operational morning alerts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertsSummary"
+
   # ─── DASHBOARD ───
   /dashboard/summary:
     get:
@@ -862,6 +1081,8 @@ components:
           type: string
         role:
           type: string
+        assignedZone:
+          type: ["string", "null"]
         createdAt:
           type: string
 
@@ -879,6 +1100,8 @@ components:
           type: string
         role:
           type: string
+        assignedZone:
+          type: ["string", "null"]
 
     UserUpdate:
       type: object
@@ -889,6 +1112,8 @@ components:
           type: string
         role:
           type: string
+        assignedZone:
+          type: ["string", "null"]
         password:
           type: ["string", "null"]
 
@@ -906,6 +1131,12 @@ components:
         phone:
           type: string
         address:
+          type: ["string", "null"]
+        zone:
+          type: ["string", "null"]
+        latitude:
+          type: ["string", "null"]
+        longitude:
           type: ["string", "null"]
         creditLimit:
           type: integer
@@ -926,6 +1157,12 @@ components:
           type: string
         address:
           type: string
+        zone:
+          type: ["string", "null"]
+        latitude:
+          type: ["string", "null"]
+        longitude:
+          type: ["string", "null"]
         creditLimit:
           type: integer
           description: سقف اعتبار مشتری به ریال
@@ -938,6 +1175,12 @@ components:
         phone:
           type: string
         address:
+          type: ["string", "null"]
+        zone:
+          type: ["string", "null"]
+        latitude:
+          type: ["string", "null"]
+        longitude:
           type: ["string", "null"]
         creditLimit:
           type: integer
@@ -959,9 +1202,15 @@ components:
           type: string
         pack:
           type: ["string", "null"]
+        unitsPerPack:
+          type: integer
         price:
           type: integer
+        costPrice:
+          type: integer
         stock:
+          type: integer
+        minStock:
           type: integer
         image:
           type: ["string", "null"]
@@ -978,10 +1227,19 @@ components:
           type: string
         pack:
           type: string
+        unitsPerPack:
+          type: integer
+          default: 1
         price:
           type: integer
+        costPrice:
+          type: integer
+          default: 0
         stock:
           type: integer
+        minStock:
+          type: integer
+          default: 10
         image:
           type: string
 
@@ -994,9 +1252,15 @@ components:
           type: string
         pack:
           type: ["string", "null"]
+        unitsPerPack:
+          type: integer
         price:
           type: integer
+        costPrice:
+          type: integer
         stock:
+          type: integer
+        minStock:
           type: integer
         image:
           type: ["string", "null"]
@@ -1014,6 +1278,9 @@ components:
           type: integer
         price:
           type: integer
+        isBonus:
+          type: boolean
+          default: false
 
     Order:
       type: object
@@ -1034,11 +1301,20 @@ components:
         visitId:
           type: ["integer", "null"]
           description: شناسه ویزیت متصل
+        subtotal:
+          type: integer
+        discount:
+          type: integer
         total:
           type: integer
+        paymentMethod:
+          type: string
+          enum: [CASH, CARD, CREDIT, CHEQUE]
         status:
           type: string
           enum: ["در انتظار", "تایید شده", "تکمیل شده", "لغو شده"]
+        notes:
+          type: ["string", "null"]
         items:
           type: array
           items:
@@ -1055,6 +1331,15 @@ components:
         visitId:
           type: integer
           description: شناسه ویزیت اختیاری جهت اتصال سفارش به ویزیت جاری
+        discount:
+          type: integer
+          default: 0
+        paymentMethod:
+          type: string
+          enum: [CASH, CARD, CREDIT, CHEQUE]
+          default: CASH
+        notes:
+          type: ["string", "null"]
         items:
           type: array
           items:
@@ -1074,11 +1359,19 @@ components:
       properties:
         totalSales:
           type: integer
+        grossProfit:
+          type: integer
         orderCount:
+          type: integer
+        pendingOrdersCount:
           type: integer
         customerCount:
           type: integer
         productCount:
+          type: integer
+        lowStockCount:
+          type: integer
+        bouncedChequesCount:
           type: integer
         recentOrders:
           type: array
@@ -1365,5 +1658,244 @@ components:
           type: integer
         overallAchievementRate:
           type: number
+
+    # ── Collections & Cash Ledger ──
+    Collection:
+      type: object
+      required: [id, code, customerId, customerName, userId, collectorName, method, amount, status, createdAt]
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        customerId:
+          type: integer
+        customerName:
+          type: string
+        orderId:
+          type: ["integer", "null"]
+        userId:
+          type: integer
+        collectorName:
+          type: string
+        method:
+          type: string
+          enum: [CASH, CARD, CHEQUE]
+        amount:
+          type: integer
+        chequeNumber:
+          type: ["string", "null"]
+        sayyadCode:
+          type: ["string", "null"]
+        dueDate:
+          type: ["string", "null"]
+          format: date-time
+        status:
+          type: string
+          enum: [PENDING, CLEARED, BOUNCED]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    CollectionInput:
+      type: object
+      required: [customerId, method, amount]
+      properties:
+        customerId:
+          type: integer
+        orderId:
+          type: ["integer", "null"]
+        method:
+          type: string
+          enum: [CASH, CARD, CHEQUE]
+        amount:
+          type: integer
+        chequeNumber:
+          type: ["string", "null"]
+        sayyadCode:
+          type: ["string", "null"]
+        dueDate:
+          type: ["string", "null"]
+          format: date-time
+        notes:
+          type: ["string", "null"]
+
+    CollectionUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [PENDING, CLEARED, BOUNCED]
+        notes:
+          type: ["string", "null"]
+
+    CollectionsSummary:
+      type: object
+      required: [totalCollected, pendingChequesAmount, pendingChequesCount, bouncedChequesAmount, bouncedChequesCount]
+      properties:
+        totalCollected:
+          type: integer
+        pendingChequesAmount:
+          type: integer
+        pendingChequesCount:
+          type: integer
+        bouncedChequesAmount:
+          type: integer
+        bouncedChequesCount:
+          type: integer
+
+    # ── Deliveries & Returns ──
+    ReturnedItem:
+      type: object
+      required: [productId, productName, qty, price]
+      properties:
+        productId:
+          type: integer
+        productName:
+          type: string
+        qty:
+          type: integer
+        price:
+          type: integer
+        restock:
+          type: boolean
+          default: true
+
+    Delivery:
+      type: object
+      required: [id, code, orderId, orderCode, customerId, customerName, driverId, driverName, status, returnedItems, returnedAmount, createdAt]
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        orderId:
+          type: integer
+        orderCode:
+          type: string
+        customerId:
+          type: integer
+        customerName:
+          type: string
+        driverId:
+          type: integer
+        driverName:
+          type: string
+        status:
+          type: string
+          enum: [ASSIGNED, OUT_FOR_DELIVERY, DELIVERED, PARTIAL_RETURN, FAILED]
+        returnedItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReturnedItem"
+        returnedAmount:
+          type: integer
+        signatureNote:
+          type: ["string", "null"]
+        deliveredAt:
+          type: ["string", "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    DeliveryAssignInput:
+      type: object
+      required: [orderId, driverId]
+      properties:
+        orderId:
+          type: integer
+        driverId:
+          type: integer
+
+    DeliveryUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [OUT_FOR_DELIVERY, DELIVERED, PARTIAL_RETURN, FAILED]
+        returnedItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReturnedItem"
+        signatureNote:
+          type: ["string", "null"]
+
+    LoadingSheetItem:
+      type: object
+      required: [productId, productName, totalQty, packsCount, remainderUnits]
+      properties:
+        productId:
+          type: integer
+        productName:
+          type: string
+        totalQty:
+          type: integer
+        packsCount:
+          type: integer
+        remainderUnits:
+          type: integer
+
+    # ── Commissions & Alerts ──
+    RepCommissionSummary:
+      type: object
+      required: [userId, repName, validSalesTotal, clearedCollectionsTotal, commissionRate, earnedCommission, targetAchievementRate]
+      properties:
+        userId:
+          type: integer
+        repName:
+          type: string
+        validSalesTotal:
+          type: integer
+        clearedCollectionsTotal:
+          type: integer
+        commissionRate:
+          type: number
+        earnedCommission:
+          type: integer
+        targetAchievementRate:
+          type: number
+
+    AlertItem:
+      type: object
+      required: [id, category, severity, title, description, entityId]
+      properties:
+        id:
+          type: string
+        category:
+          type: string
+          enum: [LOW_STOCK, DORMANT_CUSTOMER, REP_INACTIVITY, CREDIT_OR_CHEQUE]
+        severity:
+          type: string
+          enum: [HIGH, MEDIUM, LOW]
+        title:
+          type: string
+        description:
+          type: string
+        entityId:
+          type: integer
+
+    AlertsSummary:
+      type: object
+      required: [totalAlerts, lowStockCount, dormantCustomersCount, inactiveRepsCount, creditRiskCount, alerts]
+      properties:
+        totalAlerts:
+          type: integer
+        lowStockCount:
+          type: integer
+        dormantCustomersCount:
+          type: integer
+        inactiveRepsCount:
+          type: integer
+        creditRiskCount:
+          type: integer
+        alerts:
+          type: array
+          items:
+            $ref: "#/components/schemas/AlertItem"
+
 
 

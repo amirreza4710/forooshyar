@@ -22,6 +22,10 @@ router.get("/products", requireAuth, async (req, res): Promise<void> => {
 router.post("/products", requireAuth, async (req, res): Promise<void> => {
   const parsed = CreateProductBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  if (parsed.data.unitsPerPack < 1 || parsed.data.costPrice < 0 || parsed.data.minStock < 0 || parsed.data.price < 0 || parsed.data.stock < 0) {
+    res.status(400).json({ error: "مقادیر عددی محصول نامعتبر است" });
+    return;
+  }
   const user = (req as Request & { user: JwtPayload }).user;
 
   // The code comes from the row's own id and configured prefix.
@@ -65,6 +69,16 @@ router.patch("/products/:id", requireAuth, async (req, res): Promise<void> => {
   if (!params.success) { res.status(400).json({ error: "Invalid id" }); return; }
   const body = UpdateProductBody.safeParse(req.body);
   if (!body.success) { res.status(400).json({ error: body.error.message }); return; }
+  if (
+    (body.data.unitsPerPack !== undefined && body.data.unitsPerPack < 1) ||
+    (body.data.costPrice !== undefined && body.data.costPrice < 0) ||
+    (body.data.minStock !== undefined && body.data.minStock < 0) ||
+    (body.data.price !== undefined && body.data.price < 0) ||
+    (body.data.stock !== undefined && body.data.stock < 0)
+  ) {
+    res.status(400).json({ error: "مقادیر عددی محصول نامعتبر است" });
+    return;
+  }
   const user = (req as Request & { user: JwtPayload }).user;
 
   const prod = await db.transaction(async (tx) => {

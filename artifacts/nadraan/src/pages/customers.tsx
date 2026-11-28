@@ -1,3 +1,6 @@
+import { CurrencyInput } from "@/components/CurrencyInput";
+import { parseRial } from "@/lib/currency";
+import { useAuth } from "@/lib/auth-context";
 import { useState } from "react";
 import {
   useListCustomers,
@@ -81,11 +84,15 @@ function avatarColor(name: string) {
 type CustomerFormValues = z.infer<typeof CreateCustomerBody>;
 
 export default function CustomersPage() {
-  const { data: raw, isLoading } = useListCustomers();
+  const { data: raw, isLoading, isError, refetch } = useListCustomers();
   const qc = useQueryClient();
+  const { user } = useAuth();
+  const canEditCredit = ["مدیر عامل", "مدیر فروش", "مدیر سیستم", "سرپرست", "مدیر فروش / نماینده", "admin", "manager", "حسابدار / مدیر مالی"].includes(user?.role ?? "");
+  const [credit, setCredit] = useState("");
   const { toast } = useToast();
 
-  const customers: Customer[] = Array.isArray(raw) ? raw : [];
+  const invalidCustomers = raw !== undefined && (!Array.isArray(raw) || raw.some(c => !c || typeof c.id !== "number" || typeof c.name !== "string" || (c.phone != null && typeof c.phone !== "string")));
+  const customers: Customer[] = !invalidCustomers && Array.isArray(raw) ? raw : [];
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
@@ -112,22 +119,29 @@ export default function CustomersPage() {
   });
 
   function openCreate() {
+    setCredit("");
     setEditing(null);
     form.reset({ name: "", phone: "", address: "" });
     setModalOpen(true);
   }
 
   function openEdit(c: Customer) {
+    setCredit(c.creditLimit === undefined ? "" : String(c.creditLimit));
     setEditing(c);
     form.reset({
       name: c.name,
       phone: c.phone,
-      address: c.address || "",
+      address: c.address || "", zone: c.zone ?? "", latitude: c.latitude ?? "", longitude: c.longitude ?? "",
     });
     setModalOpen(true);
   }
 
   function onSubmit(values: CustomerFormValues) {
+    if (canEditCredit && credit !== "") {
+      const amount = parseRial(credit);
+      if (amount === null) { toast({ title: "سقف اعتبار نامعتبر است", variant: "destructive" }); return; }
+      values = { ...values, creditLimit: amount };
+    }
     if (editing) {
       update.mutate(
         { id: editing.id, data: values },
@@ -234,6 +248,8 @@ export default function CustomersPage() {
         </CardContent>
       </Card>
 
+      {isLoading && <p role="status">در حال دریافت مشتریان...</p>}
+      {(isError || invalidCustomers) && <div role="alert" className="p-4 text-destructive">دریافت مشتریان ناموفق بود. <Button variant="link" onClick={() => void refetch()}>تلاش مجدد</Button></div>}
       {/* Main Content */}
       <div className="bg-card border rounded-xl overflow-hidden">
         <Table>
@@ -273,7 +289,7 @@ export default function CustomersPage() {
                   </TableCell>
                 </TableRow>
               ))
-            ) : filtered.length === 0 ? (
+            ) : isError || invalidCustomers ? null : filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="h-48 text-center">
                   <div className="flex flex-col items-center justify-center text-muted-foreground gap-3">
@@ -434,6 +450,8 @@ export default function CustomersPage() {
                   )}
                 />
 
+                {(["zone", "latitude", "longitude"] as const).map(name => <FormField key={name} control={form.control} name={name} render={({ field }) => <FormItem><FormLabel>{name === "zone" ? "منطقه مشتری" : name === "latitude" ? "عرض جغرافیایی" : "طول جغرافیایی"}</FormLabel><FormControl><Input {...field} value={field.value ?? ""} /></FormControl><FormMessage /></FormItem>} />)}
+                {canEditCredit && <label className="block space-y-2 text-sm">سقف اعتبار مشتری<CurrencyInput value={credit} onChange={setCredit} aria-label="سقف اعتبار مشتری" /><span className="text-muted-foreground">خالی: بدون تغییر؛ پذیرش اعتبار سفارش با سرور است.</span></label>}
                 <SheetFooter className="mt-8 pt-4 border-t sticky bottom-0 bg-background">
                   <div className="flex gap-2 w-full">
                     <Button

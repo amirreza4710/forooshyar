@@ -11,5 +11,7 @@ export interface UserUpdate {
   phone?: string;
   role?: string;
   /** @nullable */
+  assignedZone?: string | null;
+  /** @nullable */
   password?: string | null;
 }

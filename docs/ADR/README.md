@@ -18,6 +18,7 @@
 | [ADR-009](./ADR-009.md) | **Farakhorasan Platform / Forooshyar Sales Boundary & Product Naming** | Proposed | Governance / Scope |
 | [ADR-010](./ADR-010.md) | **Forooshyar Plus Capability Integration** | Accepted | Product / Scope |
 | [ADR-011](./ADR-011.md) | **Forooshyar Plus Product Naming** | Accepted | Governance / Brand |
+| [ADR-012](./ADR-012.md) | **Distribution Core Completeness (A2.5) & Phase A3 Domain Admission** | Accepted | Domain / Scope |
 
 > [!NOTE]
 > شناسه `ADR-0001` به عنوان سند پایه حاکمیت تکنولوژی (Stack Authority) ۴ رقمی نام‌گذاری شده و با `ADR-001` (موتور قوانین) متفاوت است. مرجع پشته فنی رسمی مخزن طبق ADR-0001 پشته جاری یعنی `React 19, Express 5, PostgreSQL, Drizzle ORM` است.

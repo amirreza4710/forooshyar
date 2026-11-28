@@ -53,13 +53,13 @@ export default function UsersPage() {
   const [search, setSearch]             = useState("");
   const [roleFilter, setRoleFilter]     = useState<string>("all");
   const [modal, setModal]               = useState(false);
-  const [form, setForm]                 = useState({ username: "", name: "", phone: "", role: "ویزیتور / نماینده فروش", password: "" });
+  const [form, setForm]                 = useState({ username: "", name: "", phone: "", role: "ویزیتور / نماینده فروش", assignedZone: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [deleteId, setDeleteId]         = useState<number | null>(null);
   const [formError, setFormError]       = useState("");
 
   const [editUser, setEditUser]                 = useState<User | null>(null);
-  const [editForm, setEditForm]                 = useState({ name: "", phone: "", role: "ویزیتور / نماینده فروش", newPassword: "" });
+  const [editForm, setEditForm]                 = useState({ name: "", phone: "", role: "ویزیتور / نماینده فروش", assignedZone: "", newPassword: "" });
   const [showEditPassword, setShowEditPassword] = useState(false);
   const [editError, setEditError]               = useState("");
 
@@ -78,10 +78,10 @@ export default function UsersPage() {
   const [allowVisitorPriceEdit, setAllowVisitorPriceEdit] = useState(false);
 
   const sData = settingsData as any;
-  const currentBusinessName = settingsForm.businessName ?? sData?.businessName ?? "نادران‌گستر";
+  const currentBusinessName = settingsForm.businessName ?? sData?.businessName ?? "فروشیار پلاس";
   const currentPhone = settingsForm.phone ?? sData?.phone ?? "021-12345678";
   const currentAddress = settingsForm.address ?? sData?.address ?? "تهران";
-  const currentCurrency = settingsForm.currency ?? sData?.currency ?? "تومان";
+  const currentCurrency = settingsForm.currency ?? sData?.currency ?? "ریال";
   const currentProductPrefix = settingsForm.productCodePrefix ?? sData?.productCodePrefix ?? "NG-";
   const currentCustomerPrefix = settingsForm.customerCodePrefix ?? sData?.customerCodePrefix ?? "C-";
   const currentOrderPrefix = settingsForm.orderCodePrefix ?? sData?.orderCodePrefix ?? "ORD-";
@@ -112,7 +112,7 @@ export default function UsersPage() {
         toast({ title: "✅ عضو جدید با موفقیت اضافه شد" });
         qc.invalidateQueries({ queryKey: getListUsersQueryKey() });
         setModal(false);
-        setForm({ username: "", name: "", phone: "", role: "ویزیتور / نماینده فروش", password: "" });
+        setForm({ username: "", name: "", phone: "", role: "ویزیتور / نماینده فروش", assignedZone: "", password: "" });
         setFormError("");
       },
       onError(err: any) {
@@ -192,7 +192,7 @@ export default function UsersPage() {
         username: form.username.trim(),
         name: form.name.trim(),
         phone: form.phone.trim() || undefined,
-        role: form.role,
+        role: form.role, assignedZone: form.assignedZone.trim() || null,
         password: form.password,
       },
     });
@@ -216,7 +216,7 @@ export default function UsersPage() {
       data: {
         name: editForm.name.trim(),
         phone: editForm.phone.trim() || undefined,
-        role: editForm.role,
+        role: editForm.role, assignedZone: editForm.assignedZone.trim() || null,
         ...(editForm.newPassword ? { password: editForm.newPassword } : {}),
       },
     });
@@ -227,7 +227,7 @@ export default function UsersPage() {
     setEditForm({
       name: u.name,
       phone: (u as any).phone ?? "",
-      role: normalizeRole(u.role),
+      role: normalizeRole(u.role), assignedZone: u.assignedZone ?? "",
       newPassword: "",
     });
     setShowEditPassword(false);
@@ -350,7 +350,7 @@ export default function UsersPage() {
             {canManageAny && (
               <button
                 onClick={() => {
-                  setForm({ username: "", name: "", phone: "", role: assignableRoles[0]?.id || "ویزیتور / نماینده فروش", password: "" });
+                  setForm({ username: "", name: "", phone: "", role: assignableRoles[0]?.id || "ویزیتور / نماینده فروش", assignedZone: "", password: "" });
                   setShowPassword(false);
                   setFormError("");
                   setModal(true);
@@ -844,6 +844,7 @@ export default function UsersPage() {
               </div>
 
               <div>
+                <label className="block font-semibold mb-1">منطقه اختصاصی ویزیتور<input value={form.assignedZone} onChange={e => setForm(f => ({ ...f, assignedZone: e.target.value }))} className="w-full border rounded bg-background p-2 my-2" /></label>
                 <label className="block font-semibold mb-1">سطح و نقش سازمانی</label>
                 <select
                   value={form.role}
@@ -947,6 +948,7 @@ export default function UsersPage() {
               </div>
 
               <div>
+                <label className="block font-semibold mb-1">منطقه اختصاصی ویزیتور<input value={editForm.assignedZone} onChange={e => setEditForm(f => ({ ...f, assignedZone: e.target.value }))} className="w-full border rounded bg-background p-2 my-2" /></label>
                 <label className="block font-semibold mb-1">سطح و نقش سازمانی</label>
                 <select
                   value={editForm.role}

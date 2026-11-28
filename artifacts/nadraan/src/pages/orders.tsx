@@ -1,3 +1,5 @@
+import { OrderDetail } from "@/components/OrderDetail";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useState, useMemo, useCallback } from "react";
 import {
   useListOrders,
@@ -53,6 +55,7 @@ function Skeleton({ className }: { className: string }) {
 
 export default function OrdersPage() {
   const { data: ordersRaw, isLoading } = useListOrders();
+  const [detailId, setDetailId] = useState<number | null>(() => { const raw = new URLSearchParams(window.location.search).get("orderId"); const id = Number(raw); return raw && /^[1-9][0-9]*$/.test(raw) && Number.isSafeInteger(id) ? id : null; });
   const qc = useQueryClient();
   const { toast } = useToast();
 
@@ -236,6 +239,7 @@ export default function OrdersPage() {
 
   return (
     <div className="p-4 sm:p-6 pb-24 lg:pb-6">
+      <Dialog open={detailId !== null} onOpenChange={open => { if (!open) setDetailId(null); }}><DialogContent dir="rtl" className="max-h-[90dvh] overflow-y-auto"><DialogHeader><DialogTitle>جزئیات سفارش</DialogTitle><DialogDescription>اطلاعات دریافت‌شده از سفارش ثبت‌شده</DialogDescription></DialogHeader>{detailId !== null && <OrderDetail id={detailId} />}</DialogContent></Dialog>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -433,7 +437,7 @@ export default function OrdersPage() {
                       </button>
                     </td>
                     <td className="px-3 sm:px-4 py-3 font-mono text-xs text-muted-foreground whitespace-nowrap">
-                      {o.code}
+                      <button className="text-primary underline" onClick={() => setDetailId(o.id)} aria-label={`جزئیات سفارش ${o.code ?? o.id}`}>{o.code ?? o.id}</button>
                     </td>
                     <td className="px-3 sm:px-4 py-3 font-medium text-sm whitespace-nowrap">
                       {o.customerName}

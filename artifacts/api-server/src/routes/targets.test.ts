@@ -250,4 +250,98 @@ describe("Targets API Routes (A2-TASK-07 / TAR-F01..F02)", () => {
     expect(summaryRes.body.achievedTargets).toBeDefined();
     expect(summaryRes.body.overallAchievementRate).toBeGreaterThanOrEqual(0);
   });
+
+  it("فیلتر status در GET /api/targets با وضعیت پویای محاسبه‌شده (ACHIEVED و MISSED) هماهنگ است", async () => {
+    const pastStart = new Date(Date.now() - 86400000 * 10);
+    const futureEnd = new Date(Date.now() + 86400000 * 10);
+
+    // تارگت ۱: با وضعیت ذخیره‌شده IN_PROGRESS، اما با ثبت سفارش به سقف رسیده و پویا ACHIEVED می‌شود
+    const t1Res = await request(app)
+      .post("/api/targets")
+      .set("Authorization", `Bearer ${managerToken}`)
+      .send({
+        userId: repUser.id,
+        title: "تارگت تحقق‌پذیر",
+        targetAmount: 10_000,
+        startDate: pastStart.toISOString(),
+        endDate: futureEnd.toISOString(),
+      });
+    expect(t1Res.status).toBe(201);
+    createdTargetIds.push(t1Res.body.id);
+
+    // ثبت سفارش معادل مبلغ تارگت برای این ویزیتور
+    const ordRes = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${repToken}`)
+      .send({
+        customerId: customer.id,
+        items: [{ productId: product.id, productName: product.name, qty: 2, price: 5000 }],
+      });
+    expect(ordRes.status).toBe(201);
+    createdOrderIds.push(ordRes.body.id);
+
+    // تارگت ۲: با بازه زمانی منقضی‌شده و بدون سفارش، که پویا MISSED می‌شود
+    const pastEnd = new Date(Date.now() - 86400000 * 2);
+    const olderStart = new Date(Date.now() - 86400000 * 20);
+    const t2Res = await request(app)
+      .post("/api/targets")
+      .set("Authorization", `Bearer ${managerToken}`)
+      .send({
+        userId: repUser.id,
+        title: "تارگت منقضی‌شده",
+        targetAmount: 50_000,
+        startDate: olderStart.toISOString(),
+        endDate: pastEnd.toISOString(),
+      });
+    expect(t2Res.status).toBe(201);
+    createdTargetIds.push(t2Res.body.id);
+
+    // استعلام با ?status=ACHIEVED باید تارگت ۱ را برگرداند
+    const achievedQuery = await request(app)
+      .get("/api/targets?status=ACHIEVED")
+      .set("Authorization", `Bearer ${managerToken}`);
+    expect(achievedQuery.status).toBe(200);
+    expect(achievedQuery.body.some((t: any) => t.id === t1Res.body.id)).toBe(true);
+    expect(achievedQuery.body.some((t: any) => t.id === t2Res.body.id)).toBe(false);
+
+    // استعلام با ?status=MISSED باید تارگت ۲ را برگرداند
+    const missedQuery = await request(app)
+      .get("/api/targets?status=MISSED")
+      .set("Authorization", `Bearer ${managerToken}`);
+    expect(missedQuery.status).toBe(200);
+    expect(missedQuery.body.some((t: any) => t.id === t2Res.body.id)).toBe(true);
+    expect(missedQuery.body.some((t: any) => t.id === t1Res.body.id)).toBe(false);
+  });
+
+  it("خلاصه آمار و جزئیات تارگت برای نقش‌های غیرمدیریتی ایزوله است", async () => {
+    const otherRep = await createTestUser("نماینده فروش");
+    createdUserIds.push(otherRep.id);
+
+    // ساخت یک تارگت برای otherRep
+    const otherTarget = await request(app)
+      .post("/api/targets")
+      .set("Authorization", `Bearer ${managerToken}`)
+      .send({
+        userId: otherRep.id,
+        title: "تارگت ویزیتور دیگر",
+        targetAmount: 100_000_000,
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 86400000 * 15).toISOString(),
+      });
+    createdTargetIds.push(otherTarget.body.id);
+
+    // repUser نباید به جزئیات تارگت otherRep دسترسی داشته باشد (403)
+    const detailRes = await request(app)
+      .get(`/api/targets/${otherTarget.body.id}`)
+      .set("Authorization", `Bearer ${repToken}`);
+    expect(detailRes.status).toBe(403);
+
+    // خلاصه آمار repUser نباید مبلغ تارگت otherRep را شامل شود
+    const repSummary = await request(app)
+      .get("/api/targets/stats/summary")
+      .set("Authorization", `Bearer ${repToken}`);
+    expect(repSummary.status).toBe(200);
+    // اگر repUser تارگتی نداشته باشد یا فقط تارگت‌های خودش باشد، مجموع نباید شامل ۱۰۰ میلیون باشد
+    expect(repSummary.body.totalTargetAmount).not.toBe(100_000_000);
+  });
 });

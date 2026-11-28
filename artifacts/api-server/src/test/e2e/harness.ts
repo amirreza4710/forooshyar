@@ -264,13 +264,24 @@ export function createDbMock() {
       return { rows: store.products.filter((p) => p.deletedAt === null).map((p) => ({ id: p.id, stock: p.stock })) };
     }
 
-    // 2. SELECT name FROM customers WHERE id = ... AND deleted_at IS NULL
-    if (text.includes("SELECT name FROM customers")) {
+    // 2. SELECT id, name, credit_limit, balance FROM customers WHERE id = ... AND deleted_at IS NULL
+    if (text.includes("FROM customers")) {
       const match = text.match(/WHERE\s+id\s*=\s*(\d+)/i);
       if (match) {
         const customerId = parseInt(match[1], 10);
         const customer = store.customers.find((c) => c.id === customerId && c.deletedAt === null);
-        return { rows: customer ? [{ name: customer.name }] : [] };
+        return {
+          rows: customer
+            ? [
+                {
+                  id: customer.id,
+                  name: customer.name,
+                  credit_limit: (customer as any).creditLimit ?? 0,
+                  balance: (customer as any).balance ?? 0,
+                },
+              ]
+            : [],
+        };
       }
       return { rows: [] };
     }
@@ -663,6 +674,40 @@ export function createDbMock() {
       deletedAt: "deleted_at",
       tableName: "orders",
       _: { name: "orders" },
+    },
+    collectionsTable: {
+      id: "id",
+      customerId: "customer_id",
+      status: "status",
+      amount: "amount",
+      deletedAt: "deleted_at",
+      tableName: "collections",
+      _: { name: "collections" },
+    },
+    visitsTable: {
+      id: "id",
+      customerId: "customer_id",
+      orderId: "order_id",
+      status: "status",
+      deletedAt: "deleted_at",
+      tableName: "visits",
+      _: { name: "visits" },
+    },
+    deliveriesTable: {
+      id: "id",
+      orderId: "order_id",
+      status: "status",
+      deletedAt: "deleted_at",
+      tableName: "deliveries",
+      _: { name: "deliveries" },
+    },
+    targetsTable: {
+      id: "id",
+      userId: "user_id",
+      status: "status",
+      deletedAt: "deleted_at",
+      tableName: "targets",
+      _: { name: "targets" },
     },
   };
 }

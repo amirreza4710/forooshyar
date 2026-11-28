@@ -33,6 +33,8 @@ export interface User {
   name: string;
   phone?: string;
   role: string;
+  /** @nullable */
+  assignedZone?: string | null;
   createdAt?: string;
 }
 
@@ -59,12 +61,16 @@ export interface UserInput {
   name: string;
   phone?: string;
   role: string;
+  /** @nullable */
+  assignedZone?: string | null;
 }
 
 export interface UserUpdate {
   name?: string;
   phone?: string;
   role?: string;
+  /** @nullable */
+  assignedZone?: string | null;
   /** @nullable */
   password?: string | null;
 }
@@ -76,6 +82,12 @@ export interface Customer {
   phone: string;
   /** @nullable */
   address?: string | null;
+  /** @nullable */
+  zone?: string | null;
+  /** @nullable */
+  latitude?: string | null;
+  /** @nullable */
+  longitude?: string | null;
   /** سقف اعتبار مشتری به ریال */
   creditLimit?: number;
   /** مانده بدهی جاری مشتری به ریال */
@@ -87,6 +99,12 @@ export interface CustomerInput {
   name: string;
   phone: string;
   address?: string;
+  /** @nullable */
+  zone?: string | null;
+  /** @nullable */
+  latitude?: string | null;
+  /** @nullable */
+  longitude?: string | null;
   /** سقف اعتبار مشتری به ریال */
   creditLimit?: number;
 }
@@ -96,6 +114,12 @@ export interface CustomerUpdate {
   phone?: string;
   /** @nullable */
   address?: string | null;
+  /** @nullable */
+  zone?: string | null;
+  /** @nullable */
+  latitude?: string | null;
+  /** @nullable */
+  longitude?: string | null;
   creditLimit?: number;
   balance?: number;
 }
@@ -107,8 +131,11 @@ export interface Product {
   category: string;
   /** @nullable */
   pack?: string | null;
+  unitsPerPack?: number;
   price: number;
+  costPrice?: number;
   stock: number;
+  minStock?: number;
   /** @nullable */
   image?: string | null;
   createdAt?: string;
@@ -118,8 +145,11 @@ export interface ProductInput {
   name: string;
   category: string;
   pack?: string;
+  unitsPerPack?: number;
   price: number;
+  costPrice?: number;
   stock: number;
+  minStock?: number;
   image?: string;
 }
 
@@ -128,8 +158,11 @@ export interface ProductUpdate {
   category?: string;
   /** @nullable */
   pack?: string | null;
+  unitsPerPack?: number;
   price?: number;
+  costPrice?: number;
   stock?: number;
+  minStock?: number;
   /** @nullable */
   image?: string | null;
 }
@@ -139,7 +172,18 @@ export interface OrderItem {
   productName: string;
   qty: number;
   price: number;
+  isBonus?: boolean;
 }
+
+export type OrderPaymentMethod = typeof OrderPaymentMethod[keyof typeof OrderPaymentMethod];
+
+
+export const OrderPaymentMethod = {
+  CASH: 'CASH',
+  CARD: 'CARD',
+  CREDIT: 'CREDIT',
+  CHEQUE: 'CHEQUE',
+} as const;
 
 export type OrderStatus = typeof OrderStatus[keyof typeof OrderStatus];
 
@@ -164,16 +208,35 @@ export interface Order {
      * @nullable
      */
   visitId?: number | null;
+  subtotal?: number;
+  discount?: number;
   total: number;
+  paymentMethod?: OrderPaymentMethod;
   status: OrderStatus;
+  /** @nullable */
+  notes?: string | null;
   items?: OrderItem[];
   createdAt: string;
 }
+
+export type OrderInputPaymentMethod = typeof OrderInputPaymentMethod[keyof typeof OrderInputPaymentMethod];
+
+
+export const OrderInputPaymentMethod = {
+  CASH: 'CASH',
+  CARD: 'CARD',
+  CREDIT: 'CREDIT',
+  CHEQUE: 'CHEQUE',
+} as const;
 
 export interface OrderInput {
   customerId: number;
   /** شناسه ویزیت اختیاری جهت اتصال سفارش به ویزیت جاری */
   visitId?: number;
+  discount?: number;
+  paymentMethod?: OrderInputPaymentMethod;
+  /** @nullable */
+  notes?: string | null;
   items: OrderItem[];
 }
 
@@ -193,9 +256,13 @@ export interface OrderUpdate {
 
 export interface DashboardSummary {
   totalSales: number;
+  grossProfit?: number;
   orderCount: number;
+  pendingOrdersCount?: number;
   customerCount: number;
   productCount: number;
+  lowStockCount?: number;
+  bouncedChequesCount?: number;
   recentOrders: Order[];
 }
 
@@ -427,6 +494,210 @@ export interface TargetsSummary {
   overallAchievementRate: number;
 }
 
+export type CollectionMethod = typeof CollectionMethod[keyof typeof CollectionMethod];
+
+
+export const CollectionMethod = {
+  CASH: 'CASH',
+  CARD: 'CARD',
+  CHEQUE: 'CHEQUE',
+} as const;
+
+export type CollectionStatus = typeof CollectionStatus[keyof typeof CollectionStatus];
+
+
+export const CollectionStatus = {
+  PENDING: 'PENDING',
+  CLEARED: 'CLEARED',
+  BOUNCED: 'BOUNCED',
+} as const;
+
+export interface Collection {
+  id: number;
+  code: string;
+  customerId: number;
+  customerName: string;
+  /** @nullable */
+  orderId?: number | null;
+  userId: number;
+  collectorName: string;
+  method: CollectionMethod;
+  amount: number;
+  /** @nullable */
+  chequeNumber?: string | null;
+  /** @nullable */
+  sayyadCode?: string | null;
+  /** @nullable */
+  dueDate?: string | null;
+  status: CollectionStatus;
+  /** @nullable */
+  notes?: string | null;
+  createdAt: string;
+}
+
+export type CollectionInputMethod = typeof CollectionInputMethod[keyof typeof CollectionInputMethod];
+
+
+export const CollectionInputMethod = {
+  CASH: 'CASH',
+  CARD: 'CARD',
+  CHEQUE: 'CHEQUE',
+} as const;
+
+export interface CollectionInput {
+  customerId: number;
+  /** @nullable */
+  orderId?: number | null;
+  method: CollectionInputMethod;
+  amount: number;
+  /** @nullable */
+  chequeNumber?: string | null;
+  /** @nullable */
+  sayyadCode?: string | null;
+  /** @nullable */
+  dueDate?: string | null;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export type CollectionUpdateStatus = typeof CollectionUpdateStatus[keyof typeof CollectionUpdateStatus];
+
+
+export const CollectionUpdateStatus = {
+  PENDING: 'PENDING',
+  CLEARED: 'CLEARED',
+  BOUNCED: 'BOUNCED',
+} as const;
+
+export interface CollectionUpdate {
+  status?: CollectionUpdateStatus;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface CollectionsSummary {
+  totalCollected: number;
+  pendingChequesAmount: number;
+  pendingChequesCount: number;
+  bouncedChequesAmount: number;
+  bouncedChequesCount: number;
+}
+
+export interface ReturnedItem {
+  productId: number;
+  productName: string;
+  qty: number;
+  price: number;
+  restock?: boolean;
+}
+
+export type DeliveryStatus = typeof DeliveryStatus[keyof typeof DeliveryStatus];
+
+
+export const DeliveryStatus = {
+  ASSIGNED: 'ASSIGNED',
+  OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
+  DELIVERED: 'DELIVERED',
+  PARTIAL_RETURN: 'PARTIAL_RETURN',
+  FAILED: 'FAILED',
+} as const;
+
+export interface Delivery {
+  id: number;
+  code: string;
+  orderId: number;
+  orderCode: string;
+  customerId: number;
+  customerName: string;
+  driverId: number;
+  driverName: string;
+  status: DeliveryStatus;
+  returnedItems: ReturnedItem[];
+  returnedAmount: number;
+  /** @nullable */
+  signatureNote?: string | null;
+  /** @nullable */
+  deliveredAt?: string | null;
+  createdAt: string;
+}
+
+export interface DeliveryAssignInput {
+  orderId: number;
+  driverId: number;
+}
+
+export type DeliveryUpdateStatus = typeof DeliveryUpdateStatus[keyof typeof DeliveryUpdateStatus];
+
+
+export const DeliveryUpdateStatus = {
+  OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
+  DELIVERED: 'DELIVERED',
+  PARTIAL_RETURN: 'PARTIAL_RETURN',
+  FAILED: 'FAILED',
+} as const;
+
+export interface DeliveryUpdate {
+  status: DeliveryUpdateStatus;
+  returnedItems?: ReturnedItem[];
+  /** @nullable */
+  signatureNote?: string | null;
+}
+
+export interface LoadingSheetItem {
+  productId: number;
+  productName: string;
+  totalQty: number;
+  packsCount: number;
+  remainderUnits: number;
+}
+
+export interface RepCommissionSummary {
+  userId: number;
+  repName: string;
+  validSalesTotal: number;
+  clearedCollectionsTotal: number;
+  commissionRate: number;
+  earnedCommission: number;
+  targetAchievementRate: number;
+}
+
+export type AlertItemCategory = typeof AlertItemCategory[keyof typeof AlertItemCategory];
+
+
+export const AlertItemCategory = {
+  LOW_STOCK: 'LOW_STOCK',
+  DORMANT_CUSTOMER: 'DORMANT_CUSTOMER',
+  REP_INACTIVITY: 'REP_INACTIVITY',
+  CREDIT_OR_CHEQUE: 'CREDIT_OR_CHEQUE',
+} as const;
+
+export type AlertItemSeverity = typeof AlertItemSeverity[keyof typeof AlertItemSeverity];
+
+
+export const AlertItemSeverity = {
+  HIGH: 'HIGH',
+  MEDIUM: 'MEDIUM',
+  LOW: 'LOW',
+} as const;
+
+export interface AlertItem {
+  id: string;
+  category: AlertItemCategory;
+  severity: AlertItemSeverity;
+  title: string;
+  description: string;
+  entityId: number;
+}
+
+export interface AlertsSummary {
+  totalAlerts: number;
+  lowStockCount: number;
+  dormantCustomersCount: number;
+  inactiveRepsCount: number;
+  creditRiskCount: number;
+  alerts: AlertItem[];
+}
+
 export type ListVisitsParams = {
 customerId?: number;
 userId?: number;
@@ -438,6 +709,21 @@ export type ListTargetsParams = {
 userId?: number;
 status?: string;
 targetType?: string;
+};
+
+export type ListCollectionsParams = {
+customerId?: number;
+status?: string;
+method?: string;
+};
+
+export type ListDeliveriesParams = {
+driverId?: number;
+status?: string;
+};
+
+export type GetLoadingSheetParams = {
+driverId?: number;
 };
 
 export type ListAuditLogsParams = {

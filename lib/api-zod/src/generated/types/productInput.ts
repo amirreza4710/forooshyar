@@ -10,7 +10,10 @@ export interface ProductInput {
   name: string;
   category: string;
   pack?: string;
+  unitsPerPack?: number;
   price: number;
+  costPrice?: number;
   stock: number;
+  minStock?: number;
   image?: string;
 }

@@ -12,5 +12,7 @@ export interface User {
   name: string;
   phone?: string;
   role: string;
+  /** @nullable */
+  assignedZone?: string | null;
   createdAt?: string;
 }

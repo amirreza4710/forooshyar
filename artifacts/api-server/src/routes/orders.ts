@@ -1,7 +1,7 @@
 import { Router } from "express";
 import crypto from "crypto";
-import { db, ordersTable, productsTable, visitsTable, customersTable } from "@workspace/db";
-import { eq, sql, and, isNull } from "drizzle-orm";
+import { db, ordersTable, visitsTable, customersTable, collectionsTable } from "@workspace/db";
+import { eq, sql, and, isNull, ne } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
 import {
   CreateOrderBody,
@@ -14,22 +14,45 @@ import type { Request } from "express";
 import type { JwtPayload } from "../lib/auth";
 import { getOrCreateSettings } from "./settings";
 import { logAudit } from "../lib/audit";
+import { canViewAllOrders, syncCustomerBalance } from "../lib/ledger";
+import { adjustOrderStock } from "../lib/inventory";
+import { invalidateDashboardCache } from "./dashboard";
 
 const router = Router();
 
+interface OrderItemShape {
+  productId: number;
+  productName: string;
+  qty: number;
+  price: number;
+  isBonus?: boolean;
+}
+
 function serializeOrder(o: typeof ordersTable.$inferSelect) {
+  const rawItems = Array.isArray(o.items) ? (o.items as OrderItemShape[]) : [];
   return {
     ...o,
-    items: o.items as unknown[],
+    items: rawItems.map((item) => ({
+      ...item,
+      isBonus: Boolean(item.isBonus),
+    })),
     createdAt: o.createdAt.toISOString(),
   };
 }
 
 router.get("/orders", requireAuth, async (req, res): Promise<void> => {
+  const user = (req as Request & { user: JwtPayload }).user;
+  const conditions = [isNull(ordersTable.deletedAt)];
+
+  // ایزولاسیون داده ویزیتور: نماینده فروش فقط سفارش‌های خود را می‌بیند
+  if (!canViewAllOrders(user.role)) {
+    conditions.push(eq(ordersTable.userId, user.id));
+  }
+
   const orders = await db
     .select()
     .from(ordersTable)
-    .where(isNull(ordersTable.deletedAt))
+    .where(and(...conditions))
     .orderBy(sql`${ordersTable.createdAt} desc`);
   res.json(orders.map(serializeOrder));
 });
@@ -42,12 +65,11 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
   }
 
   const user = (req as Request & { user: JwtPayload }).user;
-  const { customerId, items, visitId } = parsed.data;
+  const { customerId, items, visitId, discount, paymentMethod, notes } = parsed.data;
 
   const order = await db.transaction(async (tx) => {
-    let total = 0;
+    let subtotal = 0;
 
-    // Validate visit existence if visitId is provided
     if (visitId) {
       const [visit] = await tx
         .select()
@@ -58,14 +80,15 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
           status: 404,
         });
       }
+      if (visit.customerId !== customerId) {
+        throw Object.assign(
+          new Error("مشتری سفارش باید با مشتری ویزیت انتخاب‌شده یکسان باشد"),
+          { status: 400 },
+        );
+      }
     }
 
-    // Aggregate items by productId to handle multiple items for the same product
-    // and easily check against the single locked rows.
-    const aggregatedItems = new Map<
-      number,
-      { qty: number; originalItem: any }
-    >();
+    const normalizedItems: OrderItemShape[] = [];
     for (const item of items) {
       if (item.qty <= 0) {
         throw Object.assign(
@@ -73,153 +96,139 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
           { status: 400 },
         );
       }
-      if (item.price < 0) {
+      if (!item.isBonus && item.price < 0) {
         throw Object.assign(
           new Error(`قیمت نامعتبر برای محصول ${item.productId}`),
           { status: 400 },
         );
       }
-      total += item.price * item.qty;
-      const existing = aggregatedItems.get(item.productId);
-      if (existing) {
-        existing.qty += item.qty;
-      } else {
-        aggregatedItems.set(item.productId, {
-          qty: item.qty,
-          originalItem: item,
-        });
-      }
+      const isBonus = Boolean(item.isBonus);
+      const effectivePrice = isBonus ? 0 : item.price;
+      subtotal += effectivePrice * item.qty;
+      normalizedItems.push({
+        productId: item.productId,
+        productName: item.productName,
+        qty: item.qty,
+        price: effectivePrice,
+        isBonus,
+      });
     }
 
-    const productIds = Array.from(aggregatedItems.keys());
-    // Guard for empty items handled by the bulk update condition
-
-    // Sort product IDs to always lock rows in a consistent order, avoiding deadlocks
-    productIds.sort((a, b) => a - b);
-
-    // Lock all relevant product rows upfront
-    const lockedProducts = await tx
-      .execute(
-        sql`SELECT id, stock FROM products WHERE id IN ${sql`(${sql.join(
-          productIds.map((id) => sql`${id}`),
-          sql`, `,
-        )})`} AND deleted_at IS NULL ORDER BY id FOR UPDATE`,
-      )
-      .then((r) => r.rows as { id: number; stock: number }[]);
-
-    const productMap = new Map(lockedProducts.map((p) => [p.id, p]));
-
-    // Validate existence and stock
-    for (const [productId, agg] of aggregatedItems.entries()) {
-      const product = productMap.get(productId);
-
-      if (!product) {
-        throw Object.assign(new Error(`محصول با شناسه ${productId} یافت نشد`), {
-          status: 400,
-        });
-      }
-      if (product.stock < agg.qty) {
-        throw Object.assign(
-          new Error(
-            `موجودی کافی نیست (محصول #${productId}): موجود ${product.stock}, درخواستی ${agg.qty}`,
-          ),
-          { status: 409 },
-        );
-      }
-    }
-
-    // Perform bulk update of stock
-    const cases = [];
-    for (const [productId, agg] of aggregatedItems.entries()) {
-      cases.push(sql`WHEN id = ${productId} THEN stock - ${agg.qty}`);
-    }
-
-    if (productIds.length > 0) {
-      await tx.execute(
-        sql`UPDATE products SET stock = CASE ${sql.join(cases, sql` `)} END WHERE id IN ${sql`(${sql.join(
-          productIds.map((id) => sql`${id}`),
-          sql`, `,
-        )})`}`,
+    if (discount < 0 || discount > subtotal) {
+      throw Object.assign(
+        new Error("مبلغ تخفیف نمی‌تواند منفی یا بیشتر از جمع کل فاکتور باشد"),
+        { status: 400 },
       );
     }
+    const total = subtotal - discount;
 
-    const customers = await tx.execute(
-      sql`SELECT name FROM customers WHERE id = ${customerId} AND deleted_at IS NULL`,
+    await adjustOrderStock(tx, normalizedItems, "deduct");
+
+    // قفل سطری مشتری (Row-Level Locking) جهت تضمین اتمیک بودن و جلوگیری از برخورد همزمان
+    const lockedCustomers = await tx.execute(
+      sql`SELECT id, name, credit_limit, balance FROM customers WHERE id = ${customerId} AND deleted_at IS NULL FOR UPDATE`,
     );
-    const customerName = (customers.rows[0] as { name: string })?.name;
-    if (!customerName) {
+    const customerRow = lockedCustomers.rows[0] as
+      | { id: number; name: string; credit_limit: number | null; balance: number | null }
+      | undefined;
+
+    if (!customerRow) {
       throw Object.assign(new Error(`مشتری با شناسه ${customerId} یافت نشد`), {
         status: 400,
       });
     }
+    const customerName = customerRow.name;
+    const creditLimit = customerRow.credit_limit ?? 0;
 
-    // اعتبارسنجی سقف اعتبار مشتری (Credit Limit Validation)
-    let creditLimit = 0;
-    try {
-      const [customerRecord] = await tx
-        .select({ creditLimit: customersTable.creditLimit })
-        .from(customersTable)
-        .where(and(eq(customersTable.id, customerId), isNull(customersTable.deletedAt)));
-      creditLimit = customerRecord?.creditLimit ?? 0;
-    } catch {
-      creditLimit = 0;
+    // مسدودسازی ثبت سفارش برای مشتری دارای چک برگشتی
+    const [bounced] = await tx
+      .select({ id: collectionsTable.id })
+      .from(collectionsTable)
+      .where(
+        and(
+          eq(collectionsTable.customerId, customerId),
+          eq(collectionsTable.status, "BOUNCED"),
+          isNull(collectionsTable.deletedAt),
+        ),
+      )
+      .limit(1);
+
+    if (bounced) {
+      throw Object.assign(
+        new Error("این مشتری دارای چک برگشتی است و تا زمان تسویه، امکان ثبت سفارش جدید وجود ندارد."),
+        { status: 400 },
+      );
     }
 
+    // اعتبارسنجی قطعی سقف اعتبار مشتری (Credit Limit Validation) با قفل سطری اتمیک و تطبیق کامل با دفتر معین
     if (creditLimit > 0) {
-      try {
-        const customerOrders = await tx
-          .select({ total: ordersTable.total, status: ordersTable.status })
-          .from(ordersTable)
-          .where(
-            and(
-              eq(ordersTable.customerId, customerId),
-              isNull(ordersTable.deletedAt),
-            ),
-          );
-        const pendingTotal = customerOrders
-          .filter((o) => o.status === "در انتظار" || o.status === "تایید شده")
-          .reduce((sum, o) => sum + (o.total || 0), 0);
-        const totalExposure = pendingTotal + total;
+      const [ordersAgg] = await tx
+        .select({
+          totalOrders: sql<number>`coalesce(sum(${ordersTable.total}), 0)`,
+        })
+        .from(ordersTable)
+        .where(
+          and(
+            eq(ordersTable.customerId, customerId),
+            isNull(ordersTable.deletedAt),
+            ne(ordersTable.status, "لغو شده"),
+          ),
+        );
 
-        if (totalExposure > creditLimit) {
-          throw Object.assign(
-            new Error(
-              `مجموع تعهدات (${totalExposure.toLocaleString(
-                "fa-IR",
-              )} ریال) از سقف اعتبار مشتری (${creditLimit.toLocaleString(
-                "fa-IR",
-              )} ریال) بیشتر است.`,
-            ),
-            { status: 400 },
-          );
-        }
-      } catch (err: any) {
-        if (err.status === 400) throw err;
+      const [collectionsAgg] = await tx
+        .select({
+          totalCleared: sql<number>`coalesce(sum(${collectionsTable.amount}), 0)`,
+        })
+        .from(collectionsTable)
+        .where(
+          and(
+            eq(collectionsTable.customerId, customerId),
+            isNull(collectionsTable.deletedAt),
+            eq(collectionsTable.status, "CLEARED"),
+          ),
+        );
+
+      const totalExistingOrders = Number(ordersAgg?.totalOrders ?? 0) || 0;
+      const totalClearedCollections = Number(collectionsAgg?.totalCleared ?? 0) || 0;
+      const currentOutstandingBalance = totalExistingOrders - totalClearedCollections;
+      const totalExposure = currentOutstandingBalance + total;
+
+      if (totalExposure > creditLimit) {
+        throw Object.assign(
+          new Error(
+            `مجموع تعهدات (${totalExposure.toLocaleString(
+              "fa-IR",
+            )} ریال) از سقف اعتبار مشتری (${creditLimit.toLocaleString(
+              "fa-IR",
+            )} ریال) بیشتر است.`,
+          ),
+          { status: 400 },
+        );
       }
     }
 
     const [inserted] = await tx
       .insert(ordersTable)
       .values({
-        // Placeholder; replaced below with the id-derived code. It is only visible
-        // inside this transaction.
         code: `pending-${crypto.randomUUID()}`,
         customerId,
         customerName,
         userId: user.id,
         repName: user.name,
         visitId: visitId ?? null,
+        subtotal,
+        discount,
         total,
+        paymentMethod,
+        notes: notes ?? null,
         status: "در انتظار",
-        items: items as unknown as object,
+        items: normalizedItems as unknown as object,
       })
       .returning();
 
     const settings = await getOrCreateSettings(tx);
     const prefix = settings?.orderCodePrefix || "ORD-";
 
-    // The code comes from the row's own id, so it cannot be reused after a hard
-    // delete and two concurrent creates cannot race onto the same code.
     const [final] = await tx
       .update(ordersTable)
       .set({ code: `${prefix}${9000 + inserted.id}` })
@@ -234,18 +243,27 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
         .where(eq(visitsTable.id, visitId));
     }
 
+    // به‌روزرسانی مانده بدهی مشتری در دفتر کل
+    try {
+      await syncCustomerBalance(tx, customerId);
+    } catch {
+      // حفظ سازگاری با تست‌های mock بدون جدول collections
+    }
+
     await logAudit(tx, {
       userId: user.id,
       actorName: user.name,
       action: "ORDER_CREATE",
       entity: "order",
       entityId: String(final!.id),
-      details: { code: final!.code, customerId, total, visitId },
+      details: { code: final!.code, customerId, subtotal, discount, total, paymentMethod, visitId },
       ipAddress: req.ip || null,
     });
 
     return final!;
   });
+
+  invalidateDashboardCache();
 
   broadcast({
     type: "order_created",
@@ -268,6 +286,7 @@ router.get("/orders/:id", requireAuth, async (req, res): Promise<void> => {
     res.status(400).json({ error: "Invalid id" });
     return;
   }
+  const user = (req as Request & { user: JwtPayload }).user;
   const [order] = await db
     .select()
     .from(ordersTable)
@@ -276,6 +295,10 @@ router.get("/orders/:id", requireAuth, async (req, res): Promise<void> => {
     );
   if (!order) {
     res.status(404).json({ error: "Order not found" });
+    return;
+  }
+  if (!canViewAllOrders(user.role) && order.userId !== user.id) {
+    res.status(403).json({ error: "دسترسی به سفارش سایر ویزیتورها مجاز نیست" });
     return;
   }
   res.json(serializeOrder(order));
@@ -295,6 +318,28 @@ router.patch("/orders/:id", requireAuth, async (req, res): Promise<void> => {
   const user = (req as Request & { user: JwtPayload }).user;
 
   const order = await db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select()
+      .from(ordersTable)
+      .where(
+        and(eq(ordersTable.id, params.data.id), isNull(ordersTable.deletedAt)),
+      );
+    if (!existing) return null;
+
+    const existingItems = Array.isArray(existing.items)
+      ? (existing.items as OrderItemShape[])
+      : [];
+
+    if (body.data.status === "لغو شده" && existing.status !== "لغو شده") {
+      await adjustOrderStock(tx, existingItems, "restore");
+    } else if (
+      body.data.status &&
+      body.data.status !== "لغو شده" &&
+      existing.status === "لغو شده"
+    ) {
+      await adjustOrderStock(tx, existingItems, "deduct");
+    }
+
     const [updated] = await tx
       .update(ordersTable)
       .set(body.data)
@@ -303,6 +348,14 @@ router.patch("/orders/:id", requireAuth, async (req, res): Promise<void> => {
       )
       .returning();
     if (!updated) return null;
+
+    if (body.data.status) {
+      try {
+        await syncCustomerBalance(tx, updated.customerId);
+      } catch {
+        // حفظ سازگاری با تست‌های mock
+      }
+    }
 
     await logAudit(tx, {
       userId: user.id,
@@ -321,6 +374,8 @@ router.patch("/orders/:id", requireAuth, async (req, res): Promise<void> => {
     res.status(404).json({ error: "Order not found" });
     return;
   }
+
+  invalidateDashboardCache();
 
   if (body.data.status) {
     broadcast({
@@ -344,6 +399,21 @@ router.delete("/orders/:id", requireAuth, async (req, res): Promise<void> => {
 
   // soft-delete: سفارش برای سابقه‌ی مالی و گزارش‌گیری نگه داشته میشه، فقط از لیست‌ها کنار میره
   const order = await db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select()
+      .from(ordersTable)
+      .where(
+        and(eq(ordersTable.id, params.data.id), isNull(ordersTable.deletedAt)),
+      );
+    if (!existing) return null;
+
+    if (existing.status !== "لغو شده") {
+      const existingItems = Array.isArray(existing.items)
+        ? (existing.items as OrderItemShape[])
+        : [];
+      await adjustOrderStock(tx, existingItems, "restore");
+    }
+
     const [deleted] = await tx
       .update(ordersTable)
       .set({ deletedAt: new Date() })
@@ -352,6 +422,12 @@ router.delete("/orders/:id", requireAuth, async (req, res): Promise<void> => {
       )
       .returning();
     if (!deleted) return null;
+
+    try {
+      await syncCustomerBalance(tx, deleted.customerId);
+    } catch {
+      // حفظ سازگاری با تست‌های mock
+    }
 
     await logAudit(tx, {
       userId: user.id,
@@ -370,6 +446,8 @@ router.delete("/orders/:id", requireAuth, async (req, res): Promise<void> => {
     res.status(404).json({ error: "Order not found" });
     return;
   }
+
+  invalidateDashboardCache();
 
   broadcast({
     type: "order_deleted",

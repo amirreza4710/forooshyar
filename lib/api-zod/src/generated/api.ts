@@ -45,6 +45,7 @@ export const LoginResponse = zod.object({
   "name": zod.string(),
   "phone": zod.string().optional(),
   "role": zod.string(),
+  "assignedZone": zod.string().nullish(),
   "createdAt": zod.string().optional()
 })
 })
@@ -66,6 +67,7 @@ export const RefreshResponse = zod.object({
   "name": zod.string(),
   "phone": zod.string().optional(),
   "role": zod.string(),
+  "assignedZone": zod.string().nullish(),
   "createdAt": zod.string().optional()
 })
 })
@@ -86,6 +88,7 @@ export const GetMeResponse = zod.object({
   "name": zod.string(),
   "phone": zod.string().optional(),
   "role": zod.string(),
+  "assignedZone": zod.string().nullish(),
   "createdAt": zod.string().optional()
 })
 
@@ -113,6 +116,7 @@ export const ListUsersResponseItem = zod.object({
   "name": zod.string(),
   "phone": zod.string().optional(),
   "role": zod.string(),
+  "assignedZone": zod.string().nullish(),
   "createdAt": zod.string().optional()
 })
 export const ListUsersResponse = zod.array(ListUsersResponseItem)
@@ -126,7 +130,8 @@ export const CreateUserBody = zod.object({
   "password": zod.string(),
   "name": zod.string(),
   "phone": zod.string().optional(),
-  "role": zod.string()
+  "role": zod.string(),
+  "assignedZone": zod.string().nullish()
 })
 
 export const CreateUserResponse = zod.object({
@@ -135,6 +140,7 @@ export const CreateUserResponse = zod.object({
   "name": zod.string(),
   "phone": zod.string().optional(),
   "role": zod.string(),
+  "assignedZone": zod.string().nullish(),
   "createdAt": zod.string().optional()
 })
 
@@ -150,6 +156,7 @@ export const UpdateUserBody = zod.object({
   "name": zod.string().optional(),
   "phone": zod.string().optional(),
   "role": zod.string().optional(),
+  "assignedZone": zod.string().nullish(),
   "password": zod.string().nullish()
 })
 
@@ -159,6 +166,7 @@ export const UpdateUserResponse = zod.object({
   "name": zod.string(),
   "phone": zod.string().optional(),
   "role": zod.string(),
+  "assignedZone": zod.string().nullish(),
   "createdAt": zod.string().optional()
 })
 
@@ -182,6 +190,9 @@ export const ListCustomersResponseItem = zod.object({
   "name": zod.string(),
   "phone": zod.string(),
   "address": zod.string().nullish(),
+  "zone": zod.string().nullish(),
+  "latitude": zod.string().nullish(),
+  "longitude": zod.string().nullish(),
   "creditLimit": zod.int().optional().describe('سقف اعتبار مشتری به ریال'),
   "balance": zod.int().optional().describe('مانده بدهی جاری مشتری به ریال'),
   "createdAt": zod.string().optional()
@@ -196,6 +207,9 @@ export const CreateCustomerBody = zod.object({
   "name": zod.string(),
   "phone": zod.string(),
   "address": zod.string().optional(),
+  "zone": zod.string().nullish(),
+  "latitude": zod.string().nullish(),
+  "longitude": zod.string().nullish(),
   "creditLimit": zod.int().optional().describe('سقف اعتبار مشتری به ریال')
 })
 
@@ -205,6 +219,9 @@ export const CreateCustomerResponse = zod.object({
   "name": zod.string(),
   "phone": zod.string(),
   "address": zod.string().nullish(),
+  "zone": zod.string().nullish(),
+  "latitude": zod.string().nullish(),
+  "longitude": zod.string().nullish(),
   "creditLimit": zod.int().optional().describe('سقف اعتبار مشتری به ریال'),
   "balance": zod.int().optional().describe('مانده بدهی جاری مشتری به ریال'),
   "createdAt": zod.string().optional()
@@ -222,6 +239,9 @@ export const UpdateCustomerBody = zod.object({
   "name": zod.string().optional(),
   "phone": zod.string().optional(),
   "address": zod.string().nullish(),
+  "zone": zod.string().nullish(),
+  "latitude": zod.string().nullish(),
+  "longitude": zod.string().nullish(),
   "creditLimit": zod.int().optional(),
   "balance": zod.int().optional()
 })
@@ -232,6 +252,9 @@ export const UpdateCustomerResponse = zod.object({
   "name": zod.string(),
   "phone": zod.string(),
   "address": zod.string().nullish(),
+  "zone": zod.string().nullish(),
+  "latitude": zod.string().nullish(),
+  "longitude": zod.string().nullish(),
   "creditLimit": zod.int().optional().describe('سقف اعتبار مشتری به ریال'),
   "balance": zod.int().optional().describe('مانده بدهی جاری مشتری به ریال'),
   "createdAt": zod.string().optional()
@@ -257,8 +280,11 @@ export const ListProductsResponseItem = zod.object({
   "name": zod.string(),
   "category": zod.string(),
   "pack": zod.string().nullish(),
+  "unitsPerPack": zod.int().optional(),
   "price": zod.int(),
+  "costPrice": zod.int().optional(),
   "stock": zod.int(),
+  "minStock": zod.int().optional(),
   "image": zod.string().nullish(),
   "createdAt": zod.string().optional()
 })
@@ -268,12 +294,19 @@ export const ListProductsResponse = zod.array(ListProductsResponseItem)
 /**
  * @summary Create new product
  */
+export const createProductBodyUnitsPerPackDefault = 1;
+export const createProductBodyCostPriceDefault = 0;
+export const createProductBodyMinStockDefault = 10;
+
 export const CreateProductBody = zod.object({
   "name": zod.string(),
   "category": zod.string(),
   "pack": zod.string().optional(),
+  "unitsPerPack": zod.int().default(createProductBodyUnitsPerPackDefault),
   "price": zod.int(),
+  "costPrice": zod.int().default(createProductBodyCostPriceDefault),
   "stock": zod.int(),
+  "minStock": zod.int().default(createProductBodyMinStockDefault),
   "image": zod.string().optional()
 })
 
@@ -283,8 +316,11 @@ export const CreateProductResponse = zod.object({
   "name": zod.string(),
   "category": zod.string(),
   "pack": zod.string().nullish(),
+  "unitsPerPack": zod.int().optional(),
   "price": zod.int(),
+  "costPrice": zod.int().optional(),
   "stock": zod.int(),
+  "minStock": zod.int().optional(),
   "image": zod.string().nullish(),
   "createdAt": zod.string().optional()
 })
@@ -301,8 +337,11 @@ export const UpdateProductBody = zod.object({
   "name": zod.string().optional(),
   "category": zod.string().optional(),
   "pack": zod.string().nullish(),
+  "unitsPerPack": zod.int().optional(),
   "price": zod.int().optional(),
+  "costPrice": zod.int().optional(),
   "stock": zod.int().optional(),
+  "minStock": zod.int().optional(),
   "image": zod.string().nullish()
 })
 
@@ -312,8 +351,11 @@ export const UpdateProductResponse = zod.object({
   "name": zod.string(),
   "category": zod.string(),
   "pack": zod.string().nullish(),
+  "unitsPerPack": zod.int().optional(),
   "price": zod.int(),
+  "costPrice": zod.int().optional(),
   "stock": zod.int(),
+  "minStock": zod.int().optional(),
   "image": zod.string().nullish(),
   "createdAt": zod.string().optional()
 })
@@ -332,6 +374,8 @@ export const DeleteProductResponse = zod.void()
 /**
  * @summary List all orders
  */
+export const listOrdersResponseItemsItemIsBonusDefault = false;
+
 export const ListOrdersResponseItem = zod.object({
   "id": zod.int(),
   "code": zod.string().optional(),
@@ -340,13 +384,18 @@ export const ListOrdersResponseItem = zod.object({
   "userId": zod.int().nullish(),
   "repName": zod.string(),
   "visitId": zod.int().nullish().describe('شناسه ویزیت متصل'),
+  "subtotal": zod.int().optional(),
+  "discount": zod.int().optional(),
   "total": zod.int(),
+  "paymentMethod": zod.enum(['CASH', 'CARD', 'CREDIT', 'CHEQUE']).optional(),
   "status": zod.enum(['در انتظار', 'تایید شده', 'تکمیل شده', 'لغو شده']),
+  "notes": zod.string().nullish(),
   "items": zod.array(zod.object({
   "productId": zod.int(),
   "productName": zod.string(),
   "qty": zod.int(),
-  "price": zod.int()
+  "price": zod.int(),
+  "isBonus": zod.boolean().default(listOrdersResponseItemsItemIsBonusDefault)
 })).optional(),
   "createdAt": zod.string()
 })
@@ -356,16 +405,26 @@ export const ListOrdersResponse = zod.array(ListOrdersResponseItem)
 /**
  * @summary Submit a new order/invoice
  */
+export const createOrderBodyDiscountDefault = 0;
+export const createOrderBodyPaymentMethodDefault = `CASH`;
+export const createOrderBodyItemsItemIsBonusDefault = false;
+
 export const CreateOrderBody = zod.object({
   "customerId": zod.int(),
   "visitId": zod.int().optional().describe('شناسه ویزیت اختیاری جهت اتصال سفارش به ویزیت جاری'),
+  "discount": zod.int().default(createOrderBodyDiscountDefault),
+  "paymentMethod": zod.enum(['CASH', 'CARD', 'CREDIT', 'CHEQUE']).default(createOrderBodyPaymentMethodDefault),
+  "notes": zod.string().nullish(),
   "items": zod.array(zod.object({
   "productId": zod.int(),
   "productName": zod.string(),
   "qty": zod.int(),
-  "price": zod.int()
+  "price": zod.int(),
+  "isBonus": zod.boolean().default(createOrderBodyItemsItemIsBonusDefault)
 }))
 })
+
+export const createOrderResponseItemsItemIsBonusDefault = false;
 
 export const CreateOrderResponse = zod.object({
   "id": zod.int(),
@@ -375,13 +434,18 @@ export const CreateOrderResponse = zod.object({
   "userId": zod.int().nullish(),
   "repName": zod.string(),
   "visitId": zod.int().nullish().describe('شناسه ویزیت متصل'),
+  "subtotal": zod.int().optional(),
+  "discount": zod.int().optional(),
   "total": zod.int(),
+  "paymentMethod": zod.enum(['CASH', 'CARD', 'CREDIT', 'CHEQUE']).optional(),
   "status": zod.enum(['در انتظار', 'تایید شده', 'تکمیل شده', 'لغو شده']),
+  "notes": zod.string().nullish(),
   "items": zod.array(zod.object({
   "productId": zod.int(),
   "productName": zod.string(),
   "qty": zod.int(),
-  "price": zod.int()
+  "price": zod.int(),
+  "isBonus": zod.boolean().default(createOrderResponseItemsItemIsBonusDefault)
 })).optional(),
   "createdAt": zod.string()
 })
@@ -394,6 +458,8 @@ export const GetOrderParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
+export const getOrderResponseItemsItemIsBonusDefault = false;
+
 export const GetOrderResponse = zod.object({
   "id": zod.int(),
   "code": zod.string().optional(),
@@ -402,13 +468,18 @@ export const GetOrderResponse = zod.object({
   "userId": zod.int().nullish(),
   "repName": zod.string(),
   "visitId": zod.int().nullish().describe('شناسه ویزیت متصل'),
+  "subtotal": zod.int().optional(),
+  "discount": zod.int().optional(),
   "total": zod.int(),
+  "paymentMethod": zod.enum(['CASH', 'CARD', 'CREDIT', 'CHEQUE']).optional(),
   "status": zod.enum(['در انتظار', 'تایید شده', 'تکمیل شده', 'لغو شده']),
+  "notes": zod.string().nullish(),
   "items": zod.array(zod.object({
   "productId": zod.int(),
   "productName": zod.string(),
   "qty": zod.int(),
-  "price": zod.int()
+  "price": zod.int(),
+  "isBonus": zod.boolean().default(getOrderResponseItemsItemIsBonusDefault)
 })).optional(),
   "createdAt": zod.string()
 })
@@ -425,6 +496,8 @@ export const UpdateOrderBody = zod.object({
   "status": zod.enum(['در انتظار', 'تایید شده', 'تکمیل شده', 'لغو شده']).optional()
 })
 
+export const updateOrderResponseItemsItemIsBonusDefault = false;
+
 export const UpdateOrderResponse = zod.object({
   "id": zod.int(),
   "code": zod.string().optional(),
@@ -433,13 +506,18 @@ export const UpdateOrderResponse = zod.object({
   "userId": zod.int().nullish(),
   "repName": zod.string(),
   "visitId": zod.int().nullish().describe('شناسه ویزیت متصل'),
+  "subtotal": zod.int().optional(),
+  "discount": zod.int().optional(),
   "total": zod.int(),
+  "paymentMethod": zod.enum(['CASH', 'CARD', 'CREDIT', 'CHEQUE']).optional(),
   "status": zod.enum(['در انتظار', 'تایید شده', 'تکمیل شده', 'لغو شده']),
+  "notes": zod.string().nullish(),
   "items": zod.array(zod.object({
   "productId": zod.int(),
   "productName": zod.string(),
   "qty": zod.int(),
-  "price": zod.int()
+  "price": zod.int(),
+  "isBonus": zod.boolean().default(updateOrderResponseItemsItemIsBonusDefault)
 })).optional(),
   "createdAt": zod.string()
 })
@@ -725,13 +803,302 @@ export const UpdateTargetResponse = zod.object({
 
 
 /**
+ * @summary List customer payments and Sayyad cheques
+ */
+export const ListCollectionsQueryParams = zod.object({
+  "customerId": zod.coerce.number().int().optional(),
+  "status": zod.coerce.string().optional(),
+  "method": zod.coerce.string().optional()
+})
+
+export const ListCollectionsResponseItem = zod.object({
+  "id": zod.int(),
+  "code": zod.string(),
+  "customerId": zod.int(),
+  "customerName": zod.string(),
+  "orderId": zod.int().nullish(),
+  "userId": zod.int(),
+  "collectorName": zod.string(),
+  "method": zod.enum(['CASH', 'CARD', 'CHEQUE']),
+  "amount": zod.int(),
+  "chequeNumber": zod.string().nullish(),
+  "sayyadCode": zod.string().nullish(),
+  "dueDate": zod.coerce.date().nullish(),
+  "status": zod.enum(['PENDING', 'CLEARED', 'BOUNCED']),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListCollectionsResponse = zod.array(ListCollectionsResponseItem)
+
+
+/**
+ * @summary Record cash, card, or Sayyad cheque collection
+ */
+export const CreateCollectionBody = zod.object({
+  "customerId": zod.int(),
+  "orderId": zod.int().nullish(),
+  "method": zod.enum(['CASH', 'CARD', 'CHEQUE']),
+  "amount": zod.int(),
+  "chequeNumber": zod.string().nullish(),
+  "sayyadCode": zod.string().nullish(),
+  "dueDate": zod.coerce.date().nullish(),
+  "notes": zod.string().nullish()
+})
+
+export const CreateCollectionResponse = zod.object({
+  "id": zod.int(),
+  "code": zod.string(),
+  "customerId": zod.int(),
+  "customerName": zod.string(),
+  "orderId": zod.int().nullish(),
+  "userId": zod.int(),
+  "collectorName": zod.string(),
+  "method": zod.enum(['CASH', 'CARD', 'CHEQUE']),
+  "amount": zod.int(),
+  "chequeNumber": zod.string().nullish(),
+  "sayyadCode": zod.string().nullish(),
+  "dueDate": zod.coerce.date().nullish(),
+  "status": zod.enum(['PENDING', 'CLEARED', 'BOUNCED']),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get cash and cheques collection summary
+ */
+export const GetCollectionsSummaryResponse = zod.object({
+  "totalCollected": zod.int(),
+  "pendingChequesAmount": zod.int(),
+  "pendingChequesCount": zod.int(),
+  "bouncedChequesAmount": zod.int(),
+  "bouncedChequesCount": zod.int()
+})
+
+
+/**
+ * @summary Update collection or cheque status
+ */
+export const UpdateCollectionParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const UpdateCollectionBody = zod.object({
+  "status": zod.enum(['PENDING', 'CLEARED', 'BOUNCED']).optional(),
+  "notes": zod.string().nullish()
+})
+
+export const UpdateCollectionResponse = zod.object({
+  "id": zod.int(),
+  "code": zod.string(),
+  "customerId": zod.int(),
+  "customerName": zod.string(),
+  "orderId": zod.int().nullish(),
+  "userId": zod.int(),
+  "collectorName": zod.string(),
+  "method": zod.enum(['CASH', 'CARD', 'CHEQUE']),
+  "amount": zod.int(),
+  "chequeNumber": zod.string().nullish(),
+  "sayyadCode": zod.string().nullish(),
+  "dueDate": zod.coerce.date().nullish(),
+  "status": zod.enum(['PENDING', 'CLEARED', 'BOUNCED']),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Soft-delete a collection record
+ */
+export const DeleteCollectionParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteCollectionResponse = zod.void()
+
+
+/**
+ * @summary List delivery dispatches
+ */
+export const ListDeliveriesQueryParams = zod.object({
+  "driverId": zod.coerce.number().int().optional(),
+  "status": zod.coerce.string().optional()
+})
+
+export const listDeliveriesResponseReturnedItemsItemRestockDefault = true;
+
+export const ListDeliveriesResponseItem = zod.object({
+  "id": zod.int(),
+  "code": zod.string(),
+  "orderId": zod.int(),
+  "orderCode": zod.string(),
+  "customerId": zod.int(),
+  "customerName": zod.string(),
+  "driverId": zod.int(),
+  "driverName": zod.string(),
+  "status": zod.enum(['ASSIGNED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'PARTIAL_RETURN', 'FAILED']),
+  "returnedItems": zod.array(zod.object({
+  "productId": zod.int(),
+  "productName": zod.string(),
+  "qty": zod.int(),
+  "price": zod.int(),
+  "restock": zod.boolean().default(listDeliveriesResponseReturnedItemsItemRestockDefault)
+})),
+  "returnedAmount": zod.int(),
+  "signatureNote": zod.string().nullish(),
+  "deliveredAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListDeliveriesResponse = zod.array(ListDeliveriesResponseItem)
+
+
+/**
+ * @summary Assign an approved order to a delivery driver
+ */
+export const AssignDeliveryBody = zod.object({
+  "orderId": zod.int(),
+  "driverId": zod.int()
+})
+
+export const assignDeliveryResponseReturnedItemsItemRestockDefault = true;
+
+export const AssignDeliveryResponse = zod.object({
+  "id": zod.int(),
+  "code": zod.string(),
+  "orderId": zod.int(),
+  "orderCode": zod.string(),
+  "customerId": zod.int(),
+  "customerName": zod.string(),
+  "driverId": zod.int(),
+  "driverName": zod.string(),
+  "status": zod.enum(['ASSIGNED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'PARTIAL_RETURN', 'FAILED']),
+  "returnedItems": zod.array(zod.object({
+  "productId": zod.int(),
+  "productName": zod.string(),
+  "qty": zod.int(),
+  "price": zod.int(),
+  "restock": zod.boolean().default(assignDeliveryResponseReturnedItemsItemRestockDefault)
+})),
+  "returnedAmount": zod.int(),
+  "signatureNote": zod.string().nullish(),
+  "deliveredAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get aggregated product quantities to load onto delivery trucks
+ */
+export const GetLoadingSheetQueryParams = zod.object({
+  "driverId": zod.coerce.number().int().optional()
+})
+
+export const GetLoadingSheetResponseItem = zod.object({
+  "productId": zod.int(),
+  "productName": zod.string(),
+  "totalQty": zod.int(),
+  "packsCount": zod.int(),
+  "remainderUnits": zod.int()
+})
+export const GetLoadingSheetResponse = zod.array(GetLoadingSheetResponseItem)
+
+
+/**
+ * @summary Update delivery status or record partial returns
+ */
+export const CompleteDeliveryParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const completeDeliveryBodyReturnedItemsItemRestockDefault = true;
+
+export const CompleteDeliveryBody = zod.object({
+  "status": zod.enum(['OUT_FOR_DELIVERY', 'DELIVERED', 'PARTIAL_RETURN', 'FAILED']),
+  "returnedItems": zod.array(zod.object({
+  "productId": zod.int(),
+  "productName": zod.string(),
+  "qty": zod.int(),
+  "price": zod.int(),
+  "restock": zod.boolean().default(completeDeliveryBodyReturnedItemsItemRestockDefault)
+})).optional(),
+  "signatureNote": zod.string().nullish()
+})
+
+export const completeDeliveryResponseReturnedItemsItemRestockDefault = true;
+
+export const CompleteDeliveryResponse = zod.object({
+  "id": zod.int(),
+  "code": zod.string(),
+  "orderId": zod.int(),
+  "orderCode": zod.string(),
+  "customerId": zod.int(),
+  "customerName": zod.string(),
+  "driverId": zod.int(),
+  "driverName": zod.string(),
+  "status": zod.enum(['ASSIGNED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'PARTIAL_RETURN', 'FAILED']),
+  "returnedItems": zod.array(zod.object({
+  "productId": zod.int(),
+  "productName": zod.string(),
+  "qty": zod.int(),
+  "price": zod.int(),
+  "restock": zod.boolean().default(completeDeliveryResponseReturnedItemsItemRestockDefault)
+})),
+  "returnedAmount": zod.int(),
+  "signatureNote": zod.string().nullish(),
+  "deliveredAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get traceable rep sales and collection-based commission metrics
+ */
+export const GetCommissionsSummaryResponseItem = zod.object({
+  "userId": zod.int(),
+  "repName": zod.string(),
+  "validSalesTotal": zod.int(),
+  "clearedCollectionsTotal": zod.int(),
+  "commissionRate": zod.number(),
+  "earnedCommission": zod.int(),
+  "targetAchievementRate": zod.number()
+})
+export const GetCommissionsSummaryResponse = zod.array(GetCommissionsSummaryResponseItem)
+
+
+/**
+ * @summary Get executive morning operational alerts from recorded database facts
+ */
+export const GetAlertsSummaryResponse = zod.object({
+  "totalAlerts": zod.int(),
+  "lowStockCount": zod.int(),
+  "dormantCustomersCount": zod.int(),
+  "inactiveRepsCount": zod.int(),
+  "creditRiskCount": zod.int(),
+  "alerts": zod.array(zod.object({
+  "id": zod.string(),
+  "category": zod.enum(['LOW_STOCK', 'DORMANT_CUSTOMER', 'REP_INACTIVITY', 'CREDIT_OR_CHEQUE']),
+  "severity": zod.enum(['HIGH', 'MEDIUM', 'LOW']),
+  "title": zod.string(),
+  "description": zod.string(),
+  "entityId": zod.int()
+}))
+})
+
+
+/**
  * @summary Get dashboard KPIs and summary data
  */
+export const getDashboardSummaryResponseRecentOrdersItemItemsItemIsBonusDefault = false;
+
 export const GetDashboardSummaryResponse = zod.object({
   "totalSales": zod.int(),
+  "grossProfit": zod.int().optional(),
   "orderCount": zod.int(),
+  "pendingOrdersCount": zod.int().optional(),
   "customerCount": zod.int(),
   "productCount": zod.int(),
+  "lowStockCount": zod.int().optional(),
+  "bouncedChequesCount": zod.int().optional(),
   "recentOrders": zod.array(zod.object({
   "id": zod.int(),
   "code": zod.string().optional(),
@@ -740,13 +1107,18 @@ export const GetDashboardSummaryResponse = zod.object({
   "userId": zod.int().nullish(),
   "repName": zod.string(),
   "visitId": zod.int().nullish().describe('شناسه ویزیت متصل'),
+  "subtotal": zod.int().optional(),
+  "discount": zod.int().optional(),
   "total": zod.int(),
+  "paymentMethod": zod.enum(['CASH', 'CARD', 'CREDIT', 'CHEQUE']).optional(),
   "status": zod.enum(['در انتظار', 'تایید شده', 'تکمیل شده', 'لغو شده']),
+  "notes": zod.string().nullish(),
   "items": zod.array(zod.object({
   "productId": zod.int(),
   "productName": zod.string(),
   "qty": zod.int(),
-  "price": zod.int()
+  "price": zod.int(),
+  "isBonus": zod.boolean().default(getDashboardSummaryResponseRecentOrdersItemItemsItemIsBonusDefault)
 })).optional(),
   "createdAt": zod.string()
 }))

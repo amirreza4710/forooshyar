@@ -5,6 +5,8 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: true,
+    fileParallelism: false,
+    pool: "threads",
   },
   resolve: {
     alias: {

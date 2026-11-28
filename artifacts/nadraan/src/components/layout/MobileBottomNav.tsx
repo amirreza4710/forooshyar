@@ -1,12 +1,13 @@
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth-context";
-import { LayoutDashboard, Plus, ClipboardList, Users, UserCircle, Package, Building2 } from "lucide-react";
+import { LayoutDashboard, Plus, ClipboardList, Users, UserCircle, MapPin, Package, Building2 } from "lucide-react";
 import { canAccessRoute } from "@/lib/permissions";
 
 const ALL_NAV = [
   { href: "/",          label: "داشبورد",   icon: LayoutDashboard },
   { href: "/orders",    label: "فاکتورها",    icon: ClipboardList },
   { href: "/new-order", label: "ثبت",        icon: Plus,           primary: true },
+  { href: "/visits", label: "ویزیت‌ها", icon: MapPin },
   { href: "/customers", label: "مشتریان",    icon: Users },
   { href: "/products",  label: "محصولات",    icon: Package },
   { href: "/users",     label: "مدیریت",     icon: Building2 },

@@ -1,6 +1,10 @@
-import { useState, useMemo } from "react";
-import { useLocation } from "wouter";
+import { CurrencyInput } from "@/components/CurrencyInput";
+import { parseRial } from "@/lib/currency";
+import { readVisitId, linkedVisitId } from "@/lib/visit-order";
+import { useState, useMemo, useEffect } from "react";
+import { useLocation, useSearch } from "wouter";
 import {
+  useGetVisit, getGetVisitQueryKey, getListTargetsQueryKey, getGetTargetsSummaryQueryKey, getListVisitsQueryKey, getGetVisitsSummaryQueryKey,
   useListProducts,
   useListCustomers,
   useCreateOrder,
@@ -38,6 +42,7 @@ interface CartItem {
   price: number;
   image: string;
   stock?: number;
+  isBonus?: boolean;
 }
 
 function n(v: number) {
@@ -79,17 +84,32 @@ export default function NewOrderPage() {
   const qc = useQueryClient();
   const { toast } = useToast();
 
-  const { data: productsRaw, isLoading: productsLoading } = useListProducts();
-  const { data: customersRaw, isLoading: customersLoading } = useListCustomers();
+  const { data: productsRaw, isLoading: productsLoading, isError: productsError, refetch: retryProducts } = useListProducts();
+  const { data: customersRaw, isLoading: customersLoading, isError: customersError, refetch: retryCustomers } = useListCustomers();
 
-  const products: Product[] = Array.isArray(productsRaw) ? productsRaw : [];
-  const customers: Customer[] = Array.isArray(customersRaw) ? customersRaw : [];
+  const invalidProducts = productsError || (productsRaw !== undefined && (
+    !Array.isArray(productsRaw) || productsRaw.some(p => !p || !Number.isSafeInteger(p.id) || p.id <= 0 || typeof p.name !== "string" || typeof p.price !== "number" || !Number.isFinite(p.price) || p.price < 0 || (p.stock != null && (typeof p.stock !== "number" || !Number.isFinite(p.stock) || p.stock < 0)) || [p.code, p.category, p.image, p.pack].some(value => value != null && typeof value !== "string"))
+  ));
+  const invalidCustomers = customersError || (customersRaw !== undefined && (
+    !Array.isArray(customersRaw) || customersRaw.some(c => !c || !Number.isSafeInteger(c.id) || c.id <= 0 || typeof c.name !== "string" || [c.phone, c.code].some(value => value != null && typeof value !== "string") || [c.creditLimit, c.balance].some(value => value != null && (typeof value !== "number" || !Number.isFinite(value))))
+  ));
+  const products: Product[] = !invalidProducts && Array.isArray(productsRaw) ? productsRaw : [];
+  const customers: Customer[] = !invalidCustomers && Array.isArray(customersRaw) ? customersRaw : [];
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("همه");
+  const [discount, setDiscount] = useState("0");
+  const [paymentMethod, setPaymentMethod] = useState<NonNullable<import("@workspace/api-client-react").OrderInput["paymentMethod"]>>("CASH");
+  const [orderNotes, setOrderNotes] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const cartMap = useMemo(() => new Map(cart.map((c) => [c.productId, c])), [cart]);
   const [customerId, setCustomerId] = useState<number | null>(null);
+  const routeSearch = useSearch();
+  const visitId = readVisitId(routeSearch);
+  const visitRequested = new URLSearchParams(routeSearch).has("visitId");
+  const visit = useGetVisit(visitId ?? 0, { query: { queryKey: getGetVisitQueryKey(visitId ?? 0), enabled: visitId !== null } });
+  const connectedVisit = linkedVisitId(visitId, visit.data, customerId);
+  useEffect(() => { if (visit.data && visit.data.id === visitId) setCustomerId(visit.data.customerId); }, [visit.data, visitId]);
   const [customerSearch, setCustomerSearch] = useState("");
   const [customerDropdownOpen, setCustomerDropdownOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false); // Mobile cart drawer
@@ -169,9 +189,15 @@ export default function NewOrderPage() {
           total: data.total || total,
           customerName: selectedCustomer?.name || "مشتری",
         });
-        setCart([]);
+        setCart([]); setDiscount("0"); setOrderNotes("");
         setCustomerId(null);
         setCartOpen(false);
+        if (visitId !== null) qc.invalidateQueries({ queryKey: getGetVisitQueryKey(visitId) });
+        qc.invalidateQueries({ queryKey: getListTargetsQueryKey() });
+        qc.invalidateQueries({ queryKey: getGetTargetsSummaryQueryKey() });
+        qc.invalidateQueries({ queryKey: getListVisitsQueryKey() });
+        qc.invalidateQueries({ queryKey: getGetVisitsSummaryQueryKey() });
+        qc.invalidateQueries({ queryKey: getListCustomersQueryKey() });
         qc.invalidateQueries({ queryKey: getListOrdersQueryKey() });
         qc.invalidateQueries({ queryKey: getListProductsQueryKey() });
       },
@@ -251,10 +277,15 @@ export default function NewOrderPage() {
     setCart([]);
   }
 
-  const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
+  const subtotal = cart.reduce((s, c) => s + (c.isBonus ? 0 : c.price * c.qty), 0);
+  const discountAmount = parseRial(discount);
+  const invalidDiscount = discountAmount === null || discountAmount > subtotal;
+  const total = Math.max(0, subtotal - (discountAmount ?? 0));
   const totalItemsCount = cart.reduce((s, c) => s + c.qty, 0);
 
   function submitOrder() {
+    if (discountAmount === null || discountAmount > subtotal) { toast({ title: "تخفیف نامعتبر است", variant: "destructive" }); return; }
+    if (invalidProducts || invalidCustomers || productsLoading || customersLoading) return;
     if (!customerId) {
       toast({ title: "لطفاً ابتدا مشتری را انتخاب کنید", variant: "destructive" });
       return;
@@ -263,14 +294,17 @@ export default function NewOrderPage() {
       toast({ title: "سبد خرید خالی است", variant: "destructive" });
       return;
     }
+    if (visitRequested && !connectedVisit) { toast({ title: "ویزیت معتبر و باز برای همین مشتری لازم است", variant: "destructive" }); return; }
     createOrder.mutate({
       data: {
-        customerId,
+        customerId, discount: discountAmount, paymentMethod, notes: orderNotes.trim() || null,
+        ...(connectedVisit ? { visitId: connectedVisit } : {}),
         items: cart.map((c) => ({
           productId: c.productId,
           productName: c.productName,
           qty: c.qty,
-          price: c.price,
+          price: c.isBonus ? 0 : c.price,
+          isBonus: c.isBonus ?? false,
         })),
       },
     });
@@ -298,6 +332,9 @@ export default function NewOrderPage() {
   // ── Cart & Customer Sidebar ──
   const CartPanel = (
     <div className="flex flex-col h-full bg-card">
+      {visitRequested && <div className="p-3 text-sm border-b">{visit.isLoading ? "در حال بررسی ویزیت..." : connectedVisit ? `متصل به ویزیت ${visit.data?.code}` : <p role="alert">ویزیت نامعتبر، بسته، دارای سفارش یا متعلق به مشتری دیگری است. {visit.isError && <button onClick={() => visit.refetch()}>تلاش مجدد</button>}</p>}</div>}
+      {selectedCustomer && <div className="p-3 text-xs space-y-1 border-b"><p>سقف اعتبار: {selectedCustomer.creditLimit === undefined ? "دریافت نشده" : `${n(selectedCustomer.creditLimit)} ریال`}</p><p>مانده بدهی: {selectedCustomer.balance === undefined ? "دریافت نشده" : `${n(selectedCustomer.balance)} ریال`}</p><p>پذیرش نهایی اعتبار توسط سرور انجام می‌شود.</p></div>}
+      {invalidCustomers && <p role="alert" className="p-3 text-destructive">دریافت مشتریان ناموفق بود. <button onClick={() => retryCustomers()}>تلاش مجدد</button></p>}
       {/* Customer Selection Section */}
       <div className="p-3.5 border-b border-border bg-muted/20">
         <div className="flex items-center justify-between mb-2">
@@ -489,6 +526,7 @@ export default function NewOrderPage() {
                   </button>
                 </div>
 
+                <label className="text-xs flex items-center gap-2"><input type="checkbox" aria-label={`اشانتیون ${item.productName}`} checked={item.isBonus ?? false} onChange={e => setCart(prev => prev.map(c => c.productId === item.productId ? { ...c, isBonus: e.target.checked } : c))} />اشانتیون (رایگان)</label>
                 <div className="flex items-center justify-between pt-1 border-t border-border/50">
                   <div className="flex items-center gap-1.5">
                     <button
@@ -510,7 +548,7 @@ export default function NewOrderPage() {
                     </button>
                   </div>
                   <div className="text-xs font-bold text-foreground">
-                    {n(item.price * item.qty)}{" "}
+                    {n(item.isBonus ? 0 : item.price * item.qty)}{" "}
                     <span className="font-normal text-[10px] text-muted-foreground">
                       ریال
                     </span>
@@ -524,6 +562,10 @@ export default function NewOrderPage() {
 
       {/* Order Footer & Checkout */}
       <div className="p-3.5 border-t border-border bg-muted/10 space-y-3">
+        <label className="block text-xs">تخفیف سفارش<CurrencyInput aria-label="تخفیف سفارش" value={discount} onChange={setDiscount} /></label>
+        {discountAmount !== null && discountAmount > subtotal && <p role="alert" className="text-sm text-destructive">تخفیف نمی‌تواند بیشتر از جمع سفارش باشد.</p>}
+        <label className="block text-xs">روش پرداخت سفارش<select aria-label="روش پرداخت سفارش" value={paymentMethod} onChange={e => setPaymentMethod(e.target.value as typeof paymentMethod)} className="w-full border rounded bg-background p-2"><option value="CASH">نقدی</option><option value="CARD">کارت</option><option value="CREDIT">اعتباری</option><option value="CHEQUE">چک</option></select></label>
+        <label className="block text-xs">یادداشت سفارش<input value={orderNotes} onChange={e => setOrderNotes(e.target.value)} className="w-full border rounded bg-background p-2" /></label>
         <div className="space-y-1.5 text-xs">
           <div className="flex justify-between text-muted-foreground">
             <span>تعداد کل کالاها:</span>
@@ -540,7 +582,7 @@ export default function NewOrderPage() {
 
         <button
           onClick={submitOrder}
-          disabled={createOrder.isPending || cart.length === 0 || !customerId}
+          disabled={invalidDiscount || invalidProducts || invalidCustomers || productsLoading || customersLoading || createOrder.isPending || cart.length === 0 || !customerId || (visitRequested && !connectedVisit)}
           className="w-full py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:opacity-90 active:scale-[0.99] transition disabled:opacity-50 shadow-sm flex items-center justify-center gap-2"
         >
           {createOrder.isPending ? (
@@ -561,6 +603,7 @@ export default function NewOrderPage() {
       {/* ── Left / Main: Products column ── */}
       <div className="flex-1 flex flex-col overflow-hidden min-h-0 border-l border-border">
         {/* Header / Filter Toolbar */}
+        {invalidProducts && <p role="alert" className="p-3 text-destructive">دریافت محصولات ناموفق بود. <button onClick={() => retryProducts()}>تلاش مجدد</button></p>}
         <div className="p-3 sm:p-4 border-b border-border shrink-0 bg-card">
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -570,7 +613,7 @@ export default function NewOrderPage() {
               <p className="text-xs text-muted-foreground mt-0.5">
                 {productsLoading
                   ? "در حال بارگذاری کاتالوگ..."
-                  : `${n(products.length)} محصول در کاتالوگ`}
+                  : invalidProducts ? "کاتالوگ دریافت نشد" : `${n(products.length)} محصول در کاتالوگ`}
               </p>
             </div>
 
@@ -880,7 +923,7 @@ export default function NewOrderPage() {
             <div className="flex gap-2 pt-2">
               <button
                 type="button"
-                onClick={() => setCompletedOrder(null)}
+                onClick={() => { setCompletedOrder(null); setCustomerId(null); navigate("/new-order", { replace: true }); }}
                 className="flex-1 py-2.5 rounded-xl border border-border text-xs font-semibold text-foreground hover:bg-muted/40 transition"
               >
                 ثبت سفارش جدید دیگر

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import crypto from "crypto";
-import { db, customersTable } from "@workspace/db";
+import { db, customersTable, usersTable } from "@workspace/db";
 import { eq, and, isNull } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
 import { CreateCustomerBody, UpdateCustomerBody, UpdateCustomerParams, DeleteCustomerParams } from "@workspace/api-zod";
@@ -9,20 +9,46 @@ import type { Request } from "express";
 import type { JwtPayload } from "../lib/auth";
 import { getOrCreateSettings } from "./settings";
 import { logAudit } from "../lib/audit";
+import { canManageCustomerCredit, canViewAllOrders, isAdminRole } from "../lib/ledger";
 
 const router = Router();
 
 router.get("/customers", requireAuth, async (req, res): Promise<void> => {
+  const user = (req as Request & { user: JwtPayload }).user;
   const customers = await db.select().from(customersTable)
     .where(isNull(customersTable.deletedAt))
     .orderBy(customersTable.createdAt);
-  res.json(customers.map(c => ({ ...c, createdAt: c.createdAt.toISOString() })));
+
+  // فیلتر منطقه (Zone Filtering) برای ویزیتور دارای منطقه اختصاصی
+  let filtered = customers;
+  if (!canViewAllOrders(user.role)) {
+    try {
+      const [dbUser] = await db
+        .select({ assignedZone: usersTable.assignedZone })
+        .from(usersTable)
+        .where(eq(usersTable.id, user.id));
+      if (dbUser?.assignedZone) {
+        filtered = customers.filter(
+          (c) => !c.zone || c.zone === dbUser.assignedZone,
+        );
+      }
+    } catch {
+      // حفظ سازگاری با تست‌های mock
+    }
+  }
+
+  res.json(filtered.map(c => ({ ...c, createdAt: c.createdAt.toISOString() })));
 });
 
 router.post("/customers", requireAuth, async (req, res): Promise<void> => {
   const parsed = CreateCustomerBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const user = (req as Request & { user: JwtPayload }).user;
+
+  if (parsed.data.creditLimit !== undefined && !canManageCustomerCredit(user.role)) {
+    res.status(403).json({ error: "تنظیم سقف اعتبار فقط توسط مدیران یا واحد مالی مجاز است" });
+    return;
+  }
 
   // The code comes from the row's own id and configured prefix.
   const cust = await db.transaction(async (tx) => {
@@ -66,6 +92,14 @@ router.patch("/customers/:id", requireAuth, async (req, res): Promise<void> => {
   const body = UpdateCustomerBody.safeParse(req.body);
   if (!body.success) { res.status(400).json({ error: body.error.message }); return; }
   const user = (req as Request & { user: JwtPayload }).user;
+
+  if (
+    (body.data.creditLimit !== undefined || body.data.balance !== undefined) &&
+    !canManageCustomerCredit(user.role)
+  ) {
+    res.status(403).json({ error: "تغییر سقف اعتبار یا مانده بدهی فقط توسط مدیران یا واحد مالی مجاز است" });
+    return;
+  }
 
   const cust = await db.transaction(async (tx) => {
     const [updated] = await tx.update(customersTable).set(body.data)

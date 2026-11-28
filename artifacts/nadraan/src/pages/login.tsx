@@ -45,9 +45,9 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary mb-4">
-            <span className="text-white text-2xl font-bold">ن</span>
+            <span className="text-white text-2xl font-bold">ف+</span>
           </div>
-          <h1 className="text-2xl font-bold text-foreground">نادران‌گستر</h1>
+          <h1 className="text-2xl font-bold text-foreground">فروشیار پلاس</h1>
           <p className="text-sm text-muted-foreground mt-1">
             پلتفرم مدیریت پخش
           </p>
@@ -101,7 +101,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-5 pt-4 border-t border-border">
+          {import.meta.env.VITE_DEMO_MODE === "true" && <div className="mt-5 pt-4 border-t border-border">
             <p className="text-xs text-muted-foreground text-center mb-2">
               کاربران نمایشی:
             </p>
@@ -123,7 +123,7 @@ export default function LoginPage() {
             <p className="text-xs text-muted-foreground text-center mt-2">
               رمز عبور همه: ۱۲۳۴
             </p>
-          </div>
+          </div>}
         </div>
       </div>
     </div>

@@ -1,0 +1,11 @@
+import * as React from "react";
+import { it, expect, vi, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
+import Login from "./login";
+vi.stubGlobal("React", React);
+vi.mock("@workspace/api-client-react", () => ({ useLogin: () => ({ mutate: vi.fn() }) }));
+vi.mock("@/lib/auth-context", () => ({ useAuth: () => ({ setAuth: vi.fn() }) }));
+vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast: vi.fn() }) }));
+afterEach(() => { cleanup(); vi.unstubAllEnvs(); });
+it("ورود واقعی راهنمای رمز نمایشی ندارد", () => { vi.stubEnv("VITE_DEMO_MODE", "false"); render(<Login />); expect(screen.queryByText("کاربران نمایشی:")).toBeNull(); });
+it("ورود نمایشی صریحاً مشخص است", () => { vi.stubEnv("VITE_DEMO_MODE", "true"); render(<Login />); expect(screen.getByText("کاربران نمایشی:")).toBeTruthy(); });
