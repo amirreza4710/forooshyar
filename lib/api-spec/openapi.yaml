@@ -1483,6 +1483,12 @@ components:
         isBonus:
           type: boolean
           default: false
+        pack:
+          type: ["string", "null"]
+          description: واحد بسته بندی کالا (مانند کارتن، جعبه، بسته یا عدد)
+        unitsPerPack:
+          type: ["integer", "null"]
+          description: تعداد در کارتن یا ضریب بسته بندی
 
     Order:
       type: object
@@ -1978,6 +1984,12 @@ components:
         restock:
           type: boolean
           default: true
+        pack:
+          type: ["string", "null"]
+          description: واحد بسته بندی کالا (مانند کارتن، جعبه، بسته یا عدد)
+        unitsPerPack:
+          type: ["integer", "null"]
+          description: تعداد در کارتن یا ضریب بسته بندی
 
     Delivery:
       type: object

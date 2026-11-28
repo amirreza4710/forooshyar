@@ -598,4 +598,43 @@ describe("POST /api/orders", () => {
     // پاک‌سازی رکورد موقت حواله
     await db.delete(deliveriesTable).where(eq(deliveriesTable.id, deliv.id));
   });
+
+  it("فیلدهای بسته بندی کالا (pack و unitsPerPack) در ثبت و بازیابی فاکتور سریالایز می‌شوند", async () => {
+    const [cartonProd] = await db
+      .insert(productsTable)
+      .values({
+        code: `PRD-PACK-${Date.now()}`,
+        name: "روغن سرخ کردنی کارتن ۲۴ عددی",
+        category: "روغنیات",
+        pack: "کارتن",
+        unitsPerPack: 24,
+        price: 50_000,
+        stock: 100,
+      })
+      .returning();
+    createdProductIds.push(cartonProd!.id);
+
+    const orderRes = await request(app)
+      .post("/api/orders")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        customerId: customer.id,
+        items: [
+          { productId: cartonProd!.id, productName: cartonProd!.name, qty: 24, price: 50_000 },
+        ],
+      });
+
+    expect(orderRes.status).toBe(201);
+    createdOrderIds.push(orderRes.body.id);
+    expect(orderRes.body.items[0].pack).toBe("کارتن");
+    expect(orderRes.body.items[0].unitsPerPack).toBe(24);
+
+    const getRes = await request(app)
+      .get(`/api/orders/${orderRes.body.id}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(getRes.status).toBe(200);
+    expect(getRes.body.items[0].pack).toBe("کارتن");
+    expect(getRes.body.items[0].unitsPerPack).toBe(24);
+  });
 });

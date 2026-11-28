@@ -1,6 +1,6 @@
 import { Router } from "express";
 import crypto from "crypto";
-import { db, ordersTable, visitsTable, customersTable, collectionsTable, deliveriesTable } from "@workspace/db";
+import { db, ordersTable, visitsTable, customersTable, collectionsTable, deliveriesTable, productsTable } from "@workspace/db";
 import { eq, sql, and, isNull, ne, inArray } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
 import {
@@ -26,12 +26,36 @@ interface OrderItemShape {
   qty: number;
   price: number;
   isBonus?: boolean;
+  pack?: string | null;
+  unitsPerPack?: number | null;
+}
+
+async function getProductPackMap(productIds: number[]) {
+  const map = new Map<number, { pack?: string | null; unitsPerPack?: number | null }>();
+  if (productIds.length === 0) return map;
+  try {
+    const prods = await db
+      .select({
+        id: productsTable.id,
+        pack: productsTable.pack,
+        unitsPerPack: productsTable.unitsPerPack,
+      })
+      .from(productsTable)
+      .where(inArray(productsTable.id, productIds));
+    for (const p of prods) {
+      map.set(p.id, p);
+    }
+  } catch {
+    // برای سازگاری با تست‌های mock بدون جدول products
+  }
+  return map;
 }
 
 function serializeOrder(
   o: typeof ordersTable.$inferSelect,
   delivery?: { returnedAmount?: number | null; returnedItems?: unknown } | null,
   customer?: { phone?: string | null; address?: string | null } | null,
+  productPackMap?: Map<number, { pack?: string | null; unitsPerPack?: number | null }>,
 ) {
   const rawItems = Array.isArray(o.items) ? (o.items as OrderItemShape[]) : [];
   const rawReturnedItems = Array.isArray(delivery?.returnedItems)
@@ -41,6 +65,8 @@ function serializeOrder(
         qty: number;
         price: number;
         restock?: boolean;
+        pack?: string | null;
+        unitsPerPack?: number | null;
       }>)
     : [];
 
@@ -48,12 +74,24 @@ function serializeOrder(
     ...o,
     customerPhone: customer?.phone ?? null,
     customerAddress: customer?.address ?? null,
-    items: rawItems.map((item) => ({
-      ...item,
-      isBonus: Boolean(item.isBonus),
-    })),
+    items: rawItems.map((item) => {
+      const prodPack = productPackMap?.get(item.productId);
+      return {
+        ...item,
+        isBonus: Boolean(item.isBonus),
+        pack: item.pack ?? prodPack?.pack ?? null,
+        unitsPerPack: item.unitsPerPack ?? prodPack?.unitsPerPack ?? 1,
+      };
+    }),
     returnedAmount: delivery?.returnedAmount ?? 0,
-    returnedItems: rawReturnedItems,
+    returnedItems: rawReturnedItems.map((item) => {
+      const prodPack = productPackMap?.get(item.productId);
+      return {
+        ...item,
+        pack: item.pack ?? prodPack?.pack ?? null,
+        unitsPerPack: item.unitsPerPack ?? prodPack?.unitsPerPack ?? 1,
+      };
+    }),
     createdAt: o.createdAt.toISOString(),
   };
 }
@@ -114,7 +152,23 @@ router.get("/orders", requireAuth, async (req, res): Promise<void> => {
     // حفظ سازگاری با تست‌های mock
   }
 
-  res.json(orders.map((o) => serializeOrder(o, deliveryMap.get(o.id), customerMap.get(o.customerId))));
+  const allProductIds = new Set<number>();
+  for (const o of orders) {
+    if (Array.isArray(o.items)) {
+      for (const item of o.items as OrderItemShape[]) {
+        if (item.productId) allProductIds.add(item.productId);
+      }
+    }
+    const d = deliveryMap.get(o.id);
+    if (Array.isArray(d?.returnedItems)) {
+      for (const item of d.returnedItems as Array<{ productId: number }>) {
+        if (item.productId) allProductIds.add(item.productId);
+      }
+    }
+  }
+  const productPackMap = await getProductPackMap(Array.from(allProductIds));
+
+  res.json(orders.map((o) => serializeOrder(o, deliveryMap.get(o.id), customerMap.get(o.customerId), productPackMap)));
 });
 
 router.post("/orders", requireAuth, async (req, res): Promise<void> => {
@@ -148,6 +202,9 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
       }
     }
 
+    const itemProductIds = items.map((i) => i.productId);
+    const productPacks = await getProductPackMap(itemProductIds);
+
     const normalizedItems: OrderItemShape[] = [];
     for (const item of items) {
       if (item.qty <= 0) {
@@ -165,12 +222,16 @@ router.post("/orders", requireAuth, async (req, res): Promise<void> => {
       const isBonus = Boolean(item.isBonus);
       const effectivePrice = isBonus ? 0 : item.price;
       subtotal += effectivePrice * item.qty;
+      const packInfo = productPacks.get(item.productId);
+      const itemUpp = typeof item.unitsPerPack === "number" && item.unitsPerPack > 0 ? item.unitsPerPack : null;
       normalizedItems.push({
         productId: item.productId,
         productName: item.productName,
         qty: item.qty,
         price: effectivePrice,
         isBonus,
+        pack: item.pack ?? packInfo?.pack ?? null,
+        unitsPerPack: itemUpp ?? packInfo?.unitsPerPack ?? 1,
       });
     }
 
@@ -399,7 +460,20 @@ router.get("/orders/:id", requireAuth, async (req, res): Promise<void> => {
     // برای سازگاری با تست‌های mock
   }
 
-  res.json(serializeOrder(order, delivery, customer));
+  const orderProductIds = new Set<number>();
+  if (Array.isArray(order.items)) {
+    for (const item of order.items as OrderItemShape[]) {
+      if (item.productId) orderProductIds.add(item.productId);
+    }
+  }
+  if (Array.isArray(delivery?.returnedItems)) {
+    for (const item of delivery.returnedItems as Array<{ productId: number }>) {
+      if (item.productId) orderProductIds.add(item.productId);
+    }
+  }
+  const productPackMap = await getProductPackMap(Array.from(orderProductIds));
+
+  res.json(serializeOrder(order, delivery, customer, productPackMap));
 });
 
 router.patch("/orders/:id", requireAuth, async (req, res): Promise<void> => {

@@ -1,5 +1,14 @@
 # Changelog
 
+## فاز A5: اصلاح واحد کالا و بسته بندی در فاکتور حرارتی (FMCG Packaging & Pack Format) — 2026-11-29
+
+- **اصلاح واحد کالا و بسته بندی در قرارداد و فاکتور چاپی:**
+  - `lib/api-spec/openapi.yaml`: افزودن فیلدهای اختیاری `pack` و `unitsPerPack` به اسکیماهای `OrderItem` و `ReturnedItem` و اجرای کدجن Orval در پکیج‌های `@workspace/api-zod` و `@workspace/api-client-react`.
+  - `artifacts/api-server/src/routes/orders.ts`: پیاده‌سازی متد `getProductPackMap` جهت اتصال هوشمند ردیف‌های فاکتور و اقلام مرجوعی به مشخصات بسته بندی کالاها در دیتابیس (`productsTable`).
+  - `artifacts/nadraan/src/components/OrderDetail.tsx`: پیاده‌سازی تابع کمکی `formatItemQuantity` و جایگزینی فرمت ساده تعداد با فرمت رسمی مویرگی (`تعداد: ۱ عدد` برای کالای تکی، `تعداد: ۱ کارتن (۲۴ عددی)` برای بسته بندی کامل و `۱ کارتن + ۲ عدد خرد (۲۴ عددی)` برای مقادیر دارای خرد).
+  - ۱۶ تست موفق در `OrderDetail.test.tsx` و ۲۰ تست موفق در `orders.test.ts`.
+  - بیلد ۱۰۰٪ موفق کلاینت فرانت‌اند و ۰ خطای تایپ‌چک در مونو‌ریپو.
+
 ## فاز A5: چاپ فاکتور تعدیل‌شده و قالب حرارتی ۸۰ میلی‌متری و رفع ۸ یافته بازبینی — 2026-11-28
 
 - **چاپ فاکتور تعدیل‌شده و رسید حرارتی ۸۰ میلی‌متری (`Phase A5 Thermal Printing`):**

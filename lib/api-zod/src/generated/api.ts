@@ -398,7 +398,9 @@ export const ListOrdersResponseItem = zod.object({
   "productName": zod.string(),
   "qty": zod.int(),
   "price": zod.int(),
-  "isBonus": zod.boolean().default(listOrdersResponseItemsItemIsBonusDefault)
+  "isBonus": zod.boolean().default(listOrdersResponseItemsItemIsBonusDefault),
+  "pack": zod.string().nullish().describe('واحد بسته بندی کالا (مانند کارتن، جعبه، بسته یا عدد)'),
+  "unitsPerPack": zod.int().nullish().describe('تعداد در کارتن یا ضریب بسته بندی')
 })).optional(),
   "returnedAmount": zod.int().optional().describe('مبلغ کل اقلام مرجوعی کسر شده از فاکتور اولیه'),
   "returnedItems": zod.array(zod.object({
@@ -406,7 +408,9 @@ export const ListOrdersResponseItem = zod.object({
   "productName": zod.string(),
   "qty": zod.int(),
   "price": zod.int(),
-  "restock": zod.boolean().default(listOrdersResponseReturnedItemsItemRestockDefault)
+  "restock": zod.boolean().default(listOrdersResponseReturnedItemsItemRestockDefault),
+  "pack": zod.string().nullish().describe('واحد بسته بندی کالا (مانند کارتن، جعبه، بسته یا عدد)'),
+  "unitsPerPack": zod.int().nullish().describe('تعداد در کارتن یا ضریب بسته بندی')
 })).optional().describe('اقلام مرجوعی ثبت‌شده در فرآیند توزیع'),
   "createdAt": zod.string()
 })
@@ -431,7 +435,9 @@ export const CreateOrderBody = zod.object({
   "productName": zod.string(),
   "qty": zod.int(),
   "price": zod.int(),
-  "isBonus": zod.boolean().default(createOrderBodyItemsItemIsBonusDefault)
+  "isBonus": zod.boolean().default(createOrderBodyItemsItemIsBonusDefault),
+  "pack": zod.string().nullish().describe('واحد بسته بندی کالا (مانند کارتن، جعبه، بسته یا عدد)'),
+  "unitsPerPack": zod.int().nullish().describe('تعداد در کارتن یا ضریب بسته بندی')
 }))
 })
 
@@ -459,7 +465,9 @@ export const CreateOrderResponse = zod.object({
   "productName": zod.string(),
   "qty": zod.int(),
   "price": zod.int(),
-  "isBonus": zod.boolean().default(createOrderResponseItemsItemIsBonusDefault)
+  "isBonus": zod.boolean().default(createOrderResponseItemsItemIsBonusDefault),
+  "pack": zod.string().nullish().describe('واحد بسته بندی کالا (مانند کارتن، جعبه، بسته یا عدد)'),
+  "unitsPerPack": zod.int().nullish().describe('تعداد در کارتن یا ضریب بسته بندی')
 })).optional(),
   "returnedAmount": zod.int().optional().describe('مبلغ کل اقلام مرجوعی کسر شده از فاکتور اولیه'),
   "returnedItems": zod.array(zod.object({
@@ -467,7 +475,9 @@ export const CreateOrderResponse = zod.object({
   "productName": zod.string(),
   "qty": zod.int(),
   "price": zod.int(),
-  "restock": zod.boolean().default(createOrderResponseReturnedItemsItemRestockDefault)
+  "restock": zod.boolean().default(createOrderResponseReturnedItemsItemRestockDefault),
+  "pack": zod.string().nullish().describe('واحد بسته بندی کالا (مانند کارتن، جعبه، بسته یا عدد)'),
+  "unitsPerPack": zod.int().nullish().describe('تعداد در کارتن یا ضریب بسته بندی')
 })).optional().describe('اقلام مرجوعی ثبت‌شده در فرآیند توزیع'),
   "createdAt": zod.string()
 })
@@ -504,7 +514,9 @@ export const GetOrderResponse = zod.object({
   "productName": zod.string(),
   "qty": zod.int(),
   "price": zod.int(),
-  "isBonus": zod.boolean().default(getOrderResponseItemsItemIsBonusDefault)
+  "isBonus": zod.boolean().default(getOrderResponseItemsItemIsBonusDefault),
+  "pack": zod.string().nullish().describe('واحد بسته بندی کالا (مانند کارتن، جعبه، بسته یا عدد)'),
+  "unitsPerPack": zod.int().nullish().describe('تعداد در کارتن یا ضریب بسته بندی')
 })).optional(),
   "returnedAmount": zod.int().optional().describe('مبلغ کل اقلام مرجوعی کسر شده از فاکتور اولیه'),
   "returnedItems": zod.array(zod.object({
@@ -512,7 +524,9 @@ export const GetOrderResponse = zod.object({
   "productName": zod.string(),
   "qty": zod.int(),
   "price": zod.int(),
-  "restock": zod.boolean().default(getOrderResponseReturnedItemsItemRestockDefault)
+  "restock": zod.boolean().default(getOrderResponseReturnedItemsItemRestockDefault),
+  "pack": zod.string().nullish().describe('واحد بسته بندی کالا (مانند کارتن، جعبه، بسته یا عدد)'),
+  "unitsPerPack": zod.int().nullish().describe('تعداد در کارتن یا ضریب بسته بندی')
 })).optional().describe('اقلام مرجوعی ثبت‌شده در فرآیند توزیع'),
   "createdAt": zod.string()
 })
@@ -553,7 +567,9 @@ export const UpdateOrderResponse = zod.object({
   "productName": zod.string(),
   "qty": zod.int(),
   "price": zod.int(),
-  "isBonus": zod.boolean().default(updateOrderResponseItemsItemIsBonusDefault)
+  "isBonus": zod.boolean().default(updateOrderResponseItemsItemIsBonusDefault),
+  "pack": zod.string().nullish().describe('واحد بسته بندی کالا (مانند کارتن، جعبه، بسته یا عدد)'),
+  "unitsPerPack": zod.int().nullish().describe('تعداد در کارتن یا ضریب بسته بندی')
 })).optional(),
   "returnedAmount": zod.int().optional().describe('مبلغ کل اقلام مرجوعی کسر شده از فاکتور اولیه'),
   "returnedItems": zod.array(zod.object({
@@ -561,7 +577,9 @@ export const UpdateOrderResponse = zod.object({
   "productName": zod.string(),
   "qty": zod.int(),
   "price": zod.int(),
-  "restock": zod.boolean().default(updateOrderResponseReturnedItemsItemRestockDefault)
+  "restock": zod.boolean().default(updateOrderResponseReturnedItemsItemRestockDefault),
+  "pack": zod.string().nullish().describe('واحد بسته بندی کالا (مانند کارتن، جعبه، بسته یا عدد)'),
+  "unitsPerPack": zod.int().nullish().describe('تعداد در کارتن یا ضریب بسته بندی')
 })).optional().describe('اقلام مرجوعی ثبت‌شده در فرآیند توزیع'),
   "createdAt": zod.string()
 })
@@ -986,7 +1004,9 @@ export const ListDeliveriesResponseItem = zod.object({
   "productName": zod.string(),
   "qty": zod.int(),
   "price": zod.int(),
-  "restock": zod.boolean().default(listDeliveriesResponseReturnedItemsItemRestockDefault)
+  "restock": zod.boolean().default(listDeliveriesResponseReturnedItemsItemRestockDefault),
+  "pack": zod.string().nullish().describe('واحد بسته بندی کالا (مانند کارتن، جعبه، بسته یا عدد)'),
+  "unitsPerPack": zod.int().nullish().describe('تعداد در کارتن یا ضریب بسته بندی')
 })),
   "returnedAmount": zod.int(),
   "signatureNote": zod.string().nullish(),
@@ -1021,7 +1041,9 @@ export const AssignDeliveryResponse = zod.object({
   "productName": zod.string(),
   "qty": zod.int(),
   "price": zod.int(),
-  "restock": zod.boolean().default(assignDeliveryResponseReturnedItemsItemRestockDefault)
+  "restock": zod.boolean().default(assignDeliveryResponseReturnedItemsItemRestockDefault),
+  "pack": zod.string().nullish().describe('واحد بسته بندی کالا (مانند کارتن، جعبه، بسته یا عدد)'),
+  "unitsPerPack": zod.int().nullish().describe('تعداد در کارتن یا ضریب بسته بندی')
 })),
   "returnedAmount": zod.int(),
   "signatureNote": zod.string().nullish(),
@@ -1063,7 +1085,9 @@ export const CompleteDeliveryBody = zod.object({
   "productName": zod.string(),
   "qty": zod.int(),
   "price": zod.int(),
-  "restock": zod.boolean().default(completeDeliveryBodyReturnedItemsItemRestockDefault)
+  "restock": zod.boolean().default(completeDeliveryBodyReturnedItemsItemRestockDefault),
+  "pack": zod.string().nullish().describe('واحد بسته بندی کالا (مانند کارتن، جعبه، بسته یا عدد)'),
+  "unitsPerPack": zod.int().nullish().describe('تعداد در کارتن یا ضریب بسته بندی')
 })).optional(),
   "signatureNote": zod.string().nullish()
 })
@@ -1085,7 +1109,9 @@ export const CompleteDeliveryResponse = zod.object({
   "productName": zod.string(),
   "qty": zod.int(),
   "price": zod.int(),
-  "restock": zod.boolean().default(completeDeliveryResponseReturnedItemsItemRestockDefault)
+  "restock": zod.boolean().default(completeDeliveryResponseReturnedItemsItemRestockDefault),
+  "pack": zod.string().nullish().describe('واحد بسته بندی کالا (مانند کارتن، جعبه، بسته یا عدد)'),
+  "unitsPerPack": zod.int().nullish().describe('تعداد در کارتن یا ضریب بسته بندی')
 })),
   "returnedAmount": zod.int(),
   "signatureNote": zod.string().nullish(),
@@ -1165,7 +1191,9 @@ export const GetDashboardSummaryResponse = zod.object({
   "productName": zod.string(),
   "qty": zod.int(),
   "price": zod.int(),
-  "isBonus": zod.boolean().default(getDashboardSummaryResponseRecentOrdersItemItemsItemIsBonusDefault)
+  "isBonus": zod.boolean().default(getDashboardSummaryResponseRecentOrdersItemItemsItemIsBonusDefault),
+  "pack": zod.string().nullish().describe('واحد بسته بندی کالا (مانند کارتن، جعبه، بسته یا عدد)'),
+  "unitsPerPack": zod.int().nullish().describe('تعداد در کارتن یا ضریب بسته بندی')
 })).optional(),
   "returnedAmount": zod.int().optional().describe('مبلغ کل اقلام مرجوعی کسر شده از فاکتور اولیه'),
   "returnedItems": zod.array(zod.object({
@@ -1173,7 +1201,9 @@ export const GetDashboardSummaryResponse = zod.object({
   "productName": zod.string(),
   "qty": zod.int(),
   "price": zod.int(),
-  "restock": zod.boolean().default(getDashboardSummaryResponseRecentOrdersItemReturnedItemsItemRestockDefault)
+  "restock": zod.boolean().default(getDashboardSummaryResponseRecentOrdersItemReturnedItemsItemRestockDefault),
+  "pack": zod.string().nullish().describe('واحد بسته بندی کالا (مانند کارتن، جعبه، بسته یا عدد)'),
+  "unitsPerPack": zod.int().nullish().describe('تعداد در کارتن یا ضریب بسته بندی')
 })).optional().describe('اقلام مرجوعی ثبت‌شده در فرآیند توزیع'),
   "createdAt": zod.string()
 }))

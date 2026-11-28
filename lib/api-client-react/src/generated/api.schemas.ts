@@ -173,6 +173,16 @@ export interface OrderItem {
   qty: number;
   price: number;
   isBonus?: boolean;
+  /**
+     * واحد بسته بندی کالا (مانند کارتن، جعبه، بسته یا عدد)
+     * @nullable
+     */
+  pack?: string | null;
+  /**
+     * تعداد در کارتن یا ضریب بسته بندی
+     * @nullable
+     */
+  unitsPerPack?: number | null;
 }
 
 export type OrderPaymentMethod = typeof OrderPaymentMethod[keyof typeof OrderPaymentMethod];
@@ -201,6 +211,16 @@ export interface ReturnedItem {
   qty: number;
   price: number;
   restock?: boolean;
+  /**
+     * واحد بسته بندی کالا (مانند کارتن، جعبه، بسته یا عدد)
+     * @nullable
+     */
+  pack?: string | null;
+  /**
+     * تعداد در کارتن یا ضریب بسته بندی
+     * @nullable
+     */
+  unitsPerPack?: number | null;
 }
 
 export interface Order {

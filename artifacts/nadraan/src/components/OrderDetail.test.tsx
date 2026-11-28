@@ -46,3 +46,40 @@ it.each([undefined, []])("بدون اقلام مرجوعی، بخش خالی س�
 it("جمع اقلام مرجوعی نامنطبق با مبلغ کسرشده چاپ نمی‌شود",()=>{
   state.data={id:3,subtotal:1000,discount:200,returnedAmount:800,total:0,items:[],returnedItems:[{productId:1,productName:"کالا و اشانتیون",qty:2,price:800,restock:true}]};render(<OrderDetail id={3}/>);expect(screen.getByText(/جمع اقلام مرجوعی با مبلغ کسرشده سازگار نیست/)).toBeTruthy();expect((screen.getByRole("button",{name:"چاپ سفارش"}) as HTMLButtonElement).disabled).toBe(true);
 });
+
+it("واحد بسته بندی اقلام را به صورت عدد یا کارتن همراه با ضریب و خرد به درستی نمایش می‌دهد", () => {
+  state.data = {
+    id: 4,
+    customerName: "فروشگاه تست بسته بندی",
+    total: 300,
+    status: "در انتظار",
+    items: [
+      { productId: 1, productName: "شیر تکی", qty: 2, price: 50, pack: "عدد", unitsPerPack: 1 },
+      { productId: 2, productName: "کیک کارتنی کامل", qty: 24, price: 10, pack: "کارتن", unitsPerPack: 24 },
+      { productId: 3, productName: "روغن کارتنی همراه با خرد", qty: 26, price: 20, pack: "کارتن", unitsPerPack: 24 },
+    ],
+  };
+  render(<OrderDetail id={4} />);
+  expect(screen.getByText(/تعداد: ۲ عدد — قیمت واحد: ۵۰ ریال/)).toBeTruthy();
+  expect(screen.getByText(/تعداد: ۱ کارتن \(۲۴ عددی\) — قیمت واحد: ۱۰ ریال/)).toBeTruthy();
+  expect(screen.getByText(/تعداد: ۱ کارتن \+ ۲ عدد خرد \(۲۴ عددی\) — قیمت واحد: ۲۰ ریال/)).toBeTruthy();
+});
+
+it("واحد بسته بندی اقلام مرجوعی را نیز با کارتن و عدد به درستی نمایش می‌دهد", () => {
+  state.data = {
+    id: 5,
+    customerName: "فروشگاه تست مرجوعی کارتن",
+    total: 0,
+    subtotal: 240,
+    discount: 0,
+    returnedAmount: 240,
+    status: "تکمیل شده",
+    items: [],
+    returnedItems: [
+      { productId: 1, productName: "آبمیوه کارتن", qty: 12, price: 20, pack: "کارتن", unitsPerPack: 12, restock: true },
+    ],
+  };
+  render(<OrderDetail id={5} />);
+  const section = screen.getByRole("region", { name: "اقلام مرجوعی حین تحویل" });
+  expect(within(section).getByText(/تعداد مرجوعی: ۱ کارتن \(۱۲ عددی\)/)).toBeTruthy();
+});
