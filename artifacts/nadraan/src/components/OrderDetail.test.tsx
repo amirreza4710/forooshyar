@@ -16,3 +16,16 @@ it("تفاوت مبلغ نهایی با اقلام اولیه را روشن می
   expect(screen.getByText("اقلام ثبت اولیه سفارش")).toBeTruthy();
   expect((screen.getByRole("button", { name: "چاپ سفارش" }) as HTMLButtonElement).disabled).toBe(true);
 });
+
+it.each([12, 0])("مبلغ نهایی سرور را پس از کسر مرجوعی دوباره کاهش نمی‌دهد: %s", (total) => {
+  state.data = { id: 3, subtotal: 36, discount: 12, total, returnedAmount: 24 - total, returnedItems: [], items: [] };
+  render(<OrderDetail id={3} />);
+  expect(screen.getByText(`کسر مبلغ مرجوعی: −${(24 - total).toLocaleString("fa-IR")} ریال`)).toBeTruthy();
+  expect(screen.getByText(`مبلغ نهایی قابل دریافت: ${total.toLocaleString("fa-IR")} ریال`)).toBeTruthy();
+});
+it.each([0, undefined])("برای سفارش بدون مرجوعی ردیف کسر نمایش نمی‌دهد: %s", (returnedAmount) => {
+  state.data = { id: 1, total: 100, returnedAmount, items: [] };
+  render(<OrderDetail id={1} />);
+  expect(screen.queryByText(/کسر مبلغ مرجوعی/)).toBeNull();
+  expect(screen.queryByText(/مبلغ نهایی قابل دریافت/)).toBeNull();
+});
